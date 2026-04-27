@@ -1,9 +1,8 @@
 import { useAuth0 } from '@auth0/auth0-react'
 import { useEffect, useState } from 'react'
-import { ThemeSwitcher } from './contexts/KinalysTheme'
 import { setAuthToken, getMyProfile, getStatus, getDepartments } from './api/client'
+import AccountSettings from './pages/AccountSettings'
 
-// ── Types ─────────────────────────────────────────────────────
 interface UserProfile {
   id: string
   email: string
@@ -12,11 +11,7 @@ interface UserProfile {
   department: string | null
   designation: string | null
   learningHoursTarget: number | null
-  tenant: {
-    id: string
-    name: string
-    plan: string
-  }
+  tenant: { id: string; name: string; plan: string }
 }
 
 interface ApiStatus {
@@ -27,70 +22,35 @@ interface ApiStatus {
   tables: string[]
 }
 
-// ── Login Page ────────────────────────────────────────────────
 function LoginPage() {
   const { loginWithRedirect, isLoading, error } = useAuth0()
-
   return (
     <div style={{
-      minHeight: '100vh',
-      background: 'var(--k-bg-topbar)',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '24px',
+      minHeight: '100vh', background: 'var(--k-bg-topbar)',
+      display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'center', padding: '24px',
     }}>
       <div style={{ textAlign: 'center', marginBottom: '48px' }}>
         <div style={{
-          fontFamily: 'var(--k-font-display)',
-          fontSize: '42px',
-          fontWeight: '800',
-          color: 'var(--k-brand-lighter)',
-          letterSpacing: '6px',
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: '8px',
-          position: 'relative',
+          fontFamily: 'var(--k-font-display)', fontSize: '42px', fontWeight: '800',
+          color: 'var(--k-brand-lighter)', letterSpacing: '6px',
+          display: 'inline-flex', alignItems: 'center', gap: '8px', position: 'relative',
         }}>
           KINALYS
-          <div style={{
-            width: '8px', height: '8px',
-            borderRadius: '50%',
-            background: 'var(--k-brand-lighter)',
-            flexShrink: 0,
-          }}/>
-          <div style={{
-            position: 'absolute',
-            bottom: '-4px', left: 0, right: '20px',
-            height: '1.5px',
-            background: 'var(--k-brand-primary)',
-            opacity: 0.6,
-          }}/>
+          <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--k-brand-lighter)', flexShrink: 0 }}/>
+          <div style={{ position: 'absolute', bottom: '-4px', left: 0, right: '20px', height: '1.5px', background: 'var(--k-brand-primary)', opacity: 0.6 }}/>
         </div>
-        <div style={{
-          marginTop: '12px',
-          fontSize: '13px',
-          color: 'var(--k-brand-light)',
-          letterSpacing: '4px',
-        }}>
+        <div style={{ marginTop: '12px', fontSize: '13px', color: 'var(--k-brand-light)', letterSpacing: '4px' }}>
           KINETIC ANALYSIS
         </div>
       </div>
-
       <div className="k-card" style={{ width: '100%', maxWidth: '400px', padding: '40px', textAlign: 'center' }}>
-        <h1 style={{
-          fontFamily: 'var(--k-font-display)',
-          fontSize: '22px', fontWeight: '700',
-          color: 'var(--k-text-primary)',
-          marginBottom: '8px',
-        }}>
+        <h1 style={{ fontFamily: 'var(--k-font-display)', fontSize: '22px', fontWeight: '700', color: 'var(--k-text-primary)', marginBottom: '8px' }}>
           Welcome back
         </h1>
         <p style={{ fontSize: '14px', color: 'var(--k-text-muted)', marginBottom: '32px' }}>
           Sign in to your Kinalys workspace
         </p>
-
         <button
           className="k-btn k-btn-primary"
           onClick={() => loginWithRedirect()}
@@ -99,26 +59,15 @@ function LoginPage() {
         >
           {isLoading ? 'Loading...' : 'Sign in with Kinalys'}
         </button>
-
-        {error && (
-          <p style={{ color: 'var(--k-danger-text)', fontSize: '12px', marginTop: '12px' }}>
-            {error.message}
-          </p>
-        )}
-
+        {error && <p style={{ color: 'var(--k-danger-text)', fontSize: '12px', marginTop: '12px' }}>{error.message}</p>}
         <p style={{ marginTop: '24px', fontSize: '12px', color: 'var(--k-text-muted)' }}>
           Kinetic Analysis · Unified LMS + Performance Management
         </p>
-      </div>
-
-      <div style={{ marginTop: '32px' }}>
-        <ThemeSwitcher />
       </div>
     </div>
   )
 }
 
-// ── Dashboard ─────────────────────────────────────────────────
 function Dashboard() {
   const { user, logout, getAccessTokenSilently } = useAuth0()
   const [profile, setProfile] = useState<UserProfile | null>(null)
@@ -131,31 +80,17 @@ function Dashboard() {
   useEffect(() => {
     async function loadData() {
       try {
-        // Get Auth0 token and attach to API client
         const token = await getAccessTokenSilently({
-          authorizationParams: {
-            audience: 'https://api.kinalys.io',
-          }
+          authorizationParams: { audience: 'https://api.kinalys.io' }
         })
         setAuthToken(token)
-
-        // Debug — remove after fixing
-const decoded = JSON.parse(atob(token.split('.')[1]))
-console.log('Token sub:', decoded.sub)
-
-        // Load data in parallel
         const [statusData, profileData, deptData] = await Promise.allSettled([
-          getStatus(),
-          getMyProfile(),
-          getDepartments(),
+          getStatus(), getMyProfile(), getDepartments(),
         ])
-
         if (statusData.status === 'fulfilled') setStatus(statusData.value)
         if (profileData.status === 'fulfilled') setProfile(profileData.value.user)
         if (deptData.status === 'fulfilled') setDepartments(deptData.value.departments || [])
-
       } catch (err: any) {
-        console.error('Failed to load data:', err.message)
         setApiError(err.message)
       } finally {
         setLoading(false)
@@ -166,19 +101,8 @@ console.log('Token sub:', decoded.sub)
 
   if (loading) {
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: 'var(--k-bg-topbar)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}>
-        <div style={{
-          fontFamily: 'var(--k-font-display)',
-          fontSize: '18px', fontWeight: '800',
-          color: 'var(--k-brand-lighter)',
-          letterSpacing: '4px',
-        }}>
+      <div style={{ minHeight: '100vh', background: 'var(--k-bg-topbar)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ fontFamily: 'var(--k-font-display)', fontSize: '18px', fontWeight: '800', color: 'var(--k-brand-lighter)', letterSpacing: '4px' }}>
           KINALYS · Loading...
         </div>
       </div>
@@ -187,47 +111,24 @@ console.log('Token sub:', decoded.sub)
 
   return (
     <div className="k-shell">
+
       {/* Topbar */}
       <div className="k-topbar">
-        <div style={{
-          fontFamily: 'var(--k-font-display)',
-          fontSize: '18px', fontWeight: '800',
-          color: 'var(--k-text-topbar)',
-          letterSpacing: '3px',
-          display: 'flex', alignItems: 'center', gap: '6px',
-        }}>
+        <div style={{ fontFamily: 'var(--k-font-display)', fontSize: '18px', fontWeight: '800', color: 'var(--k-text-topbar)', letterSpacing: '3px', display: 'flex', alignItems: 'center', gap: '6px' }}>
           KINALYS
-          <span style={{
-            width: '6px', height: '6px',
-            borderRadius: '50%',
-            background: 'var(--k-text-topbar)',
-            display: 'inline-block',
-          }}/>
+          <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--k-text-topbar)', display: 'inline-block' }}/>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           {profile?.tenant && (
-            <span style={{
-              fontSize: '12px',
-              color: 'var(--k-text-topbar)',
-              opacity: 0.7,
-              background: 'rgba(255,255,255,0.1)',
-              padding: '3px 12px',
-              borderRadius: '20px',
-            }}>
+            <span style={{ fontSize: '12px', color: 'var(--k-text-topbar)', opacity: 0.7, background: 'rgba(255,255,255,0.1)', padding: '3px 12px', borderRadius: '20px' }}>
               {profile.tenant.name}
             </span>
           )}
-          <span style={{ fontSize: '12px', color: 'var(--k-text-topbar)', opacity: 0.7 }}>
-            {user?.email}
-          </span>
+          <span style={{ fontSize: '12px', color: 'var(--k-text-topbar)', opacity: 0.7 }}>{user?.email}</span>
           <button
             className="k-btn k-btn-ghost"
             onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}
-            style={{
-              fontSize: '12px', padding: '6px 14px',
-              color: 'var(--k-text-topbar)',
-              borderColor: 'rgba(255,255,255,0.2)',
-            }}
+            style={{ fontSize: '12px', padding: '6px 14px', color: 'var(--k-text-topbar)', borderColor: 'rgba(255,255,255,0.2)' }}
           >
             Sign out
           </button>
@@ -238,261 +139,185 @@ console.log('Token sub:', decoded.sub)
       <div className="k-sidebar">
         <div className="k-sidebar-section">
           <div className="k-sidebar-label">Learning</div>
-          <div
-            className={`k-nav-item ${activeNav === 'learning' ? 'active' : ''}`}
-            onClick={() => setActiveNav('learning')}
-          >
-            🎓 My Learning
-          </div>
-          <div
-            className={`k-nav-item ${activeNav === 'catalog' ? 'active' : ''}`}
-            onClick={() => setActiveNav('catalog')}
-          >
-            📚 Course Catalog
-          </div>
-          <div
-            className={`k-nav-item ${activeNav === 'certs' ? 'active' : ''}`}
-            onClick={() => setActiveNav('certs')}
-          >
-            🏆 Certifications
-          </div>
+          <div className={`k-nav-item ${activeNav === 'learning' ? 'active' : ''}`} onClick={() => setActiveNav('learning')}>🎓 My Learning</div>
+          <div className={`k-nav-item ${activeNav === 'catalog' ? 'active' : ''}`} onClick={() => setActiveNav('catalog')}>📚 Course Catalog</div>
+          <div className={`k-nav-item ${activeNav === 'certs' ? 'active' : ''}`} onClick={() => setActiveNav('certs')}>🏆 Certifications</div>
         </div>
         <div className="k-sidebar-section" style={{ marginTop: '8px' }}>
           <div className="k-sidebar-label">Performance</div>
-          <div
-            className={`k-nav-item ${activeNav === 'scorecard' ? 'active' : ''}`}
-            onClick={() => setActiveNav('scorecard')}
-          >
-            📊 My Scorecard
-          </div>
-          <div
-            className={`k-nav-item ${activeNav === 'ai' ? 'active' : ''}`}
-            onClick={() => setActiveNav('ai')}
-          >
-            🤖 AI Coaching
-          </div>
+          <div className={`k-nav-item ${activeNav === 'scorecard' ? 'active' : ''}`} onClick={() => setActiveNav('scorecard')}>📊 My Scorecard</div>
+          <div className={`k-nav-item ${activeNav === 'ai' ? 'active' : ''}`} onClick={() => setActiveNav('ai')}>🤖 AI Coaching</div>
         </div>
-        {profile?.role === 'hr_admin' || profile?.role === 'executive' ? (
+        {(profile?.role === 'hr_admin' || profile?.role === 'executive') && (
           <div className="k-sidebar-section" style={{ marginTop: '8px' }}>
             <div className="k-sidebar-label">Management</div>
-            <div
-              className={`k-nav-item ${activeNav === 'org' ? 'active' : ''}`}
-              onClick={() => setActiveNav('org')}
-            >
-              🏢 Organisation
-            </div>
-            <div
-              className={`k-nav-item ${activeNav === 'exec' ? 'active' : ''}`}
-              onClick={() => setActiveNav('exec')}
-            >
-              📈 Exec Dashboard
-            </div>
+            <div className={`k-nav-item ${activeNav === 'org' ? 'active' : ''}`} onClick={() => setActiveNav('org')}>🏢 Organisation</div>
+            <div className={`k-nav-item ${activeNav === 'exec' ? 'active' : ''}`} onClick={() => setActiveNav('exec')}>📈 Exec Dashboard</div>
           </div>
-        ) : null}
-        <div style={{ marginTop: 'auto', borderTop: '1px solid var(--k-border-default)', paddingTop: '8px' }}>
-          <ThemeSwitcher />
+        )}
+        <div style={{ marginTop: 'auto', borderTop: '1px solid var(--k-border-default)', padding: '12px 0' }}>
+          <div
+            className={`k-nav-item ${activeNav === 'settings' ? 'active' : ''}`}
+            onClick={() => setActiveNav('settings')}
+            style={{ margin: '0 var(--k-space-3)' }}
+          >
+            ⚙️ Account Settings
+          </div>
         </div>
       </div>
 
       {/* Main content */}
       <div className="k-main">
-        <div className="k-page">
+        {activeNav === 'settings' ? (
+          <AccountSettings onBack={() => setActiveNav('learning')} />
+        ) : (
+          <div className="k-page">
 
-          {/* API connection error */}
-          {apiError && (
-            <div style={{
-              background: 'var(--k-danger-bg)',
-              border: '1px solid var(--k-danger-border)',
-              borderRadius: 'var(--k-radius-md)',
-              padding: '12px 16px',
-              marginBottom: '16px',
-              fontSize: '13px',
-              color: 'var(--k-danger-text)',
-            }}>
-              ⚠ API connection issue: {apiError}. Make sure the Kinalys API server is running on port 3000.
-            </div>
-          )}
+            {apiError && (
+              <div style={{ background: 'var(--k-danger-bg)', border: '1px solid var(--k-danger-border)', borderRadius: 'var(--k-radius-md)', padding: '12px 16px', marginBottom: '16px', fontSize: '13px', color: 'var(--k-danger-text)' }}>
+                ⚠ API connection issue: {apiError}. Make sure the Kinalys API server is running on port 3000.
+              </div>
+            )}
 
-          {/* Page header */}
-          <div style={{ marginBottom: '24px' }}>
-            <div className="k-page-title">
-              Welcome back, {profile?.fullName || user?.name || 'there'} 👋
-            </div>
-            <div className="k-page-sub">
-              {profile?.role === 'hr_admin' ? 'HR Admin' : 'Team Member'} ·{' '}
-              {profile?.tenant?.name || 'Your workspace'} ·{' '}
-              {profile?.designation || 'Kinalys Platform'}
-            </div>
-          </div>
-
-          {/* Stat cards */}
-          <div className="k-stat-grid k-stat-grid-4" style={{ marginBottom: '24px' }}>
-            <div className="k-stat-card accent">
-              <div className="k-stat-label">Overall Score</div>
-              <div className="k-stat-value">74.2</div>
-              <div className="k-stat-trend up">↑ +1.8 vs last period</div>
-            </div>
-            <div className="k-stat-card green">
-              <div className="k-stat-label">Learning Hours</div>
-              <div className="k-stat-value">20</div>
-              <div className="k-stat-sub" style={{ fontSize: '11px', color: 'var(--k-text-muted)', marginTop: '4px' }}>
-                Target: {profile?.learningHoursTarget || 40} hrs/year
+            <div style={{ marginBottom: '24px' }}>
+              <div className="k-page-title">Welcome back, {profile?.fullName || user?.name || 'there'} 👋</div>
+              <div className="k-page-sub">
+                {profile?.role === 'hr_admin' ? 'HR Admin' : 'Team Member'} · {profile?.tenant?.name || 'Your workspace'} · {profile?.designation || 'Kinalys Platform'}
               </div>
             </div>
-            <div className="k-stat-card purple">
-              <div className="k-stat-label">AI Recommendations</div>
-              <div className="k-stat-value">3</div>
-              <div className="k-stat-trend">Pending review</div>
-            </div>
-            <div className="k-stat-card amber">
-              <div className="k-stat-label">Certifications</div>
-              <div className="k-stat-value">4</div>
-              <div className="k-stat-trend down">1 expiring soon</div>
-            </div>
-          </div>
 
-          {/* LMS Banner */}
-          <div className="k-lms-banner" style={{ marginBottom: '24px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
-              <div style={{ fontSize: '14px', fontWeight: 700 }}>📚 Learning Hours — Q2 2025</div>
-              <span className="k-pill lms">+3.5% PMS BONUS ACTIVE</span>
-            </div>
-            <div className="k-lms-progress">
-              <div className="k-lms-progress-fill" style={{ width: '100%' }}/>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', opacity: 0.8 }}>
-              <span>20 hrs achieved</span>
-              <span>Target: 10 hrs (Q2 pro-rated)</span>
-              <span>Annual: {profile?.learningHoursTarget || 40} hrs</span>
-            </div>
-          </div>
-
-          {/* Two column layout */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
-
-            {/* Profile card — real data */}
-            <div className="k-card">
-              <div className="k-card-header">
-                <div className="k-card-title">👤 My Profile</div>
-                <span className="k-pill green">Active</span>
+            <div className="k-stat-grid k-stat-grid-4" style={{ marginBottom: '24px' }}>
+              <div className="k-stat-card accent">
+                <div className="k-stat-label">Overall Score</div>
+                <div className="k-stat-value">74.2</div>
+                <div className="k-stat-trend up">↑ +1.8 vs last period</div>
               </div>
-              {profile ? (
-                <table style={{ width: '100%', fontSize: '13px', borderCollapse: 'collapse' }}>
-                  <tbody>
-                    {[
-                      ['Name', profile.fullName],
-                      ['Email', profile.email],
-                      ['Role', profile.role.replace('_', ' ')],
-                      ['Department', profile.department || 'Not assigned'],
-                      ['Designation', profile.designation || 'Not assigned'],
-                      ['Tenant', profile.tenant?.name],
-                      ['Plan', profile.tenant?.plan],
-                    ].map(([label, value]) => (
-                      <tr key={label} style={{ borderBottom: '1px solid var(--k-border-default)' }}>
-                        <td style={{ padding: '8px 0', color: 'var(--k-text-muted)', width: '40%' }}>{label}</td>
-                        <td style={{ padding: '8px 0', fontWeight: 500, color: 'var(--k-text-primary)', textTransform: 'capitalize' }}>{value}</td>
-                      </tr>
+              <div className="k-stat-card green">
+                <div className="k-stat-label">Learning Hours</div>
+                <div className="k-stat-value">20</div>
+                <div style={{ fontSize: '11px', color: 'var(--k-text-muted)', marginTop: '4px' }}>
+                  Target: {profile?.learningHoursTarget || 40} hrs/year
+                </div>
+              </div>
+              <div className="k-stat-card purple">
+                <div className="k-stat-label">AI Recommendations</div>
+                <div className="k-stat-value">3</div>
+                <div className="k-stat-trend">Pending review</div>
+              </div>
+              <div className="k-stat-card amber">
+                <div className="k-stat-label">Certifications</div>
+                <div className="k-stat-value">4</div>
+                <div className="k-stat-trend down">1 expiring soon</div>
+              </div>
+            </div>
+
+            <div className="k-lms-banner" style={{ marginBottom: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                <div style={{ fontSize: '14px', fontWeight: 700 }}>📚 Learning Hours — Q2 2026</div>
+                <span className="k-pill lms">+3.5% PMS BONUS ACTIVE</span>
+              </div>
+              <div className="k-lms-progress">
+                <div className="k-lms-progress-fill" style={{ width: '100%' }}/>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', opacity: 0.8 }}>
+                <span>20 hrs achieved</span>
+                <span>Target: 10 hrs (Q2 pro-rated)</span>
+                <span>Annual: {profile?.learningHoursTarget || 40} hrs</span>
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+              <div className="k-card">
+                <div className="k-card-header">
+                  <div className="k-card-title">👤 My Profile</div>
+                  <span className="k-pill green">Active</span>
+                </div>
+                {profile ? (
+                  <table style={{ width: '100%', fontSize: '13px', borderCollapse: 'collapse' }}>
+                    <tbody>
+                      {[
+                        ['Name', profile.fullName],
+                        ['Email', profile.email],
+                        ['Role', profile.role.replace('_', ' ')],
+                        ['Department', profile.department || 'Not assigned'],
+                        ['Designation', profile.designation || 'Not assigned'],
+                        ['Tenant', profile.tenant?.name],
+                        ['Plan', profile.tenant?.plan],
+                      ].map(([label, value]) => (
+                        <tr key={label} style={{ borderBottom: '1px solid var(--k-border-default)' }}>
+                          <td style={{ padding: '8px 0', color: 'var(--k-text-muted)', width: '40%' }}>{label}</td>
+                          <td style={{ padding: '8px 0', fontWeight: 500, color: 'var(--k-text-primary)', textTransform: 'capitalize' }}>{value}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                ) : (
+                  <p style={{ fontSize: '13px', color: 'var(--k-text-muted)' }}>Profile not found in database.</p>
+                )}
+              </div>
+
+              <div className="k-card">
+                <div className="k-card-header">
+                  <div className="k-card-title">🏢 Departments</div>
+                  <span style={{ fontSize: '12px', color: 'var(--k-text-muted)' }}>{departments.length} total</span>
+                </div>
+                {departments.length > 0 ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {departments.map((dept: any) => (
+                      <div key={dept.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: 'var(--k-bg-page)', borderRadius: 'var(--k-radius-md)', fontSize: '13px' }}>
+                        <span style={{ fontWeight: 500, color: 'var(--k-text-primary)' }}>{dept.name}</span>
+                        <span style={{ fontSize: '11px', color: 'var(--k-text-muted)' }}>{dept.user_count} members</span>
+                      </div>
                     ))}
-                  </tbody>
-                </table>
-              ) : (
-                <p style={{ fontSize: '13px', color: 'var(--k-text-muted)' }}>
-                  Profile not found in database. Make sure your user is registered.
-                </p>
-              )}
+                  </div>
+                ) : (
+                  <p style={{ fontSize: '13px', color: 'var(--k-text-muted)' }}>
+                    {apiError ? 'Could not load departments — API offline' : 'No departments found'}
+                  </p>
+                )}
+              </div>
             </div>
 
-            {/* Departments card — real data */}
-            <div className="k-card">
-              <div className="k-card-header">
-                <div className="k-card-title">🏢 Departments</div>
-                <span style={{ fontSize: '12px', color: 'var(--k-text-muted)' }}>{departments.length} total</span>
-              </div>
-              {departments.length > 0 ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  {departments.map((dept: any) => (
-                    <div key={dept.id} style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      padding: '8px 12px',
-                      background: 'var(--k-bg-page)',
-                      borderRadius: 'var(--k-radius-md)',
-                      fontSize: '13px',
-                    }}>
-                      <span style={{ fontWeight: 500, color: 'var(--k-text-primary)' }}>{dept.name}</span>
-                      <span style={{ fontSize: '11px', color: 'var(--k-text-muted)' }}>{dept.user_count} members</span>
-                    </div>
+            {status && (
+              <div className="k-card">
+                <div className="k-card-header">
+                  <div className="k-card-title">⚡ System Status</div>
+                  <span className="k-pill green">All systems operational</span>
+                </div>
+                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                  <span className="k-pill green">● API: {status.api}</span>
+                  <span className="k-pill green">● Database: {status.database}</span>
+                  <span className="k-pill green">● Auth0: {status.auth0}</span>
+                  <span className="k-pill ai">● {status.sprint}</span>
+                </div>
+                <div style={{ marginTop: '12px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  {status.tables?.map((table: string) => (
+                    <span key={table} style={{ fontSize: '11px', fontFamily: 'var(--k-font-mono)', background: 'var(--k-bg-page)', padding: '2px 8px', borderRadius: 'var(--k-radius-sm)', color: 'var(--k-text-muted)', border: '1px solid var(--k-border-default)' }}>
+                      {table}
+                    </span>
                   ))}
                 </div>
-              ) : (
-                <p style={{ fontSize: '13px', color: 'var(--k-text-muted)' }}>
-                  {apiError ? 'Could not load departments — API offline' : 'No departments found'}
-                </p>
-              )}
-            </div>
-          </div>
+              </div>
+            )}
 
-          {/* API Status card */}
-          {status && (
-            <div className="k-card">
-              <div className="k-card-header">
-                <div className="k-card-title">⚡ System Status</div>
-                <span className="k-pill green">All systems operational</span>
-              </div>
-              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                <span className="k-pill green">● API: {status.api}</span>
-                <span className="k-pill green">● Database: {status.database}</span>
-                <span className="k-pill green">● Auth0: {status.auth0}</span>
-                <span className="k-pill ai">● {status.sprint}</span>
-              </div>
-              <div style={{ marginTop: '12px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                {status.tables?.map((table: string) => (
-                  <span key={table} style={{
-                    fontSize: '11px',
-                    fontFamily: 'var(--k-font-mono)',
-                    background: 'var(--k-bg-page)',
-                    padding: '2px 8px',
-                    borderRadius: 'var(--k-radius-sm)',
-                    color: 'var(--k-text-muted)',
-                    border: '1px solid var(--k-border-default)',
-                  }}>
-                    {table}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
+
     </div>
   )
 }
 
-// ── Root App ──────────────────────────────────────────────────
 export default function App() {
   const { isAuthenticated, isLoading } = useAuth0()
-
   if (isLoading) {
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: 'var(--k-bg-topbar)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}>
-        <div style={{
-          fontFamily: 'var(--k-font-display)',
-          fontSize: '18px', fontWeight: '800',
-          color: 'var(--k-brand-lighter)',
-          letterSpacing: '4px',
-        }}>
+      <div style={{ minHeight: '100vh', background: 'var(--k-bg-topbar)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ fontFamily: 'var(--k-font-display)', fontSize: '18px', fontWeight: '800', color: 'var(--k-brand-lighter)', letterSpacing: '4px' }}>
           KINALYS
         </div>
       </div>
     )
   }
-
   return isAuthenticated ? <Dashboard /> : <LoginPage />
 }

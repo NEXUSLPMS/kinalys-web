@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { setAuthToken, getMyProfile, getStatus, getDepartments } from './api/client'
 import Organisation from './pages/Organisation'
 import AccountSettings from './pages/AccountSettings'
+import ImportUsers from './pages/ImportUsers'
 
 interface UserProfile {
   id: string
@@ -153,6 +154,7 @@ function Dashboard() {
           <div className="k-sidebar-section" style={{ marginTop: '8px' }}>
             <div className="k-sidebar-label">Management</div>
             <div className={`k-nav-item ${activeNav === 'org' ? 'active' : ''}`} onClick={() => setActiveNav('org')}>🏢 Organisation</div>
+            <div className={`k-nav-item ${activeNav === 'import' ? 'active' : ''}`} onClick={() => setActiveNav('import')}>📥 Import Users</div>
             <div className={`k-nav-item ${activeNav === 'exec' ? 'active' : ''}`} onClick={() => setActiveNav('exec')}>📈 Exec Dashboard</div>
           </div>
         )}
@@ -171,8 +173,10 @@ function Dashboard() {
       <div className="k-main">
       {activeNav === 'settings' ? (
           <AccountSettings onBack={() => setActiveNav('learning')} />
-        ) : activeNav === 'org' ? (
+       ) : activeNav === 'org' ? (
           <Organisation />
+        ) : activeNav === 'import' ? (
+          <ImportUsers />
         ) : (
           <div className="k-page">
 

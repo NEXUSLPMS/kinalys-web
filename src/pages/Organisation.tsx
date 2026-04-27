@@ -5,6 +5,8 @@ interface TenantSettings {
   tenant_name: string
   plan: string
   module_mode: 'lms_only' | 'pms_only' | 'unified'
+  pending_module_mode: 'lms_only' | 'pms_only' | 'unified' | null
+  module_change_date: string | null
   default_methodology: 'copc' | 'six_sigma' | 'okr' | 'balanced_scorecard' | 'custom'
   lms_enabled: boolean
   pms_enabled: boolean
@@ -68,6 +70,7 @@ export default function Organisation() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [savedMessage, setSavedMessage] = useState('Saved')
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<'modules' | 'methodology' | 'hris' | 'features'>('modules')
 
@@ -91,8 +94,9 @@ export default function Organisation() {
     try {
       const data = await updateTenantSettings(updates)
       setSettings(data.settings)
+      setSavedMessage(data.message || 'Saved')
       setSaved(true)
-      setTimeout(() => setSaved(false), 2000)
+      setTimeout(() => setSaved(false), 4000)
     } catch (err: any) {
       setError(err.message)
     } finally {
@@ -163,6 +167,48 @@ export default function Organisation() {
         {/* ── MODULES TAB ─────────────────────────────────────── */}
         {activeTab === 'modules' && (
           <div>
+
+            {/* Pending change banner */}
+            {settings?.pending_module_mode && settings?.module_change_date && (
+              <div style={{
+                background: 'var(--k-warning-bg)',
+                border: '1px solid var(--k-warning-border)',
+                borderRadius: 'var(--k-radius-md)',
+                padding: '14px 18px',
+                marginBottom: '20px',
+                fontSize: '13px',
+                color: 'var(--k-warning-text)',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}>
+                <span>
+                  ⏳ <strong>Pending change:</strong> Switching to{' '}
+                  <strong>{settings.pending_module_mode.replace('_', ' ')}</strong> on{' '}
+                  <strong>
+                    {new Date(settings.module_change_date).toLocaleDateString('en-US', {
+                      day: 'numeric', month: 'long', year: 'numeric'
+                    })}
+                  </strong>
+                </span>
+                <button
+                  onClick={() => save({ pending_module_mode: null, module_change_date: null } as any)}
+                  style={{
+                    background: 'none',
+                    border: '1px solid var(--k-warning-border)',
+                    borderRadius: 'var(--k-radius-md)',
+                    padding: '4px 12px',
+                    fontSize: '12px',
+                    color: 'var(--k-warning-text)',
+                    cursor: 'pointer',
+                    fontFamily: 'var(--k-font-sans)',
+                  }}
+                >
+                  Cancel change
+                </button>
+              </div>
+            )}
+
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '16px', marginBottom: '24px' }}>
               {MODULE_OPTIONS.map(mod => (
                 <div
@@ -183,8 +229,7 @@ export default function Organisation() {
                       position: 'absolute', top: '-12px', left: '50%', transform: 'translateX(-50%)',
                       background: 'var(--k-brand-primary)', color: 'white',
                       fontSize: '10px', fontWeight: 700, padding: '3px 14px',
-                      borderRadius: 'var(--k-radius-pill)', whiteSpace: 'nowrap',
-                      letterSpacing: '0.5px',
+                      borderRadius: 'var(--k-radius-pill)', whiteSpace: 'nowrap', letterSpacing: '0.5px',
                     }}>
                       MOST POPULAR
                     </div>
@@ -212,11 +257,16 @@ export default function Organisation() {
                       <span>●</span> Currently active
                     </div>
                   )}
+                  {settings?.pending_module_mode === mod.id && (
+                    <div style={{ marginTop: '8px', fontSize: '12px', fontWeight: 700, color: 'var(--k-warning-text)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span>⏳</span> Activates {new Date(settings.module_change_date!).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
             <div style={{ fontSize: '12px', color: 'var(--k-text-muted)', textAlign: 'center' }}>
-              Click a module to switch instantly · Changes take effect immediately for all users
+              Upgrades take effect immediately · Downgrades activate on the 1st of the following month
             </div>
           </div>
         )}
@@ -297,7 +347,7 @@ export default function Organisation() {
                 </div>
               ))}
             </div>
-            {settings?.hris_provider && (
+            {settings?.hris_provider ? (
               <div style={{
                 padding: '20px', borderRadius: 'var(--k-radius-lg)',
                 border: '1px solid var(--k-border-default)',
@@ -307,29 +357,24 @@ export default function Organisation() {
                   {HRIS_OPTIONS.find(h => h.id === settings.hris_provider)?.name} — Manual Sync
                 </div>
                 <div style={{ fontSize: '13px', color: 'var(--k-text-muted)', marginBottom: '16px', lineHeight: 1.6 }}>
-                  Phase 1 — Manual trigger sync. Click the button below to pull the latest employee list from {HRIS_OPTIONS.find(h => h.id === settings.hris_provider)?.name}. Scheduled nightly sync coming in Sprint 6.
+                  Phase 1 — Manual trigger sync. Click Sync Now to pull the latest employee list. Scheduled nightly sync coming in Sprint 6.
                 </div>
                 <div style={{ display: 'flex', gap: '12px' }}>
-                  <button className="k-btn k-btn-primary" style={{ fontSize: '13px' }}>
-                    🔄 Sync Now
-                  </button>
-                  <button className="k-btn k-btn-secondary" style={{ fontSize: '13px' }}>
-                    ⚙️ Configure Connection
-                  </button>
+                  <button className="k-btn k-btn-primary" style={{ fontSize: '13px' }}>🔄 Sync Now</button>
+                  <button className="k-btn k-btn-secondary" style={{ fontSize: '13px' }}>⚙️ Configure Connection</button>
                 </div>
                 <div style={{ marginTop: '12px', fontSize: '12px', color: 'var(--k-text-muted)' }}>
-                  Last synced: Never · Next scheduled sync: Manual only (Sprint 6 adds nightly automation)
+                  Last synced: Never · Scheduled sync: Sprint 6
                 </div>
               </div>
-            )}
-            {!settings?.hris_provider && (
+            ) : (
               <div style={{
                 padding: '20px', borderRadius: 'var(--k-radius-md)',
                 background: 'var(--k-bg-page)', border: '1px solid var(--k-border-default)',
                 fontSize: '13px', color: 'var(--k-text-muted)', textAlign: 'center', lineHeight: 1.7,
               }}>
                 No HRIS connected yet. Select your HRIS above to enable sync.<br/>
-                No HRIS? Use <strong style={{ color: 'var(--k-text-primary)' }}>Excel Import</strong> in the Organisation menu to bulk-load your team.
+                No HRIS? Use <strong style={{ color: 'var(--k-text-primary)' }}>Excel Import</strong> to bulk-load your team.
               </div>
             )}
           </div>
@@ -359,7 +404,7 @@ export default function Organisation() {
                   </div>
                 </div>
                 <div
-                  onClick={() => save({ [feature.key]: !settings?.[feature.key as keyof TenantSettings] })}
+                  onClick={() => save({ [feature.key]: !settings?.[feature.key as keyof TenantSettings] } as any)}
                   style={{
                     width: '48px', height: '26px', borderRadius: '13px',
                     background: settings?.[feature.key as keyof TenantSettings] ? 'var(--k-brand-primary)' : 'var(--k-border-default)',
@@ -380,7 +425,7 @@ export default function Organisation() {
           </div>
         )}
 
-        {/* Save indicator */}
+        {/* Save toast */}
         {(saving || saved) && (
           <div style={{
             position: 'fixed', bottom: '32px', right: '32px',
@@ -390,8 +435,9 @@ export default function Organisation() {
             fontSize: '13px', fontWeight: 600,
             boxShadow: 'var(--k-shadow-lg)',
             transition: 'all var(--k-transition)',
+            maxWidth: '320px',
           }}>
-            {saving ? '⏳ Saving...' : '✓ Saved'}
+            {saving ? '⏳ Saving...' : `✓ ${savedMessage}`}
           </div>
         )}
 

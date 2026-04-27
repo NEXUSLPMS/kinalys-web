@@ -1,6 +1,7 @@
 import { useAuth0 } from '@auth0/auth0-react'
 import { useEffect, useState } from 'react'
 import { setAuthToken, getMyProfile, getStatus, getDepartments } from './api/client'
+import Organisation from './pages/Organisation'
 import AccountSettings from './pages/AccountSettings'
 
 interface UserProfile {
@@ -168,8 +169,10 @@ function Dashboard() {
 
       {/* Main content */}
       <div className="k-main">
-        {activeNav === 'settings' ? (
+      {activeNav === 'settings' ? (
           <AccountSettings onBack={() => setActiveNav('learning')} />
+        ) : activeNav === 'org' ? (
+          <Organisation />
         ) : (
           <div className="k-page">
 

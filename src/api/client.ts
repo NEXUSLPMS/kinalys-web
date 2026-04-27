@@ -45,6 +45,16 @@ export async function getDesignations() {
   return response.data
 }
 
+export async function getTenantSettings() {
+  const response = await apiClient.get('/tenant/settings')
+  return response.data
+}
+
+export async function updateTenantSettings(settings: Record<string, any>) {
+  const response = await apiClient.put('/tenant/settings', settings)
+  return response.data
+}
+
 export async function getStatus() {
   const response = await apiClient.get('/status')
   return response.data

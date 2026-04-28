@@ -67,17 +67,17 @@ export const THEMES: Theme[] = [
   {
     id: 'cyberpunk',
     name: 'Cyberpunk',
-    description: 'Neon magenta and cyan on near-black — electrifying',
+    description: 'Near-black · Electric magenta · Cyan',
     color: '#FF00FF',
-    available: false,
+    available: true,        // ← change from false
     tier: 'sprint4',
   },
   {
     id: 'nfs',
     name: 'Need For Speed',
-    description: 'Jet black and vivid orange — pure performance',
+    description: 'Jet black · Vivid orange · Pure white',
     color: '#FF6B00',
-    available: false,
+    available: true,        // ← change from false
     tier: 'sprint4',
   },
   {
@@ -85,9 +85,10 @@ export const THEMES: Theme[] = [
     name: 'The Matrix',
     description: 'Terminal green on black — you see the code',
     color: '#00FF41',
-    available: false,
+    available: true,        // ← change from false
     tier: 'sprint4',
   },
+  
   {
     id: 'avengers',
     name: 'Avengers',

@@ -273,51 +273,79 @@
   --k-theme-name:        'Coffee';
 }
 
-/* ── CYBERPUNK THEME (Sprint 4) ──────────────────────────────── */
+/* ── CYBERPUNK THEME ─────────────────────────────────────────── */
 [data-theme="cyberpunk"] {
   --k-brand-primary:     #FF00FF;
   --k-brand-dark:        #CC00CC;
+  --k-brand-darker:      #880088;
   --k-brand-light:       #00FFFF;
-  --k-brand-faint:       #0A0020;
+  --k-brand-lighter:     #88FFFF;
+  --k-brand-faint:       #1A0030;
 
   --k-bg-page:           #060014;
   --k-bg-surface:        #0A0020;
   --k-bg-elevated:       #0F0030;
-  --k-bg-sidebar:        #0A0020;
+  --k-bg-sidebar:        #080018;
   --k-bg-sidebar-active: #FF00FF;
-  --k-bg-topbar:         #FF00FF;
+  --k-bg-topbar:         #0A0020;
   --k-bg-input:          #0A0020;
   --k-bg-hover:          #0F0030;
 
   --k-text-primary:      #00FFFF;
   --k-text-secondary:    #FF00FF;
-  --k-text-muted:        #8800AA;
+  --k-text-muted:        #884488;
   --k-text-inverse:      #060014;
   --k-text-brand:        #FF00FF;
-  --k-text-topbar:       #060014;
+  --k-text-topbar:       #00FFFF;
 
   --k-border-default:    #330055;
   --k-border-strong:     #FF00FF;
   --k-border-focus:      #00FFFF;
-  --k-border-input:      #330055;
+  --k-border-input:      #440066;
+
+  --k-success-bg:        #001A00;
+  --k-success-border:    #00FF41;
+  --k-success-text:      #00FF41;
+  --k-success-solid:     #00FF41;
+
+  --k-warning-bg:        #1A0A00;
+  --k-warning-border:    #FF8800;
+  --k-warning-text:      #FF8800;
+  --k-warning-solid:     #FF8800;
+
+  --k-danger-bg:         #1A0000;
+  --k-danger-border:     #FF0044;
+  --k-danger-text:       #FF0044;
+  --k-danger-solid:      #FF0044;
+
+  --k-ai-bg:             #1A0030;
+  --k-ai-border:         #FF00FF;
+  --k-ai-text:           #FF00FF;
+  --k-ai-solid:          #FF00FF;
+
+  --k-shadow-sm:         0 1px 8px rgba(255,0,255,0.15);
+  --k-shadow-md:         0 4px 16px rgba(255,0,255,0.20);
+  --k-shadow-focus:      0 0 0 3px rgba(0,255,255,0.35);
 
   --k-font-mono:         'DM Mono', 'Courier New', monospace;
   --k-theme-name:        'Cyberpunk';
 }
 
-/* ── NEED FOR SPEED THEME (Sprint 4) ─────────────────────────── */
+/* ── NEED FOR SPEED THEME ────────────────────────────────────── */
 [data-theme="nfs"] {
   --k-brand-primary:     #FF6B00;
   --k-brand-dark:        #CC4400;
+  --k-brand-darker:      #882200;
   --k-brand-light:       #FF9944;
+  --k-brand-lighter:     #FFCC99;
   --k-brand-faint:       #1A0A00;
 
   --k-bg-page:           #0A0A0A;
   --k-bg-surface:        #111111;
   --k-bg-elevated:       #1A1A1A;
-  --k-bg-sidebar:        #111111;
+  --k-bg-sidebar:        #0D0D0D;
   --k-bg-sidebar-active: #FF6B00;
-  --k-bg-topbar:         #0A0A0A;
+  --k-bg-topbar:         #050505;
   --k-bg-input:          #111111;
   --k-bg-hover:          #1A1A1A;
 
@@ -333,20 +361,46 @@
   --k-border-focus:      #FF6B00;
   --k-border-input:      #333333;
 
+  --k-success-bg:        #0A1A00;
+  --k-success-border:    #44FF00;
+  --k-success-text:      #44FF00;
+  --k-success-solid:     #44FF00;
+
+  --k-warning-bg:        #1A1000;
+  --k-warning-border:    #FFCC00;
+  --k-warning-text:      #FFCC00;
+  --k-warning-solid:     #FFCC00;
+
+  --k-danger-bg:         #1A0000;
+  --k-danger-border:     #FF2200;
+  --k-danger-text:       #FF2200;
+  --k-danger-solid:      #FF2200;
+
+  --k-ai-bg:             #1A0A00;
+  --k-ai-border:         #FF6B00;
+  --k-ai-text:           #FF6B00;
+  --k-ai-solid:          #FF6B00;
+
+  --k-shadow-sm:         0 1px 8px rgba(255,107,0,0.15);
+  --k-shadow-md:         0 4px 16px rgba(255,107,0,0.20);
+  --k-shadow-focus:      0 0 0 3px rgba(255,107,0,0.35);
+
   --k-theme-name:        'Need For Speed';
 }
 
-/* ── THE MATRIX THEME (Sprint 4) ─────────────────────────────── */
+/* ── THE MATRIX THEME ────────────────────────────────────────── */
 [data-theme="matrix"] {
   --k-brand-primary:     #00FF41;
   --k-brand-dark:        #00CC33;
+  --k-brand-darker:      #008822;
   --k-brand-light:       #00AA2A;
+  --k-brand-lighter:     #88FF99;
   --k-brand-faint:       #001100;
 
   --k-bg-page:           #000000;
   --k-bg-surface:        #001100;
   --k-bg-elevated:       #002200;
-  --k-bg-sidebar:        #000000;
+  --k-bg-sidebar:        #000800;
   --k-bg-sidebar-active: #00FF41;
   --k-bg-topbar:         #000000;
   --k-bg-input:          #001100;
@@ -362,7 +416,31 @@
   --k-border-default:    #003300;
   --k-border-strong:     #00FF41;
   --k-border-focus:      #00FF41;
-  --k-border-input:      #003300;
+  --k-border-input:      #004400;
+
+  --k-success-bg:        #001A00;
+  --k-success-border:    #00FF41;
+  --k-success-text:      #00FF41;
+  --k-success-solid:     #00FF41;
+
+  --k-warning-bg:        #1A1A00;
+  --k-warning-border:    #AAFF00;
+  --k-warning-text:      #AAFF00;
+  --k-warning-solid:     #AAFF00;
+
+  --k-danger-bg:         #1A0000;
+  --k-danger-border:     #FF0000;
+  --k-danger-text:       #FF0000;
+  --k-danger-solid:      #FF0000;
+
+  --k-ai-bg:             #001A00;
+  --k-ai-border:         #00FF41;
+  --k-ai-text:           #00FF41;
+  --k-ai-solid:          #00FF41;
+
+  --k-shadow-sm:         0 1px 8px rgba(0,255,65,0.10);
+  --k-shadow-md:         0 4px 16px rgba(0,255,65,0.15);
+  --k-shadow-focus:      0 0 0 3px rgba(0,255,65,0.30);
 
   --k-font-mono:         'DM Mono', 'Courier New', monospace;
   --k-theme-name:        'The Matrix';

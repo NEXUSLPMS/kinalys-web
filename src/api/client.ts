@@ -59,3 +59,13 @@ export async function getStatus() {
   const response = await apiClient.get('/status')
   return response.data
 }
+
+export async function triggerHrisSync() {
+  const response = await apiClient.post('/hris/sync')
+  return response.data
+}
+
+export async function getHrisSyncHistory() {
+  const response = await apiClient.get('/hris/sync/history')
+  return response.data
+}

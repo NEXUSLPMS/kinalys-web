@@ -4,6 +4,7 @@ import { setAuthToken, getMyProfile, getStatus, getDepartments } from './api/cli
 import Organisation from './pages/Organisation'
 import AccountSettings from './pages/AccountSettings'
 import ImportUsers from './pages/ImportUsers'
+import BalancedScorecard from './pages/BalancedScorecard'
 
 interface UserProfile {
   id: string
@@ -155,6 +156,8 @@ function Dashboard() {
             <div className="k-sidebar-label">Management</div>
             <div className={`k-nav-item ${activeNav === 'org' ? 'active' : ''}`} onClick={() => setActiveNav('org')}>🏢 Organisation</div>
             <div className={`k-nav-item ${activeNav === 'import' ? 'active' : ''}`} onClick={() => setActiveNav('import')}>📥 Import Users</div>
+            <div className={`k-nav-item ${activeNav === 'import' ? 'active' : ''}`} onClick={() => setActiveNav('import')}>📥 Import Users</div>
+            <div className={`k-nav-item ${activeNav === 'bsc' ? 'active' : ''}`} onClick={() => setActiveNav('bsc')}>⚖️ Balanced Scorecard</div>
             <div className={`k-nav-item ${activeNav === 'exec' ? 'active' : ''}`} onClick={() => setActiveNav('exec')}>📈 Exec Dashboard</div>
           </div>
         )}
@@ -175,8 +178,10 @@ function Dashboard() {
           <AccountSettings onBack={() => setActiveNav('learning')} />
        ) : activeNav === 'org' ? (
           <Organisation />
-        ) : activeNav === 'import' ? (
+       ) : activeNav === 'import' ? (
           <ImportUsers />
+        ) : activeNav === 'bsc' ? (
+          <BalancedScorecard />
         ) : (
           <div className="k-page">
 

@@ -69,3 +69,32 @@ export async function getHrisSyncHistory() {
   const response = await apiClient.get('/hris/sync/history')
   return response.data
 }
+export async function getBscPerspectives() {
+  const response = await apiClient.get('/bsc/perspectives')
+  return response.data
+}
+
+export async function updateBscPerspective(id: string, data: Record<string, any>) {
+  const response = await apiClient.put(`/bsc/perspectives/${id}`, data)
+  return response.data
+}
+
+export async function getBscMetrics(perspectiveId: string) {
+  const response = await apiClient.get(`/bsc/perspectives/${perspectiveId}/metrics`)
+  return response.data
+}
+
+export async function createBscMetric(perspectiveId: string, data: Record<string, any>) {
+  const response = await apiClient.post(`/bsc/perspectives/${perspectiveId}/metrics`, data)
+  return response.data
+}
+
+export async function deleteBscMetric(metricId: string) {
+  const response = await apiClient.delete(`/bsc/metrics/${metricId}`)
+  return response.data
+}
+
+export async function getReviewCycles() {
+  const response = await apiClient.get('/review-cycles')
+  return response.data
+}

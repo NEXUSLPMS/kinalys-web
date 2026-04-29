@@ -230,3 +230,42 @@ export async function reviewKpi(id: string, action: string, reason?: string) {
   const response = await apiClient.put(`/kpi/assignments/${id}/review`, { action, reason })
   return response.data
 }
+export async function getKbCategories() {
+  const response = await apiClient.get('/kb/categories')
+  return response.data
+}
+
+export async function getKbArticles(categorySlug: string) {
+  const response = await apiClient.get(`/kb/categories/${categorySlug}/articles`)
+  return response.data
+}
+
+export async function getKbArticle(slug: string) {
+  const response = await apiClient.get(`/kb/articles/${slug}`)
+  return response.data
+}
+
+export async function markArticleHelpful(slug: string, helpful: boolean) {
+  const response = await apiClient.post(`/kb/articles/${slug}/helpful`, { helpful })
+  return response.data
+}
+
+export async function seedKbArticles() {
+  const response = await apiClient.post('/kb/seed')
+  return response.data
+}
+
+export async function getSupportTickets() {
+  const response = await apiClient.get('/support/tickets')
+  return response.data
+}
+
+export async function createSupportTicket(data: Record<string, any>) {
+  const response = await apiClient.post('/support/tickets', data)
+  return response.data
+}
+
+export async function updateSupportTicket(id: string, data: Record<string, any>) {
+  const response = await apiClient.put(`/support/tickets/${id}`, data)
+  return response.data
+}

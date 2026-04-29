@@ -164,3 +164,22 @@ export async function seedDemoScorecards() {
   const response = await apiClient.post('/talent/seed-demo')
   return response.data
 }
+export async function getManagedUsers(filters?: {
+  search?: string
+  department_id?: string
+  role?: string
+  employment_status?: string
+}) {
+  const params = new URLSearchParams()
+  if (filters?.search) params.append('search', filters.search)
+  if (filters?.department_id) params.append('department_id', filters.department_id)
+  if (filters?.role) params.append('role', filters.role)
+  if (filters?.employment_status) params.append('employment_status', filters.employment_status)
+  const response = await apiClient.get(`/users/manage?${params}`)
+  return response.data
+}
+
+export async function updateManagedUser(id: string, data: Record<string, any>) {
+  const response = await apiClient.put(`/users/${id}/manage`, data)
+  return response.data
+}

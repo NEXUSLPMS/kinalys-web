@@ -143,3 +143,24 @@ export async function getOkrSummary(year?: number, quarter?: number) {
   const response = await apiClient.get(`/okr/summary?${params}`)
   return response.data
 }
+export async function getTalentGrid(cycleId?: string) {
+  const params = cycleId ? `?cycle_id=${cycleId}` : ''
+  const response = await apiClient.get(`/talent/grid${params}`)
+  return response.data
+}
+
+export async function getTalentAssessments(cycleId?: string) {
+  const params = cycleId ? `?cycle_id=${cycleId}` : ''
+  const response = await apiClient.get(`/talent/assessments${params}`)
+  return response.data
+}
+
+export async function setTalentPotential(userId: string, data: Record<string, any>) {
+  const response = await apiClient.post(`/talent/assessments/${userId}`, data)
+  return response.data
+}
+
+export async function seedDemoScorecards() {
+  const response = await apiClient.post('/talent/seed-demo')
+  return response.data
+}

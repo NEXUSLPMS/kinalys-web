@@ -6,6 +6,7 @@ import AccountSettings from './pages/AccountSettings'
 import ImportUsers from './pages/ImportUsers'
 import BalancedScorecard from './pages/BalancedScorecard'
 import OKR from './pages/OKR'
+import TalentGrid from './pages/TalentGrid'
 
 interface UserProfile {
   id: string
@@ -159,6 +160,7 @@ function Dashboard() {
             <div className={`k-nav-item ${activeNav === 'import' ? 'active' : ''}`} onClick={() => setActiveNav('import')}>📥 Import Users</div>
             <div className={`k-nav-item ${activeNav === 'bsc' ? 'active' : ''}`} onClick={() => setActiveNav('bsc')}>⚖️ Balanced Scorecard</div>
             <div className={`k-nav-item ${activeNav === 'okr' ? 'active' : ''}`} onClick={() => setActiveNav('okr')}>🎯 OKR Framework</div>
+            <div className={`k-nav-item ${activeNav === 'talent' ? 'active' : ''}`} onClick={() => setActiveNav('talent')}>🎯 Talent Grid</div>
             <div className={`k-nav-item ${activeNav === 'exec' ? 'active' : ''}`} onClick={() => setActiveNav('exec')}>📈 Exec Dashboard</div>
           </div>
         )}
@@ -185,7 +187,10 @@ function Dashboard() {
           <BalancedScorecard />
         ) : activeNav === 'okr' ? (
           <OKR />
+        ) : activeNav === 'talent' ? (
+          <TalentGrid />
         ) : (
+          
           <div className="k-page">
 
             {apiError && (

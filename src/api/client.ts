@@ -269,3 +269,26 @@ export async function updateSupportTicket(id: string, data: Record<string, any>)
   const response = await apiClient.put(`/support/tickets/${id}`, data)
   return response.data
 }
+
+export async function getMyScorecard(cycleId?: string) {
+  const params = cycleId ? `?cycle_id=${cycleId}` : ''
+  const response = await apiClient.get(`/scorecard/me${params}`)
+  return response.data
+}
+
+export async function updateKpiActual(id: string, actualValue: number) {
+  const response = await apiClient.put(`/scorecard/kpi/${id}/actual`, { actual_value: actualValue })
+  return response.data
+}
+
+export async function getTeamScorecards(cycleId?: string) {
+  const params = cycleId ? `?cycle_id=${cycleId}` : ''
+  const response = await apiClient.get(`/scorecard/team${params}`)
+  return response.data
+}
+
+export async function getUserScorecard(userId: string, cycleId?: string) {
+  const params = cycleId ? `?cycle_id=${cycleId}` : ''
+  const response = await apiClient.get(`/scorecard/user/${userId}${params}`)
+  return response.data
+}

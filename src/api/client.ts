@@ -98,3 +98,48 @@ export async function getReviewCycles() {
   const response = await apiClient.get('/review-cycles')
   return response.data
 }
+export async function getOkrObjectives(year?: number, quarter?: number) {
+  const params = new URLSearchParams()
+  if (year) params.append('year', String(year))
+  if (quarter) params.append('quarter', String(quarter))
+  const response = await apiClient.get(`/okr/objectives?${params}`)
+  return response.data
+}
+
+export async function createOkrObjective(data: Record<string, any>) {
+  const response = await apiClient.post('/okr/objectives', data)
+  return response.data
+}
+
+export async function updateOkrObjective(id: string, data: Record<string, any>) {
+  const response = await apiClient.put(`/okr/objectives/${id}`, data)
+  return response.data
+}
+
+export async function deleteOkrObjective(id: string) {
+  const response = await apiClient.delete(`/okr/objectives/${id}`)
+  return response.data
+}
+
+export async function getKeyResults(objectiveId: string) {
+  const response = await apiClient.get(`/okr/objectives/${objectiveId}/key-results`)
+  return response.data
+}
+
+export async function createKeyResult(objectiveId: string, data: Record<string, any>) {
+  const response = await apiClient.post(`/okr/objectives/${objectiveId}/key-results`, data)
+  return response.data
+}
+
+export async function updateKeyResult(id: string, data: Record<string, any>) {
+  const response = await apiClient.put(`/okr/key-results/${id}`, data)
+  return response.data
+}
+
+export async function getOkrSummary(year?: number, quarter?: number) {
+  const params = new URLSearchParams()
+  if (year) params.append('year', String(year))
+  if (quarter) params.append('quarter', String(quarter))
+  const response = await apiClient.get(`/okr/summary?${params}`)
+  return response.data
+}

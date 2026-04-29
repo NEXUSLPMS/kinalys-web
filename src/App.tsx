@@ -12,6 +12,7 @@ import KpiTemplates from './pages/KpiTemplates'
 import KnowledgeBase from './pages/KnowledgeBase'
 import SupportTickets from './pages/SupportTickets'
 import Scorecard from './pages/Scorecard'
+import AICoaching from './pages/AICoaching'
 
 interface UserProfile {
   id: string
@@ -205,8 +206,10 @@ function Dashboard() {
           <ImportUsers />
         ) : activeNav === 'bsc' ? (
           <BalancedScorecard />
-          ) : activeNav === 'scorecard' ? (
+        ) : activeNav === 'scorecard' ? (
           <Scorecard />
+        ) : activeNav === 'ai' ? (
+          <AICoaching />
         ) : activeNav === 'okr' ? (
           <OKR />
         ) : activeNav === 'talent' ? (

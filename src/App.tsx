@@ -65,6 +65,12 @@ function Dashboard() {
   const [apiError, setApiError] = useState<string | null>(null)
   const [activeNav, setActiveNav] = useState('learning')
 
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({})
+
+  function toggleSection(section: string) {
+    setCollapsedSections(prev => ({ ...prev, [section]: !prev[section] }))
+  }
+
   useEffect(() => {
     async function loadData() {
       try {
@@ -110,40 +116,82 @@ function Dashboard() {
 
       {/* Sidebar */}
       <div className="k-sidebar">
+
+        {/* Learning */}
         <div className="k-sidebar-section">
-          <div className="k-sidebar-label">Learning</div>
-          <div className={`k-nav-item ${activeNav === 'learning' ? 'active' : ''}`} onClick={() => setActiveNav('learning')}>🎓 My Learning</div>
-          <div className={`k-nav-item ${activeNav === 'catalog' ? 'active' : ''}`} onClick={() => setActiveNav('catalog')}>📚 Course Catalog</div>
-          <div className={`k-nav-item ${activeNav === 'certs' ? 'active' : ''}`} onClick={() => setActiveNav('certs')}>🏆 Certifications</div>
+          <div
+            className="k-sidebar-label"
+            onClick={() => toggleSection('learning')}
+            style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', userSelect: 'none' }}
+          >
+            Learning <span style={{ fontSize: '10px' }}>{collapsedSections['learning'] ? '▶' : '▼'}</span>
+          </div>
+          {!collapsedSections['learning'] && <>
+            <div className={`k-nav-item ${activeNav === 'learning' ? 'active' : ''}`} onClick={() => setActiveNav('learning')}>🎓 My Learning</div>
+            <div className={`k-nav-item ${activeNav === 'catalog' ? 'active' : ''}`} onClick={() => setActiveNav('catalog')}>📚 Course Catalog</div>
+            <div className={`k-nav-item ${activeNav === 'certs' ? 'active' : ''}`} onClick={() => setActiveNav('certs')}>🏆 Certifications</div>
+          </>}
         </div>
-        <div className="k-sidebar-section" style={{ marginTop: '8px' }}>
-          <div className="k-sidebar-label">Performance</div>
-          <div className={`k-nav-item ${activeNav === 'scorecard' ? 'active' : ''}`} onClick={() => setActiveNav('scorecard')}>📊 My Scorecard</div>
-          <div className={`k-nav-item ${activeNav === 'ai' ? 'active' : ''}`} onClick={() => setActiveNav('ai')}>🤖 AI Coaching</div>
+
+        {/* Performance */}
+        <div className="k-sidebar-section" style={{ marginTop: '4px' }}>
+          <div
+            className="k-sidebar-label"
+            onClick={() => toggleSection('performance')}
+            style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', userSelect: 'none' }}
+          >
+            Performance <span style={{ fontSize: '10px' }}>{collapsedSections['performance'] ? '▶' : '▼'}</span>
+          </div>
+          {!collapsedSections['performance'] && <>
+            <div className={`k-nav-item ${activeNav === 'scorecard' ? 'active' : ''}`} onClick={() => setActiveNav('scorecard')}>📊 My Scorecard</div>
+            <div className={`k-nav-item ${activeNav === 'ai' ? 'active' : ''}`} onClick={() => setActiveNav('ai')}>🤖 AI Coaching</div>
+          </>}
         </div>
+
+        {/* Management */}
         {isAdmin && (
-          <div className="k-sidebar-section" style={{ marginTop: '8px' }}>
-            <div className="k-sidebar-label">Management</div>
-            <div className={`k-nav-item ${activeNav === 'org' ? 'active' : ''}`} onClick={() => setActiveNav('org')}>🏢 Organisation</div>
-            <div className={`k-nav-item ${activeNav === 'import' ? 'active' : ''}`} onClick={() => setActiveNav('import')}>📥 Import Users</div>
-            <div className={`k-nav-item ${activeNav === 'bsc' ? 'active' : ''}`} onClick={() => setActiveNav('bsc')}>⚖️ Balanced Scorecard</div>
-            <div className={`k-nav-item ${activeNav === 'okr' ? 'active' : ''}`} onClick={() => setActiveNav('okr')}>🎯 OKR Framework</div>
-            <div className={`k-nav-item ${activeNav === 'talent' ? 'active' : ''}`} onClick={() => setActiveNav('talent')}>🎯 Talent Grid</div>
-            <div className={`k-nav-item ${activeNav === 'users' ? 'active' : ''}`} onClick={() => setActiveNav('users')}>👥 User Management</div>
-            <div className={`k-nav-item ${activeNav === 'kpi' ? 'active' : ''}`} onClick={() => setActiveNav('kpi')}>📋 KPI Templates</div>
-            <div className={`k-nav-item ${activeNav === 'exec' ? 'active' : ''}`} onClick={() => setActiveNav('exec')}>📈 Exec Dashboard</div>
+          <div className="k-sidebar-section" style={{ marginTop: '4px' }}>
+            <div
+              className="k-sidebar-label"
+              onClick={() => toggleSection('management')}
+              style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', userSelect: 'none' }}
+            >
+              Management <span style={{ fontSize: '10px' }}>{collapsedSections['management'] ? '▶' : '▼'}</span>
+            </div>
+            {!collapsedSections['management'] && <>
+              <div className={`k-nav-item ${activeNav === 'org' ? 'active' : ''}`} onClick={() => setActiveNav('org')}>🏢 Organisation</div>
+              <div className={`k-nav-item ${activeNav === 'import' ? 'active' : ''}`} onClick={() => setActiveNav('import')}>📥 Import Users</div>
+              <div className={`k-nav-item ${activeNav === 'bsc' ? 'active' : ''}`} onClick={() => setActiveNav('bsc')}>⚖️ Balanced Scorecard</div>
+              <div className={`k-nav-item ${activeNav === 'okr' ? 'active' : ''}`} onClick={() => setActiveNav('okr')}>🎯 OKR Framework</div>
+              <div className={`k-nav-item ${activeNav === 'talent' ? 'active' : ''}`} onClick={() => setActiveNav('talent')}>🎯 Talent Grid</div>
+              <div className={`k-nav-item ${activeNav === 'users' ? 'active' : ''}`} onClick={() => setActiveNav('users')}>👥 User Management</div>
+              <div className={`k-nav-item ${activeNav === 'kpi' ? 'active' : ''}`} onClick={() => setActiveNav('kpi')}>📋 KPI Templates</div>
+              <div className={`k-nav-item ${activeNav === 'exec' ? 'active' : ''}`} onClick={() => setActiveNav('exec')}>📈 Exec Dashboard</div>
+            </>}
           </div>
         )}
-        <div className="k-sidebar-section" style={{ marginTop: '8px' }}>
-          <div className="k-sidebar-label">Help</div>
-          <div className={`k-nav-item ${activeNav === 'kb' ? 'active' : ''}`} onClick={() => setActiveNav('kb')}>📖 Knowledge Base</div>
-          <div className={`k-nav-item ${activeNav === 'support' ? 'active' : ''}`} onClick={() => setActiveNav('support')}>🎫 Support Tickets</div>
+
+        {/* Help */}
+        <div className="k-sidebar-section" style={{ marginTop: '4px' }}>
+          <div
+            className="k-sidebar-label"
+            onClick={() => toggleSection('help')}
+            style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', userSelect: 'none' }}
+          >
+            Help <span style={{ fontSize: '10px' }}>{collapsedSections['help'] ? '▶' : '▼'}</span>
+          </div>
+          {!collapsedSections['help'] && <>
+            <div className={`k-nav-item ${activeNav === 'kb' ? 'active' : ''}`} onClick={() => setActiveNav('kb')}>📖 Knowledge Base</div>
+            <div className={`k-nav-item ${activeNav === 'support' ? 'active' : ''}`} onClick={() => setActiveNav('support')}>🎫 Support Tickets</div>
+          </>}
         </div>
+
         <div style={{ marginTop: 'auto', borderTop: '1px solid var(--k-border-default)', padding: '12px 0' }}>
           <div className={`k-nav-item ${activeNav === 'settings' ? 'active' : ''}`} onClick={() => setActiveNav('settings')} style={{ margin: '0 var(--k-space-3)' }}>
             ⚙️ Account Settings
           </div>
         </div>
+
       </div>
 
       {/* Main content */}

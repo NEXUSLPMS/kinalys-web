@@ -8,6 +8,7 @@ import BalancedScorecard from './pages/BalancedScorecard'
 import OKR from './pages/OKR'
 import TalentGrid from './pages/TalentGrid'
 import UserManagement from './pages/UserManagement'
+import KpiTemplates from './pages/KpiTemplates'
 
 interface UserProfile {
   id: string
@@ -163,6 +164,7 @@ function Dashboard() {
             <div className={`k-nav-item ${activeNav === 'okr' ? 'active' : ''}`} onClick={() => setActiveNav('okr')}>🎯 OKR Framework</div>
             <div className={`k-nav-item ${activeNav === 'talent' ? 'active' : ''}`} onClick={() => setActiveNav('talent')}>🎯 Talent Grid</div>
             <div className={`k-nav-item ${activeNav === 'users' ? 'active' : ''}`} onClick={() => setActiveNav('users')}>👥 User Management</div>
+            <div className={`k-nav-item ${activeNav === 'kpi' ? 'active' : ''}`} onClick={() => setActiveNav('kpi')}>📋 KPI Templates</div>
             <div className={`k-nav-item ${activeNav === 'exec' ? 'active' : ''}`} onClick={() => setActiveNav('exec')}>📈 Exec Dashboard</div>
           </div>
         )}
@@ -191,8 +193,10 @@ function Dashboard() {
           <OKR />
         ) : activeNav === 'talent' ? (
           <TalentGrid />
-        ) : activeNav === 'users' ? (
+       ) : activeNav === 'users' ? (
           <UserManagement />
+        ) : activeNav === 'kpi' ? (
+          <KpiTemplates />
         ) : (
           
           <div className="k-page">

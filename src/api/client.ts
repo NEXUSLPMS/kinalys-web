@@ -183,3 +183,50 @@ export async function updateManagedUser(id: string, data: Record<string, any>) {
   const response = await apiClient.put(`/users/${id}/manage`, data)
   return response.data
 }
+
+export async function getKpiTemplates(filters?: { designation_id?: string; department_id?: string }) {
+  const params = new URLSearchParams()
+  if (filters?.designation_id) params.append('designation_id', filters.designation_id)
+  if (filters?.department_id) params.append('department_id', filters.department_id)
+  const response = await apiClient.get(`/kpi/templates?${params}`)
+  return response.data
+}
+
+export async function createKpiTemplate(data: Record<string, any>) {
+  const response = await apiClient.post('/kpi/templates', data)
+  return response.data
+}
+
+export async function updateKpiTemplate(id: string, data: Record<string, any>) {
+  const response = await apiClient.put(`/kpi/templates/${id}`, data)
+  return response.data
+}
+
+export async function deleteKpiTemplate(id: string) {
+  const response = await apiClient.delete(`/kpi/templates/${id}`)
+  return response.data
+}
+
+export async function applyKpiTemplates(reviewCycleId: string) {
+  const response = await apiClient.post('/kpi/templates/apply', { review_cycle_id: reviewCycleId })
+  return response.data
+}
+
+export async function getKpiAssignments(filters?: { user_id?: string; review_cycle_id?: string; status?: string }) {
+  const params = new URLSearchParams()
+  if (filters?.user_id) params.append('user_id', filters.user_id)
+  if (filters?.review_cycle_id) params.append('review_cycle_id', filters.review_cycle_id)
+  if (filters?.status) params.append('status', filters.status)
+  const response = await apiClient.get(`/kpi/assignments?${params}`)
+  return response.data
+}
+
+export async function proposeKpi(data: Record<string, any>) {
+  const response = await apiClient.post('/kpi/assignments', data)
+  return response.data
+}
+
+export async function reviewKpi(id: string, action: string, reason?: string) {
+  const response = await apiClient.put(`/kpi/assignments/${id}/review`, { action, reason })
+  return response.data
+}

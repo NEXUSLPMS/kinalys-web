@@ -323,3 +323,15 @@ export async function getOneOnOneTeam() {
   const response = await apiClient.get('/oneonone/team')
   return response.data
 }
+
+export async function getCopcScorecard(cycleId?: string) {
+  const params = cycleId ? `?cycle_id=${cycleId}` : ''
+  const response = await apiClient.get(`/copc/scorecard${params}`)
+  return response.data
+}
+
+export async function getCopcTeam(cycleId?: string) {
+  const params = cycleId ? `?cycle_id=${cycleId}` : ''
+  const response = await apiClient.get(`/copc/team${params}`)
+  return response.data
+}

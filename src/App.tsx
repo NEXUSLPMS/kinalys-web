@@ -14,6 +14,7 @@ import SupportTickets from './pages/SupportTickets'
 import Scorecard from './pages/Scorecard'
 import AICoaching from './pages/AICoaching'
 import OneOnOne from './pages/OneOnOne'
+import COPCScorecard from './pages/COPCScorecard'
 
 interface UserProfile {
   id: string
@@ -149,6 +150,7 @@ function Dashboard() {
           {!collapsedSections['performance'] && <>
             <div className={`k-nav-item ${activeNav === 'scorecard' ? 'active' : ''}`} onClick={() => setActiveNav('scorecard')}>📊 My Scorecard</div>
             <div className={`k-nav-item ${activeNav === 'ai' ? 'active' : ''}`} onClick={() => setActiveNav('ai')}>🤖 AI Coaching</div>
+            <div className={`k-nav-item ${activeNav === 'copc' ? 'active' : ''}`} onClick={() => setActiveNav('copc')}>🏢 COPC Scorecard</div>
           </>}
         </div>
 
@@ -226,6 +228,8 @@ function Dashboard() {
           <KnowledgeBase />
         ) : activeNav === 'support' ? (
           <SupportTickets />
+          ) : activeNav === 'copc' ? (
+          <COPCScorecard />
         ) : (
           <div className="k-page">
 

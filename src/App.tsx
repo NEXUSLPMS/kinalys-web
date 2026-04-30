@@ -13,6 +13,7 @@ import KnowledgeBase from './pages/KnowledgeBase'
 import SupportTickets from './pages/SupportTickets'
 import Scorecard from './pages/Scorecard'
 import AICoaching from './pages/AICoaching'
+import OneOnOne from './pages/OneOnOne'
 
 interface UserProfile {
   id: string
@@ -132,6 +133,7 @@ function Dashboard() {
             <div className={`k-nav-item ${activeNav === 'learning' ? 'active' : ''}`} onClick={() => setActiveNav('learning')}>🎓 My Learning</div>
             <div className={`k-nav-item ${activeNav === 'catalog' ? 'active' : ''}`} onClick={() => setActiveNav('catalog')}>📚 Course Catalog</div>
             <div className={`k-nav-item ${activeNav === 'certs' ? 'active' : ''}`} onClick={() => setActiveNav('certs')}>🏆 Certifications</div>
+            <div className={`k-nav-item ${activeNav === 'oneonone' ? 'active' : ''}`} onClick={() => setActiveNav('oneonone')}>🗣️ 1-on-1 Reviews</div>
           </>}
         </div>
 
@@ -208,6 +210,8 @@ function Dashboard() {
           <BalancedScorecard />
         ) : activeNav === 'scorecard' ? (
           <Scorecard />
+          ) : activeNav === 'oneonone' ? (
+          <OneOnOne />
         ) : activeNav === 'ai' ? (
           <AICoaching />
         ) : activeNav === 'okr' ? (

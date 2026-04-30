@@ -292,3 +292,34 @@ export async function getUserScorecard(userId: string, cycleId?: string) {
   const response = await apiClient.get(`/scorecard/user/${userId}${params}`)
   return response.data
 }
+
+export async function getOneOnOneSessions(status?: string) {
+  const params = status ? `?status=${status}` : ''
+  const response = await apiClient.get(`/oneonone/sessions${params}`)
+  return response.data
+}
+
+export async function createOneOnOneSession(data: Record<string, any>) {
+  const response = await apiClient.post('/oneonone/sessions', data)
+  return response.data
+}
+
+export async function getSessionEntries(sessionId: string) {
+  const response = await apiClient.get(`/oneonone/sessions/${sessionId}/entries`)
+  return response.data
+}
+
+export async function saveSessionEntry(sessionId: string, data: Record<string, any>) {
+  const response = await apiClient.put(`/oneonone/sessions/${sessionId}/entries`, data)
+  return response.data
+}
+
+export async function signOffSession(sessionId: string) {
+  const response = await apiClient.post(`/oneonone/sessions/${sessionId}/signoff`)
+  return response.data
+}
+
+export async function getOneOnOneTeam() {
+  const response = await apiClient.get('/oneonone/team')
+  return response.data
+}

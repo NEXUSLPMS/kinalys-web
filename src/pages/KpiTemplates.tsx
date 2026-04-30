@@ -41,6 +41,7 @@ export default function KpiTemplates() {
   const [applyResult, setApplyResult] = useState<string | null>(null)
   const [filterDesignation, setFilterDesignation] = useState('')
   const [filterDept, setFilterDept] = useState('')
+  const [filterMethodology, setFilterMethodology] = useState('')
   const [selectedCycle, setSelectedCycle] = useState('')
   const [showDesignationPicker, setShowDesignationPicker] = useState(false)
   const [bulkData, setBulkData] = useState<any[]>([])
@@ -60,13 +61,13 @@ export default function KpiTemplates() {
     is_mandatory: true,
   })
 
-  useEffect(() => { loadAll() }, [filterDesignation, filterDept]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { loadAll() }, [filterDesignation, filterDept, filterMethodology]) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function loadAll() {
     setLoading(true)
     try {
       const [tmplData, deptData, desigData, cycleData] = await Promise.allSettled([
-        getKpiTemplates({ designation_id: filterDesignation || undefined, department_id: filterDept || undefined }),
+        getKpiTemplates({ designation_id: filterDesignation || undefined, department_id: filterDept || undefined, methodology: filterMethodology || undefined }),
         getDepartments(),
         getDesignations(),
         getReviewCycles(),
@@ -231,7 +232,10 @@ export default function KpiTemplates() {
     setBulkUploading(false)
   }
 
-  const grouped = templates.reduce((acc, t) => {
+  const copcTemplates = templates.filter(t => (t as any).methodology === 'copc')
+  const sixSigmaTemplates = templates.filter(t => (t as any).methodology === 'six_sigma')
+  const universalTemplates = templates.filter(t => !['copc', 'six_sigma'].includes((t as any).methodology || ''))
+  const grouped = universalTemplates.reduce((acc, t) => {
     const key = t.designation_name || 'All Designations'
     if (!acc[key]) acc[key] = []
     acc[key].push(t)
@@ -289,6 +293,12 @@ export default function KpiTemplates() {
             <option value="">All Departments</option>
             {departments.map((d: any) => <option key={d.id} value={d.id}>{d.name}</option>)}
           </select>
+          <select value={filterMethodology} onChange={e => setFilterMethodology(e.target.value)} style={{ fontSize: '13px', padding: '8px 12px', borderRadius: 'var(--k-radius-md)', border: '1px solid var(--k-border-input)', background: 'var(--k-bg-input)', color: 'var(--k-text-primary)', fontFamily: 'var(--k-font-sans)', cursor: 'pointer' }}>
+            <option value="">All Methodologies</option>
+            <option value="universal">Universal</option>
+            <option value="copc">COPC</option>
+            <option value="six_sigma">Six Sigma</option>
+          </select>
           <div style={{ fontSize: '13px', color: 'var(--k-text-muted)' }}>{templates.length} templates</div>
         </div>
 
@@ -301,6 +311,90 @@ export default function KpiTemplates() {
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {copcTemplates.length > 0 && (
+              <div className="k-card" style={{ border: '1px solid #0F6E56' }}>
+                <div className="k-card-header" style={{ background: '#D6F0E4' }}>
+                  <div className="k-card-title" style={{ color: '#0F6E56' }}>🏢 COPC Standard KPIs <span style={{ fontSize: '11px', fontWeight: 400, color: '#0F6E56', marginLeft: '8px' }}>{copcTemplates.length} KPIs · Apply when COPC methodology is selected</span></div>
+                  <span style={{ fontSize: '12px', color: '#0F6E56' }}>Total weight: {copcTemplates.reduce((s, t) => s + Number(t.weight_pct), 0).toFixed(0)}%</span>
+                </div>
+                <table style={{ width: '100%', fontSize: '13px', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr>
+                      {['KPI Name', 'Department', 'Type', 'Target', 'Weight', 'RAG Green', 'RAG Amber', 'Mandatory', 'Actions'].map(h => (
+                        <th key={h} style={{ padding: '8px 12px', textAlign: 'left', background: 'var(--k-bg-page)', color: 'var(--k-text-muted)', fontWeight: 700, fontSize: '11px', textTransform: 'uppercase', borderBottom: '1px solid var(--k-border-default)' }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {copcTemplates.map(t => (
+                      <tr key={t.id} style={{ borderBottom: '1px solid var(--k-border-default)' }}>
+                        <td style={{ padding: '10px 12px' }}>
+                          <div style={{ fontWeight: 600, color: 'var(--k-text-primary)' }}>{t.name}</div>
+                          {t.description && <div style={{ fontSize: '11px', color: 'var(--k-text-muted)' }}>{t.description}</div>}
+                        </td>
+                        <td style={{ padding: '10px 12px', fontSize: '12px', color: 'var(--k-text-secondary)' }}>{t.department_name || '—'}</td>
+                        <td style={{ padding: '10px 12px', fontSize: '12px', color: 'var(--k-text-muted)' }}>{t.metric_type}</td>
+                        <td style={{ padding: '10px 12px', fontWeight: 600 }}>{t.target_value ?? '—'}</td>
+                        <td style={{ padding: '10px 12px', fontWeight: 700, color: 'var(--k-brand-primary)' }}>{t.weight_pct}%</td>
+                        <td style={{ padding: '10px 12px', color: 'var(--k-success-text)' }}>{t.rag_green_threshold ?? '—'}</td>
+                        <td style={{ padding: '10px 12px', color: 'var(--k-warning-text)' }}>{t.rag_amber_threshold ?? '—'}</td>
+                        <td style={{ padding: '10px 12px' }}>
+                          <span style={{ fontSize: '11px', fontWeight: 700, color: t.is_mandatory ? 'var(--k-success-text)' : 'var(--k-text-muted)', background: t.is_mandatory ? 'var(--k-success-bg)' : 'var(--k-bg-page)', padding: '2px 8px', borderRadius: '10px' }}>
+                            {t.is_mandatory ? 'Yes' : 'No'}
+                          </span>
+                        </td>
+                        <td style={{ padding: '10px 12px' }}>
+                          <span style={{ fontSize: '10px', color: '#0F6E56', fontStyle: 'italic' }}>🔒 COPC Standard</span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {sixSigmaTemplates.length > 0 && (
+              <div className="k-card" style={{ border: '1px solid #6B21A8' }}>
+                <div className="k-card-header" style={{ background: '#F3E8FF' }}>
+                  <div className="k-card-title" style={{ color: '#6B21A8' }}>⚙️ Six Sigma Standard KPIs <span style={{ fontSize: '11px', fontWeight: 400, color: '#6B21A8', marginLeft: '8px' }}>{sixSigmaTemplates.length} KPIs · Apply when Six Sigma methodology is selected</span></div>
+                  <span style={{ fontSize: '12px', color: '#6B21A8' }}>Total weight: {sixSigmaTemplates.reduce((s, t) => s + Number(t.weight_pct), 0).toFixed(0)}%</span>
+                </div>
+                <table style={{ width: '100%', fontSize: '13px', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr>
+                      {['KPI Name', 'Department', 'Type', 'Target', 'Weight', 'RAG Green', 'RAG Amber', 'Mandatory', 'Actions'].map(h => (
+                        <th key={h} style={{ padding: '8px 12px', textAlign: 'left', background: 'var(--k-bg-page)', color: 'var(--k-text-muted)', fontWeight: 700, fontSize: '11px', textTransform: 'uppercase', borderBottom: '1px solid var(--k-border-default)' }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sixSigmaTemplates.map(t => (
+                      <tr key={t.id} style={{ borderBottom: '1px solid var(--k-border-default)' }}>
+                        <td style={{ padding: '10px 12px' }}>
+                          <div style={{ fontWeight: 600, color: 'var(--k-text-primary)' }}>{t.name}</div>
+                          {t.description && <div style={{ fontSize: '11px', color: 'var(--k-text-muted)' }}>{t.description}</div>}
+                        </td>
+                        <td style={{ padding: '10px 12px', fontSize: '12px', color: 'var(--k-text-secondary)' }}>{t.department_name || '—'}</td>
+                        <td style={{ padding: '10px 12px', fontSize: '12px', color: 'var(--k-text-muted)' }}>{t.metric_type}</td>
+                        <td style={{ padding: '10px 12px', fontWeight: 600 }}>{t.target_value ?? '—'}</td>
+                        <td style={{ padding: '10px 12px', fontWeight: 700, color: 'var(--k-brand-primary)' }}>{t.weight_pct}%</td>
+                        <td style={{ padding: '10px 12px', color: 'var(--k-success-text)' }}>{t.rag_green_threshold ?? '—'}</td>
+                        <td style={{ padding: '10px 12px', color: 'var(--k-warning-text)' }}>{t.rag_amber_threshold ?? '—'}</td>
+                        <td style={{ padding: '10px 12px' }}>
+                          <span style={{ fontSize: '11px', fontWeight: 700, color: t.is_mandatory ? 'var(--k-success-text)' : 'var(--k-text-muted)', background: t.is_mandatory ? 'var(--k-success-bg)' : 'var(--k-bg-page)', padding: '2px 8px', borderRadius: '10px' }}>
+                            {t.is_mandatory ? 'Yes' : 'No'}
+                          </span>
+                        </td>
+                        <td style={{ padding: '10px 12px' }}>
+                          <span style={{ fontSize: '10px', color: '#6B21A8', fontStyle: 'italic' }}>🔒 Six Sigma Standard</span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
             {Object.entries(grouped).map(([designation, tmplList]) => (
               <div key={designation} className="k-card">
                 <div className="k-card-header">
@@ -319,7 +413,14 @@ export default function KpiTemplates() {
                     {tmplList.map(t => (
                       <tr key={t.id} style={{ borderBottom: '1px solid var(--k-border-default)' }}>
                         <td style={{ padding: '10px 12px' }}>
-                          <div style={{ fontWeight: 600, color: 'var(--k-text-primary)' }}>{t.name}</div>
+                          <div style={{ fontWeight: 600, color: 'var(--k-text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            {t.name}
+                            {(t as any).methodology && (t as any).methodology !== 'universal' && (
+                              <span style={{ fontSize: '10px', fontWeight: 700, color: (t as any).methodology === 'copc' ? '#0F6E56' : '#6B21A8', background: (t as any).methodology === 'copc' ? '#D6F0E4' : '#F3E8FF', padding: '1px 6px', borderRadius: '6px' }}>
+                                {(t as any).methodology === 'copc' ? 'COPC' : 'Six Sigma'}
+                              </span>
+                            )}
+                          </div>
                           {t.description && <div style={{ fontSize: '11px', color: 'var(--k-text-muted)' }}>{t.description}</div>}
                         </td>
                         <td style={{ padding: '10px 12px', fontSize: '12px', color: 'var(--k-text-secondary)' }}>{t.department_name || '—'}</td>

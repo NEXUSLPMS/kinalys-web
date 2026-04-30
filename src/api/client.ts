@@ -184,11 +184,12 @@ export async function updateManagedUser(id: string, data: Record<string, any>) {
   return response.data
 }
 
-export async function getKpiTemplates(filters?: { designation_id?: string; department_id?: string }) {
+export async function getKpiTemplates(filters?: { designation_id?: string; department_id?: string; methodology?: string }) {
   const params = new URLSearchParams()
   if (filters?.designation_id) params.append('designation_id', filters.designation_id)
   if (filters?.department_id) params.append('department_id', filters.department_id)
-  const response = await apiClient.get(`/kpi/templates?${params}`)
+  if (filters?.methodology) params.append('methodology', filters.methodology)
+  const response = await apiClient.get('/kpi/templates?' + params.toString())
   return response.data
 }
 

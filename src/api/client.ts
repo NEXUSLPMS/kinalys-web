@@ -343,3 +343,42 @@ export async function getSixSigmaData() {
 export async function saveSixSigmaData(data: Record<string, any>) {
   return { success: true }
 }
+
+export async function getLmsCourses(filters?: { search?: string; category?: string; difficulty?: string }) {
+  const params = new URLSearchParams()
+  if (filters?.search) params.append('search', filters.search)
+  if (filters?.category) params.append('category', filters.category)
+  if (filters?.difficulty) params.append('difficulty', filters.difficulty)
+  const response = await apiClient.get(`/lms/courses?${params}`)
+  return response.data
+}
+
+export async function getMyLearning() {
+  const response = await apiClient.get('/lms/my-learning')
+  return response.data
+}
+
+export async function enrollCourse(courseId: string) {
+  const response = await apiClient.post(`/lms/courses/${courseId}/enroll`)
+  return response.data
+}
+
+export async function updateCourseProgress(enrollmentId: string, progressPct: number) {
+  const response = await apiClient.put(`/lms/enrollments/${enrollmentId}/progress`, { progress_pct: progressPct })
+  return response.data
+}
+
+export async function getLmsCertifications() {
+  const response = await apiClient.get('/lms/certifications')
+  return response.data
+}
+
+export async function getLmsStats() {
+  const response = await apiClient.get('/lms/stats')
+  return response.data
+}
+
+export async function fixLmsEmojis() {
+  const response = await apiClient.post('/lms/fix-emojis')
+  return response.data
+}

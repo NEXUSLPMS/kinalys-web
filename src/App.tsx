@@ -16,6 +16,9 @@ import AICoaching from './pages/AICoaching'
 import OneOnOne from './pages/OneOnOne'
 import COPCScorecard from './pages/COPCScorecard'
 import SixSigma from './pages/SixSigma'
+import MyLearning from './pages/MyLearning'
+import CourseCatalog from './pages/CourseCatalog'
+import Certifications from './pages/Certifications'
 
 
 interface UserProfile {
@@ -136,8 +139,7 @@ function Dashboard() {
             <div className={`k-nav-item ${activeNav === 'learning' ? 'active' : ''}`} onClick={() => setActiveNav('learning')}>🎓 My Learning</div>
             <div className={`k-nav-item ${activeNav === 'catalog' ? 'active' : ''}`} onClick={() => setActiveNav('catalog')}>📚 Course Catalog</div>
             <div className={`k-nav-item ${activeNav === 'certs' ? 'active' : ''}`} onClick={() => setActiveNav('certs')}>🏆 Certifications</div>
-            <div className={`k-nav-item ${activeNav === 'oneonone' ? 'active' : ''}`} onClick={() => setActiveNav('oneonone')}>🗣️ 1-on-1 Reviews</div>
-          </>}
+                      </>}
         </div>
 
         {/* Performance */}
@@ -154,6 +156,7 @@ function Dashboard() {
             <div className={`k-nav-item ${activeNav === 'ai' ? 'active' : ''}`} onClick={() => setActiveNav('ai')}>🤖 AI Coaching</div>
             <div className={`k-nav-item ${activeNav === 'copc' ? 'active' : ''}`} onClick={() => setActiveNav('copc')}>🏢 COPC Scorecard</div>
             <div className={`k-nav-item ${activeNav === 'sixsigma' ? 'active' : ''}`} onClick={() => setActiveNav('sixsigma')}>⚙️ Six Sigma</div>
+            <div className={`k-nav-item ${activeNav === 'oneonone' ? 'active' : ''}`} onClick={() => setActiveNav('oneonone')}>🗣️ 1-on-1 Reviews</div>
           </>}
         </div>
 
@@ -225,6 +228,12 @@ function Dashboard() {
           <TalentGrid />
         ) : activeNav === 'users' ? (
           <UserManagement />
+        ) : activeNav === 'learning' ? (
+          <MyLearning />
+        ) : activeNav === 'catalog' ? (
+          <CourseCatalog />
+        ) : activeNav === 'certs' ? (
+          <Certifications />
         ) : activeNav === 'kpi' ? (
           <KpiTemplates />
         ) : activeNav === 'kb' ? (

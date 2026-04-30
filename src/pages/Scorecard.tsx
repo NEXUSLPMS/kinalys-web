@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect } from 'react'
-import { getMyScorecard, updateKpiActual, getTeamScorecards, getUserScorecard, getReviewCycles } from '../api/client'
+import { getMyScorecard, updateKpiActual, getTeamScorecards, getUserScorecard, getReviewCycles, proposeKpi } from '../api/client'
 
 interface KpiAssignment {
   id: string
@@ -71,6 +71,16 @@ export default function Scorecard() {
   const [editingActual, setEditingActual] = useState<string | null>(null)
   const [actualValue, setActualValue] = useState('')
   const [saving, setSaving] = useState(false)
+  const [showProposeModal, setShowProposeModal] = useState(false)
+  const [proposing, setProposing] = useState(false)
+  const [proposeForm, setProposeForm] = useState({
+    name: '',
+    description: '',
+    weight_pct: 10,
+    metric_type: 'percentage',
+    target_value: '',
+    notes: '',
+  })
   const [isManager, setIsManager] = useState(false)
 
   useEffect(() => { loadInitial() }, []) // eslint-disable-line react-hooks/exhaustive-deps
@@ -153,7 +163,27 @@ export default function Scorecard() {
       setSaving(false)
     }
   }
-
+async function submitProposal() {
+    if (!proposeForm.name.trim()) { setError('KPI name is required'); return }
+    if (!proposeForm.target_value) { setError('Target value is required'); return }
+    if (!proposeForm.notes.trim()) { setError('Reason for proposal is mandatory'); return }
+    if (proposeForm.weight_pct < 1 || proposeForm.weight_pct > 100) { setError('Weight must be between 1 and 100'); return }
+    setProposing(true)
+    try {
+      await proposeKpi({
+        ...proposeForm,
+        review_cycle_id: myScorecard?.cycle?.id,
+        target_value: parseFloat(proposeForm.target_value),
+      })
+      setShowProposeModal(false)
+      setProposeForm({ name: '', description: '', weight_pct: 10, metric_type: 'percentage', target_value: '', notes: '' })
+      await loadMyScorecard()
+    } catch (err: any) {
+      setError(err.response?.data?.message || err.message)
+    } finally {
+      setProposing(false)
+    }
+  }
   function getScoreColor(score: number | null) {
     if (score === null) return 'var(--k-text-muted)'
     if (score >= 90) return 'var(--k-success-text)'
@@ -219,6 +249,27 @@ export default function Scorecard() {
         {/* ── MY SCORECARD VIEW ─────────────────────────── */}
         {view === 'my' && (
           <>
+          {/* Proposal window banner */}
+            {myScorecard?.proposal_window_open && (
+              <div style={{ background: 'var(--k-brand-faint)', border: '1px solid var(--k-brand-primary)', borderRadius: 'var(--k-radius-md)', padding: '14px 20px', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--k-brand-primary)', marginBottom: '2px' }}>
+                    KPI Proposal Window Open — Day {myScorecard.day_of_cycle} of cycle
+                  </div>
+                  <div style={{ fontSize: '12px', color: 'var(--k-text-muted)' }}>
+                    {myScorecard.days_until_cutoff} day{myScorecard.days_until_cutoff !== 1 ? 's' : ''} remaining to propose additional KPIs · Proposals go to your manager for review
+                  </div>
+                </div>
+                <button
+                  className="k-btn k-btn-primary"
+                  onClick={() => setShowProposeModal(true)}
+                  style={{ fontSize: '12px', whiteSpace: 'nowrap' }}
+                >
+                  + Propose KPI
+                </button>
+              </div>
+            )}
+
             {/* Score summary */}
             <div className="k-stat-grid k-stat-grid-4" style={{ marginBottom: '24px' }}>
               <div className="k-stat-card accent">
@@ -402,6 +453,63 @@ export default function Scorecard() {
                 No KPIs assigned for this cycle yet. Your HR Admin will apply templates at the start of the cycle.
               </div>
             )}
+            {/* Propose KPI Modal */}
+            {showProposeModal && (
+              <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+                <div style={{ background: 'var(--k-bg-surface)', borderRadius: 'var(--k-radius-lg)', padding: '28px', width: '520px', maxWidth: '90vw', boxShadow: 'var(--k-shadow-lg)', maxHeight: '90vh', overflowY: 'auto' }}>
+                  <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--k-text-primary)', marginBottom: '6px' }}>Propose a KPI</div>
+                  <div style={{ fontSize: '12px', color: 'var(--k-text-muted)', marginBottom: '20px' }}>Your proposal will be sent to your manager for review, then to HR Admin for final approval.</div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                    <div>
+                      <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--k-text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>KPI Name *</div>
+                      <input value={proposeForm.name} onChange={e => setProposeForm(p => ({ ...p, name: e.target.value }))} placeholder="e.g. Customer Retention Rate" autoFocus style={{ width: '100%', fontSize: '13px', padding: '8px 12px', borderRadius: 'var(--k-radius-md)', border: '1px solid var(--k-border-input)', background: 'var(--k-bg-input)', color: 'var(--k-text-primary)', fontFamily: 'var(--k-font-sans)' }} />
+                    </div>
+
+                    <div>
+                      <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--k-text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>Description</div>
+                      <textarea value={proposeForm.description} onChange={e => setProposeForm(p => ({ ...p, description: e.target.value }))} placeholder="What does this KPI measure and why is it relevant to your role?" rows={2} style={{ width: '100%', fontSize: '13px', padding: '8px 12px', borderRadius: 'var(--k-radius-md)', border: '1px solid var(--k-border-input)', background: 'var(--k-bg-input)', color: 'var(--k-text-primary)', fontFamily: 'var(--k-font-sans)', resize: 'vertical' }} />
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                      <div>
+                        <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--k-text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>Metric Type *</div>
+                        <select value={proposeForm.metric_type} onChange={e => setProposeForm(p => ({ ...p, metric_type: e.target.value }))} style={{ width: '100%', fontSize: '13px', padding: '8px 12px', borderRadius: 'var(--k-radius-md)', border: '1px solid var(--k-border-input)', background: 'var(--k-bg-input)', color: 'var(--k-text-primary)', fontFamily: 'var(--k-font-sans)', cursor: 'pointer' }}>
+                          <option value="percentage">Percentage (%)</option>
+                          <option value="numeric">Numeric</option>
+                          <option value="boolean">Boolean (Yes/No)</option>
+                          <option value="rating">Rating (1-5)</option>
+                        </select>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--k-text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>Target Value *</div>
+                        <input type="number" value={proposeForm.target_value} onChange={e => setProposeForm(p => ({ ...p, target_value: e.target.value }))} placeholder="e.g. 90" style={{ width: '100%', fontSize: '13px', padding: '8px 12px', borderRadius: 'var(--k-radius-md)', border: '1px solid var(--k-border-input)', background: 'var(--k-bg-input)', color: 'var(--k-text-primary)', fontFamily: 'var(--k-font-sans)' }} />
+                      </div>
+                    </div>
+
+                    <div>
+                      <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--k-text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>Proposed Weight: {proposeForm.weight_pct}%</div>
+                      <input type="range" min={5} max={30} step={5} value={proposeForm.weight_pct} onChange={e => setProposeForm(p => ({ ...p, weight_pct: parseInt(e.target.value) }))} style={{ width: '100%', accentColor: 'var(--k-brand-primary)' }} />
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--k-text-muted)', marginTop: '4px' }}>
+                        <span>5%</span><span>Your manager may adjust this</span><span>30%</span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--k-danger-text)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>Reason for Proposal * — mandatory</div>
+                      <textarea value={proposeForm.notes} onChange={e => setProposeForm(p => ({ ...p, notes: e.target.value }))} placeholder="Why should this KPI be added to your scorecard this cycle?" rows={2} style={{ width: '100%', fontSize: '13px', padding: '8px 12px', borderRadius: 'var(--k-radius-md)', border: '1px solid var(--k-border-input)', background: 'var(--k-bg-input)', color: 'var(--k-text-primary)', fontFamily: 'var(--k-font-sans)', resize: 'vertical' }} />
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '10px', marginTop: '24px' }}>
+                    <button className="k-btn k-btn-primary" onClick={submitProposal} disabled={proposing} style={{ flex: 1, justifyContent: 'center' }}>
+                      {proposing ? 'Submitting...' : 'Submit Proposal'}
+                    </button>
+                    <button className="k-btn k-btn-secondary" onClick={() => { setShowProposeModal(false); setError(null) }} style={{ flex: 1, justifyContent: 'center' }}>Cancel</button>
+                  </div>
+                </div>
+              </div>
+            )}
           </>
         )}
 
@@ -470,6 +578,7 @@ export default function Scorecard() {
                 </table>
               </div>
             )}
+            
           </>
         )}
 

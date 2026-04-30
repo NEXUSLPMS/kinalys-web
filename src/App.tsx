@@ -19,6 +19,7 @@ import SixSigma from './pages/SixSigma'
 import MyLearning from './pages/MyLearning'
 import CourseCatalog from './pages/CourseCatalog'
 import Certifications from './pages/Certifications'
+import ExecDashboard from './pages/ExecDashboard'
 
 
 interface UserProfile {
@@ -152,6 +153,7 @@ function Dashboard() {
             Performance <span style={{ fontSize: '10px' }}>{collapsedSections['performance'] ? '▶' : '▼'}</span>
           </div>
           {!collapsedSections['performance'] && <>
+            <div className={`k-nav-item ${activeNav === 'exec' ? 'active' : ''}`} onClick={() => setActiveNav('exec')}>📈 Exec Dashboard</div>
             <div className={`k-nav-item ${activeNav === 'scorecard' ? 'active' : ''}`} onClick={() => setActiveNav('scorecard')}>📊 My Scorecard</div>
             <div className={`k-nav-item ${activeNav === 'ai' ? 'active' : ''}`} onClick={() => setActiveNav('ai')}>🤖 AI Coaching</div>
             <div className={`k-nav-item ${activeNav === 'copc' ? 'active' : ''}`} onClick={() => setActiveNav('copc')}>🏢 COPC Scorecard</div>
@@ -234,6 +236,8 @@ function Dashboard() {
           <CourseCatalog />
         ) : activeNav === 'certs' ? (
           <Certifications />
+        ) : activeNav === 'exec' ? (
+          <ExecDashboard />
         ) : activeNav === 'kpi' ? (
           <KpiTemplates />
         ) : activeNav === 'kb' ? (

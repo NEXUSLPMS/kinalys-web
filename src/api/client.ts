@@ -335,3 +335,11 @@ export async function getCopcTeam(cycleId?: string) {
   const response = await apiClient.get(`/copc/team${params}`)
   return response.data
 }
+
+export async function getSixSigmaData() {
+  return { history: [] }
+}
+
+export async function saveSixSigmaData(data: Record<string, any>) {
+  return { success: true }
+}

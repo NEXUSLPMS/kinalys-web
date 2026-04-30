@@ -1,6 +1,6 @@
 ﻿import { useAuth0 } from '@auth0/auth0-react'
 import { useEffect, useState } from 'react'
-import { setAuthToken, getMyProfile, getStatus, getDepartments } from './api/client'
+import { setAuthToken, getMyProfile, getStatus, getDepartments, getDashboardStats } from './api/client'
 import Organisation from './pages/Organisation'
 import AccountSettings from './pages/AccountSettings'
 import ImportUsers from './pages/ImportUsers'
@@ -73,7 +73,8 @@ function Dashboard() {
   const [departments, setDepartments] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [apiError, setApiError] = useState<string | null>(null)
-  const [activeNav, setActiveNav] = useState('learning')
+  const [activeNav, setActiveNav] = useState('home')
+  const [dashStats, setDashStats] = useState<any>(null)
 
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({})
 
@@ -86,10 +87,11 @@ function Dashboard() {
       try {
         const token = await getAccessTokenSilently({ authorizationParams: { audience: 'https://api.kinalys.io' } })
         setAuthToken(token)
-        const [statusData, profileData, deptData] = await Promise.allSettled([getStatus(), getMyProfile(), getDepartments()])
+       const [statusData, profileData, deptData, statsData] = await Promise.allSettled([getStatus(), getMyProfile(), getDepartments(), getDashboardStats()])
         if (statusData.status === 'fulfilled') setStatus(statusData.value)
         if (profileData.status === 'fulfilled') setProfile(profileData.value.user)
         if (deptData.status === 'fulfilled') setDepartments(deptData.value.departments || [])
+        if (statsData.status === 'fulfilled') setDashStats(statsData.value)
       } catch (err: any) {
         setApiError(err.message)
       } finally {
@@ -114,7 +116,7 @@ function Dashboard() {
 
       {/* Topbar */}
       <div className="k-topbar">
-        <div style={{ fontFamily: 'var(--k-font-display)', fontSize: '18px', fontWeight: '800', color: 'var(--k-text-topbar)', letterSpacing: '3px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <div onClick={() => setActiveNav('home')} style={{ fontFamily: 'var(--k-font-display)', fontSize: '18px', fontWeight: '800', color: 'var(--k-text-topbar)', letterSpacing: '3px', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
           KINALYS<span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--k-text-topbar)', display: 'inline-block' }}/>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
@@ -211,7 +213,7 @@ function Dashboard() {
       {/* Main content */}
       <div className="k-main">
         {activeNav === 'settings' ? (
-          <AccountSettings onBack={() => setActiveNav('learning')} />
+          <AccountSettings onBack={() => setActiveNav('home')} />
         ) : activeNav === 'org' ? (
           <Organisation />
         ) : activeNav === 'import' ? (
@@ -262,23 +264,46 @@ function Dashboard() {
               <div className="k-page-sub">{profile?.role === 'hr_admin' ? 'HR Admin' : 'Team Member'} · {profile?.tenant?.name || 'Your workspace'} · {profile?.designation || 'Kinalys Platform'}</div>
             </div>
 
-            <div className="k-stat-grid k-stat-grid-4" style={{ marginBottom: '24px' }}>
-              <div className="k-stat-card accent"><div className="k-stat-label">Overall Score</div><div className="k-stat-value">74.2</div><div className="k-stat-trend up">↑ +1.8 vs last period</div></div>
-              <div className="k-stat-card green"><div className="k-stat-label">Learning Hours</div><div className="k-stat-value">20</div><div style={{ fontSize: '11px', color: 'var(--k-text-muted)', marginTop: '4px' }}>Target: {profile?.learningHoursTarget || 40} hrs/year</div></div>
-              <div className="k-stat-card purple"><div className="k-stat-label">AI Recommendations</div><div className="k-stat-value">3</div><div className="k-stat-trend">Pending review</div></div>
-              <div className="k-stat-card amber"><div className="k-stat-label">Certifications</div><div className="k-stat-value">4</div><div className="k-stat-trend down">1 expiring soon</div></div>
+          <div className="k-stat-grid k-stat-grid-4" style={{ marginBottom: '24px' }}>
+              <div className="k-stat-card accent">
+                <div className="k-stat-label">Overall Score</div>
+                <div className="k-stat-value" style={{ color: dashStats?.overall_score >= 90 ? 'var(--k-success-text)' : dashStats?.overall_score >= 80 ? 'var(--k-warning-text)' : dashStats?.overall_score ? 'var(--k-danger-text)' : 'var(--k-text-muted)' }}>
+                  {dashStats?.overall_score !== null && dashStats?.overall_score !== undefined ? `${dashStats.overall_score}%` : '—'}
+                </div>
+                <div className="k-stat-trend">
+                  {dashStats?.overall_score >= 90 ? '🟢 High Performance' : dashStats?.overall_score >= 80 ? '🟡 Medium Performance' : dashStats?.overall_score ? '🔴 Needs Improvement' : 'No score yet'}
+                </div>
+              </div>
+              <div className="k-stat-card green">
+                <div className="k-stat-label">Learning Hours</div>
+                <div className="k-stat-value">{dashStats?.completed_hours ?? '—'}</div>
+                <div style={{ fontSize: '11px', color: 'var(--k-text-muted)', marginTop: '4px' }}>
+                  {dashStats?.learning_pct ?? 0}% of {dashStats?.learning_target ?? 40} hr target
+                </div>
+              </div>
+              <div className="k-stat-card purple">
+                <div className="k-stat-label">Pending KPIs</div>
+                <div className="k-stat-value">{dashStats?.pending_kpis ?? '—'}</div>
+                <div className="k-stat-trend">{dashStats?.pending_kpis > 0 ? 'Awaiting approval' : 'All approved'}</div>
+              </div>
+              <div className="k-stat-card amber">
+                <div className="k-stat-label">Certifications</div>
+                <div className="k-stat-value">{dashStats?.certifications ?? '—'}</div>
+                <div className="k-stat-trend">{dashStats?.upcoming_one_on_ones > 0 ? `${dashStats.upcoming_one_on_ones} upcoming 1-on-1` : 'Earned'}</div>
+              </div>
             </div>
 
             <div className="k-lms-banner" style={{ marginBottom: '24px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
-                <div style={{ fontSize: '14px', fontWeight: 700 }}>📚 Learning Hours — Q2 2026</div>
-                <span className="k-pill lms">+3.5% PMS BONUS ACTIVE</span>
+                <div style={{ fontSize: '14px', fontWeight: 700 }}>📚 Learning Hours</div>
+                {dashStats?.learning_pct >= 100 && <span className="k-pill lms">TARGET HIT — BONUS ACTIVE</span>}
+                {dashStats?.learning_pct < 100 && dashStats?.learning_pct > 0 && <span className="k-pill amber">{dashStats.learning_pct}% COMPLETE</span>}
               </div>
-              <div className="k-lms-progress"><div className="k-lms-progress-fill" style={{ width: '100%' }}/></div>
+              <div className="k-lms-progress"><div className="k-lms-progress-fill" style={{ width: `${dashStats?.learning_pct ?? 0}%` }}/></div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', opacity: 0.8 }}>
-                <span>20 hrs achieved</span>
-                <span>Target: 10 hrs (Q2 pro-rated)</span>
-                <span>Annual: {profile?.learningHoursTarget || 40} hrs</span>
+                <span>{dashStats?.completed_hours ?? 0} hrs achieved</span>
+                <span>{dashStats?.learning_pct ?? 0}% of target</span>
+                <span>Annual target: {dashStats?.learning_target ?? 40} hrs</span>
               </div>
             </div>
 

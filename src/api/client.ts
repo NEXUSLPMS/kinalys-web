@@ -382,3 +382,8 @@ export async function fixLmsEmojis() {
   const response = await apiClient.post('/lms/fix-emojis')
   return response.data
 }
+
+export async function getDashboardStats() {
+  const response = await apiClient.get('/dashboard/stats')
+  return response.data
+}

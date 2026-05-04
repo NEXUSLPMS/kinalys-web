@@ -1,6 +1,6 @@
 import { useAuth0 } from '@auth0/auth0-react'
 import { useEffect, useState } from 'react'
-import { setAuthToken, getMyProfile, getStatus, getDepartments, getDashboardStats, getMyTalentPosition } from './api/client'
+import { setAuthToken, getMyProfile, getStatus, getDepartments, getDashboardStats, getMyAlerts, markAlertRead, markAllAlertsRead, getMyTalentPosition } from './api/client'
 import Organisation from './pages/Organisation'
 import AccountSettings from './pages/AccountSettings'
 import ImportUsers from './pages/ImportUsers'
@@ -78,7 +78,9 @@ function Dashboard() {
   const [activeNav, setActiveNav] = useState('home')
   const [dashStats, setDashStats] = useState<any>(null)
   const [talentPosition, setTalentPosition] = useState<any>(null)
-
+  const [alerts, setAlerts] = useState<any[]>([])
+  const [unreadCount, setUnreadCount] = useState(0)
+  const [showAlerts, setShowAlerts] = useState(false)
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({})
 
   function toggleSection(section: string) {
@@ -90,12 +92,15 @@ function Dashboard() {
       try {
         const token = await getAccessTokenSilently({ authorizationParams: { audience: 'https://api.kinalys.io' } })
         setAuthToken(token)
-       const [statusData, profileData, deptData, statsData, talentData] = await Promise.allSettled([getStatus(), getMyProfile(), getDepartments(), getDashboardStats(), getMyTalentPosition()])
-        if (statusData.status === 'fulfilled') setStatus(statusData.value)
+        const [statusData, profileData, deptData, statsData, talentData, alertsData] = await Promise.allSettled([getStatus(), getMyProfile(), getDepartments(), getDashboardStats(), getMyTalentPosition(), getMyAlerts()])
         if (profileData.status === 'fulfilled') setProfile(profileData.value.user)
         if (deptData.status === 'fulfilled') setDepartments(deptData.value.departments || [])
         if (statsData.status === 'fulfilled') setDashStats(statsData.value)
         if (talentData.status === 'fulfilled') setTalentPosition(talentData.value)
+        if (alertsData.status === 'fulfilled') {
+            setAlerts(alertsData.value.alerts || [])
+            setUnreadCount(alertsData.value.unread_count || 0)
+          }
       } catch (err: any) {
         setApiError(err.message)
       } finally {
@@ -266,57 +271,105 @@ function Dashboard() {
               </div>
             )}
 
+            {/* Notification Bell */}
+                <div style={{ position: 'relative', marginRight: '12px' }}>
+                  <button
+                    onClick={() => setShowAlerts(!showAlerts)}
+                    style={{ position: 'relative', background: 'none', border: 'none', cursor: 'pointer', padding: '6px', borderRadius: 'var(--k-radius-md)', color: 'var(--k-text-muted)', fontSize: '18px' }}
+                  >
+                    🔔
+                    {unreadCount > 0 && (
+                      <span style={{ position: 'absolute', top: '2px', right: '2px', background: '#EF4444', color: 'white', borderRadius: '50%', width: '16px', height: '16px', fontSize: '10px', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                      </span>
+                    )}
+                  </button>
+                  {showAlerts && (
+                    <div style={{ position: 'absolute', right: 0, top: '40px', width: '380px', background: 'var(--k-bg-surface)', border: '1px solid var(--k-border-default)', borderRadius: 'var(--k-radius-lg)', boxShadow: 'var(--k-shadow-lg)', zIndex: 1000, maxHeight: '480px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                      <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--k-border-default)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--k-text-primary)' }}>
+                          Alerts {unreadCount > 0 && <span style={{ fontSize: '12px', color: 'white', background: '#EF4444', padding: '1px 7px', borderRadius: '10px', marginLeft: '6px' }}>{unreadCount}</span>}
+                        </div>
+                        {unreadCount > 0 && (
+                          <button onClick={async () => { await markAllAlertsRead(); setAlerts(prev => prev.map(a => ({ ...a, is_read: true }))); setUnreadCount(0) }} style={{ fontSize: '11px', color: 'var(--k-brand-primary)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--k-font-sans)', fontWeight: 600 }}>
+                            Mark all read
+                          </button>
+                        )}
+                        <button onClick={() => setShowAlerts(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px', color: 'var(--k-text-muted)', padding: '0 4px', lineHeight: 1 }}>✕</button>
+                      </div>
+                      <div style={{ overflowY: 'auto', flex: 1 }}>
+                        {alerts.length === 0 ? (
+                          <div style={{ padding: '32px', textAlign: 'center', color: 'var(--k-text-muted)', fontSize: '13px' }}>
+                            <div style={{ fontSize: '28px', marginBottom: '8px' }}>✅</div>
+                            No alerts — all KPIs on track
+                          </div>
+                        ) : (
+                          alerts.map((alert: any) => (
+                            <div key={alert.id} onClick={async () => { if (!alert.is_read) { await markAlertRead(alert.id); setAlerts(prev => prev.map(a => a.id === alert.id ? { ...a, is_read: true } : a)); setUnreadCount(prev => Math.max(0, prev - 1)) } }} style={{ padding: '14px 16px', borderBottom: '1px solid var(--k-border-default)', background: alert.is_read ? 'transparent' : '#FFFBEB', cursor: alert.is_read ? 'default' : 'pointer' }}>
+                              <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+                                <span style={{ fontSize: '16px' }}>⚠️</span>
+                                <div style={{ flex: 1 }}>
+                                  <div style={{ fontSize: '12px', fontWeight: 700, color: '#B45309', marginBottom: '3px' }}>{alert.kpi_name}</div>
+                                  <div style={{ fontSize: '11px', color: 'var(--k-text-secondary)', lineHeight: 1.4 }}>{alert.message}</div>
+                                  <div style={{ fontSize: '10px', color: 'var(--k-text-muted)', marginTop: '4px' }}>Score: {Number(alert.current_score).toFixed(1)}% · {new Date(alert.fired_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</div>
+                                </div>
+                                {!alert.is_read && <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#EF4444', flexShrink: 0, marginTop: '4px' }} />}
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
             <div style={{ marginBottom: '24px' }}>
               <div className="k-page-title">Welcome back, {profile?.fullName || user?.name || 'there'} 👋</div>
               <div className="k-page-sub">{profile?.role === 'hr_admin' ? 'HR Admin' : 'Team Member'} · {profile?.tenant?.name || 'Your workspace'} · {profile?.designation || 'Kinalys Platform'}</div>
             </div>
 
-
-            {/* 9-Box Position Card */}
-            {talentPosition?.position && (
-              <div className="k-card" style={{ marginBottom: '24px' }}>
-                <div className="k-card-header">
-                  <div className="k-card-title">My Talent Profile</div>
-                  <span style={{ fontSize: '12px', color: 'var(--k-text-muted)' }}>{talentPosition.cycle?.name}</span>
-                </div>
-                <div style={{ padding: '20px', display: 'flex', gap: '32px', alignItems: 'center' }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ marginBottom: '16px' }}>
-                      <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--k-text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>Performance Score</div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <div style={{ fontSize: '32px', fontWeight: 800, color: talentPosition.position.performance_score >= 90 ? 'var(--k-success-text)' : talentPosition.position.performance_score >= 80 ? 'var(--k-warning-text)' : 'var(--k-danger-text)' }}>
-                          {talentPosition.position.performance_score}%
-                        </div>
-                        <div style={{ flex: 1, height: '8px', background: 'var(--k-border-default)', borderRadius: '4px', overflow: 'hidden' }}>
-                          <div style={{ height: '100%', width: `${talentPosition.position.performance_score}%`, background: talentPosition.position.performance_score >= 90 ? 'var(--k-success-text)' : talentPosition.position.performance_score >= 80 ? 'var(--k-warning-text)' : 'var(--k-danger-text)', borderRadius: '4px' }} />
-                        </div>
-                      </div>
+                {talentPosition?.position && (
+                  <div className="k-card" style={{ marginBottom: "24px" }}>
+                    <div className="k-card-header">
+                      <div className="k-card-title">My Talent Profile</div>
+                      <span style={{ fontSize: "12px", color: "var(--k-text-muted)" }}>{talentPosition.cycle?.name}</span>
                     </div>
-                    <div>
-                      <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--k-text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>Potential</div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        {talentPosition.position.has_potential_rating ? (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <span style={{ fontSize: '15px', fontWeight: 800, color: talentPosition.position.potential_rating >= 4 ? 'var(--k-success-text)' : talentPosition.position.potential_rating >= 3 ? 'var(--k-warning-text)' : 'var(--k-danger-text)', background: talentPosition.position.potential_rating >= 4 ? 'var(--k-success-bg)' : talentPosition.position.potential_rating >= 3 ? 'var(--k-warning-bg)' : 'var(--k-danger-bg)', padding: '4px 14px', borderRadius: '10px' }}>
-                              {talentPosition.position.potential_rating >= 4 ? 'High Potential' : talentPosition.position.potential_rating >= 3 ? 'Medium Potential' : 'Developing'}
-                            </span>
-                            <span style={{ fontSize: '12px', color: 'var(--k-text-muted)' }}>· Manager assessed</span>
+                    <div style={{ padding: "20px", display: "flex", gap: "32px", alignItems: "center" }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ marginBottom: "16px" }}>
+                          <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--k-text-muted)", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "6px" }}>Performance Score</div>
+                          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                            <div style={{ fontSize: "32px", fontWeight: 800, color: talentPosition.position.performance_score >= 90 ? "var(--k-success-text)" : talentPosition.position.performance_score >= 80 ? "var(--k-warning-text)" : "var(--k-danger-text)" }}>
+                              {talentPosition.position.performance_score}%
+                            </div>
+                            <div style={{ flex: 1, height: "8px", background: "var(--k-border-default)", borderRadius: "4px", overflow: "hidden" }}>
+                              <div style={{ height: "100%", width: `${talentPosition.position.performance_score}%`, background: talentPosition.position.performance_score >= 90 ? "var(--k-success-text)" : talentPosition.position.performance_score >= 80 ? "var(--k-warning-text)" : "var(--k-danger-text)", borderRadius: "4px" }} />
+                            </div>
                           </div>
-                        ) : (
-                          <span style={{ fontSize: '13px', color: 'var(--k-text-muted)' }}>Not yet assessed by your manager</span>
-                        )}
+                        </div>
+                        <div>
+                          <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--k-text-muted)", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "6px" }}>Potential</div>
+                          {talentPosition.position.has_potential_rating ? (
+                            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                              <span style={{ fontSize: "15px", fontWeight: 800, color: talentPosition.position.potential_rating >= 4 ? "var(--k-success-text)" : talentPosition.position.potential_rating >= 3 ? "var(--k-warning-text)" : "var(--k-danger-text)", background: talentPosition.position.potential_rating >= 4 ? "var(--k-success-bg)" : talentPosition.position.potential_rating >= 3 ? "var(--k-warning-bg)" : "var(--k-danger-bg)", padding: "4px 14px", borderRadius: "10px" }}>
+                                {talentPosition.position.potential_rating >= 4 ? "High Potential" : talentPosition.position.potential_rating >= 3 ? "Medium Potential" : "Developing"}
+                              </span>
+                              <span style={{ fontSize: "12px", color: "var(--k-text-muted)" }}>Manager assessed</span>
+                            </div>
+                          ) : (
+                            <span style={{ fontSize: "13px", color: "var(--k-text-muted)" }}>Not yet assessed by your manager</span>
+                          )}
+                        </div>
+                      </div>
+                      <div style={{ background: "var(--k-bg-page)", borderRadius: "var(--k-radius-md)", padding: "14px 20px", textAlign: "center", flexShrink: 0 }}>
+                        <div style={{ fontSize: "11px", color: "var(--k-text-muted)", marginBottom: "4px" }}>Your profile is reviewed</div>
+                        <div style={{ fontSize: "11px", color: "var(--k-text-muted)", marginBottom: "8px" }}>by your manager each cycle.</div>
+                        <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--k-brand-primary)" }}>Performance + Potential</div>
+                        <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--k-brand-primary)" }}>drive your development plan.</div>
                       </div>
                     </div>
                   </div>
-                  <div style={{ background: 'var(--k-bg-page)', borderRadius: 'var(--k-radius-md)', padding: '14px 20px', textAlign: 'center', flexShrink: 0 }}>
-                    <div style={{ fontSize: '11px', color: 'var(--k-text-muted)', marginBottom: '4px' }}>Your profile is reviewed</div>
-                    <div style={{ fontSize: '11px', color: 'var(--k-text-muted)', marginBottom: '8px' }}>by your manager each cycle.</div>
-                    <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--k-brand-primary)' }}>Performance + Potential</div>
-                    <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--k-brand-primary)' }}>drive your development plan.</div>
-                  </div>
-                </div>
-              </div>
-            )}
+                )}
           <div className="k-stat-grid k-stat-grid-4" style={{ marginBottom: '24px' }}>
               <div className="k-stat-card accent">
                 <div className="k-stat-label">Overall Score</div>

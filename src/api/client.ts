@@ -1,4 +1,4 @@
-﻿import axios from 'axios'
+import axios from 'axios'
 
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Kinalys API Client
@@ -439,5 +439,20 @@ export async function saveCompetencyAssessment(userId: string, data: Record<stri
 
 export async function getMyTalentPosition() {
   const response = await apiClient.get('/talent/my-position')
+  return response.data
+}
+
+export async function getMyAlerts() {
+  const response = await apiClient.get('/alerts/my')
+  return response.data
+}
+
+export async function markAlertRead(id: string) {
+  const response = await apiClient.put(`/alerts/${id}/read`)
+  return response.data
+}
+
+export async function markAllAlertsRead() {
+  const response = await apiClient.put('/alerts/read-all')
   return response.data
 }

@@ -20,6 +20,7 @@ import MyLearning from './pages/MyLearning'
 import CourseCatalog from './pages/CourseCatalog'
 import Certifications from './pages/Certifications'
 import ExecDashboard from './pages/ExecDashboard'
+import CompetencyFramework from './pages/CompetencyFramework'
 
 
 interface UserProfile {
@@ -161,6 +162,7 @@ function Dashboard() {
             <div className={`k-nav-item ${activeNav === 'copc' ? 'active' : ''}`} onClick={() => setActiveNav('copc')}>🏢 COPC Scorecard</div>
             <div className={`k-nav-item ${activeNav === 'sixsigma' ? 'active' : ''}`} onClick={() => setActiveNav('sixsigma')}>⚙️ Six Sigma</div>
             <div className={`k-nav-item ${activeNav === 'oneonone' ? 'active' : ''}`} onClick={() => setActiveNav('oneonone')}>🗣️ 1-on-1 Reviews</div>
+            <div className={`k-nav-item ${activeNav === 'competency' ? 'active' : ''}`} onClick={() => setActiveNav('competency')}>🎯 Competency</div>
           </>}
         </div>
 
@@ -250,6 +252,8 @@ function Dashboard() {
           <COPCScorecard />
           ) : activeNav === 'sixsigma' ? (
           <SixSigma />
+          ) : activeNav === 'competency' ? (
+          <CompetencyFramework />
         ) : (
           <div className="k-page">
 

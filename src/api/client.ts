@@ -399,3 +399,40 @@ export async function completeCourseSection(enrollmentId: string, sectionId: str
   const response = await apiClient.post(`/lms/enrollments/${enrollmentId}/sections/${sectionId}/complete`)
   return response.data
 }
+
+export async function getCompetencyFrameworks() {
+  const response = await apiClient.get('/competency/frameworks')
+  return response.data
+}
+
+export async function getFrameworkCompetencies(code: string) {
+  const response = await apiClient.get(`/competency/frameworks/${code}/competencies`)
+  return response.data
+}
+
+export async function getCompetencySettings() {
+  const response = await apiClient.get('/competency/settings')
+  return response.data
+}
+
+export async function updateCompetencySettings(data: Record<string, any>) {
+  const response = await apiClient.put('/competency/settings', data)
+  return response.data
+}
+
+export async function getMyCompetencyAssessments(cycleId?: string) {
+  const params = cycleId ? `?cycle_id=${cycleId}` : ''
+  const response = await apiClient.get(`/competency/assessments/me${params}`)
+  return response.data
+}
+
+export async function getUserCompetencyAssessments(userId: string, cycleId?: string) {
+  const params = cycleId ? `?cycle_id=${cycleId}` : ''
+  const response = await apiClient.get(`/competency/assessments/user/${userId}${params}`)
+  return response.data
+}
+
+export async function saveCompetencyAssessment(userId: string, data: Record<string, any>) {
+  const response = await apiClient.put(`/competency/assessments/user/${userId}`, data)
+  return response.data
+}

@@ -1,5 +1,6 @@
 ﻿import { useState, useEffect } from 'react'
 import { getMyLearning, getLmsStats, updateCourseProgress } from '../api/client'
+import CourseViewer from './CourseViewer'
 
 const DIFFICULTY_CONFIG: Record<string, { color: string; bg: string }> = {
   beginner:     { color: 'var(--k-success-text)', bg: 'var(--k-success-bg)' },
@@ -20,6 +21,7 @@ export default function MyLearning() {
   const [updating, setUpdating] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [filter, setFilter] = useState<'all' | 'in_progress' | 'completed' | 'enrolled'>('all')
+  const [viewingCourse, setViewingCourse] = useState<any>(null)
 
   useEffect(() => { loadData() }, []) // eslint-disable-line
 
@@ -52,6 +54,16 @@ export default function MyLearning() {
   }
 
   const filtered = enrollments.filter(e => filter === 'all' || e.status === filter)
+
+  if (viewingCourse) return (
+    <CourseViewer
+      courseId={viewingCourse.course_id}
+      courseTitle={viewingCourse.title}
+      enrollmentId={viewingCourse.id}
+      onBack={() => setViewingCourse(null)}
+      onComplete={() => { setViewingCourse(null); loadData() }}
+    />
+  )
 
   if (loading) return <div className="k-page"><div style={{ fontSize: '14px', color: 'var(--k-text-muted)' }}>Loading your learning...</div></div>
 
@@ -169,11 +181,17 @@ export default function MyLearning() {
                         <div style={{ height: '100%', width: `${progress}%`, background: enrollment.status === 'completed' ? 'var(--k-success-text)' : 'var(--k-brand-primary)', borderRadius: '3px', transition: 'width 0.3s' }}/>
                       </div>
 
-                      {/* Actions */}
+                     {/* Actions */}
                       {enrollment.status !== 'completed' ? (
                         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                           <span style={{ fontSize: '12px', color: 'var(--k-text-muted)' }}>{Math.round(progress)}% complete</span>
                           <div style={{ display: 'flex', gap: '6px', marginLeft: 'auto' }}>
+                            <button
+                              onClick={() => setViewingCourse(enrollment)}
+                              style={{ fontSize: '11px', padding: '4px 12px', borderRadius: 'var(--k-radius-md)', border: '1px solid var(--k-brand-primary)', background: 'var(--k-brand-faint)', color: 'var(--k-brand-primary)', cursor: 'pointer', fontFamily: 'var(--k-font-sans)', fontWeight: 600 }}
+                            >
+                              {enrollment.progress_pct > 0 ? 'Continue' : 'Start Learning'}
+                            </button>
                             {[25, 50, 75, 100].map(pct => (
                               <button
                                 key={pct}

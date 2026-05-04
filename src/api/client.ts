@@ -387,4 +387,15 @@ export async function fixLmsEmojis() {
 export async function getDashboardStats() {
   const response = await apiClient.get('/dashboard/stats')
   return response.data
+
+}
+
+export async function getCourseSections(courseId: string) {
+  const response = await apiClient.get(`/lms/courses/${courseId}/sections`)
+  return response.data
+}
+
+export async function completeCourseSection(enrollmentId: string, sectionId: string) {
+  const response = await apiClient.post(`/lms/enrollments/${enrollmentId}/sections/${sectionId}/complete`)
+  return response.data
 }

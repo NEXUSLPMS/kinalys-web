@@ -319,3 +319,124 @@ Paste this at the start of any new Claude chat or Claude Code session:
 
 "I am building Kinalys, a unified LMS + PMS SaaS. Please read the attached context file KINALYS_CONTEXT_V2.md before we begin. We are currently in Sprint 8, building toward a demo on 21 May 2026. The servers are [running/not running]. Today we need to build [next item from Remaining Sprint 8 list]."
 
+
+---
+
+## DECISIONS LOCKED — 2 May 2026
+
+### 9-Box Visibility (LOCKED)
+Show axes only on employee dashboard — Performance Score (%) + "Potential: Manager Assessed"
+Do NOT show box label (e.g. "Star", "Needs Improvement")
+Build in Sprint 9
+
+### User Roles — 8 Levels (LOCKED)
+| Role | Code | Key Permissions |
+|---|---|---|
+| Super Admin | super_admin | Full system, billing, white-label config (Phase 2) |
+| HR Admin | hr_admin | Users, departments, KPI setup, cycle management, extend windows |
+| Executive/CXO | executive | All org data, set Org OKRs |
+| Leadership (VP/Director/AVP) | leadership | All assigned verticals, set Business OKRs |
+| Manager | manager | All assigned departments/teams, set Department OKRs |
+| Assistant Manager | asst_manager | All assigned teams, set Team OKRs |
+| Team Lead | team_lead | Their team only, set User OKRs |
+| Employee | employee | Own data only, propose self KPIs and OKRs |
+
+Current DB role enum needs: super_admin, leadership, asst_manager added
+Current system has: hr_admin, executive, manager, team_lead, employee
+
+### Early Adopter Offer (LOCKED)
+- 12 months platform access on 10-month payment (17% effective discount)
+- First 20 clients only — cap is firm
+- Valid until 31 July 2026
+- Frame as: Founding Client Program — never call it a discount
+- Mention on demo call, not in outreach email (email has P.S. teaser only)
+
+### Outreach Email Send Date (LOCKED)
+- Send: 12 May 2026
+- 3-email sequence (templates written in kinalys_outreach_email.md)
+- Target: HR Heads / CHROs at BPO, ITeS, Contact Centres, IT Services
+- Cities: Pune, Mumbai, Bengaluru, Hyderabad, Chennai, Delhi NCR
+
+### Phase 1 Freeze (LOCKED)
+Full scope in kinalys_phase1_freeze.md
+Demo-ready: 21 May 2026
+Production-ready: 30 June 2026
+
+### LinkedIn Series (LOCKED)
+6 posts over 5 weeks — see kinalys_linkedin_series.md
+Post 1: Immediately (article ready)
+Post 6 (product reveal): 19-20 May 2026
+
+### Logo Brief (LOCKED)
+Primary teal: #0D9488
+Deep teal: #0F6E56
+Brief in kinalys_logo_brief.md — send to designer this week
+
+### Insurance Sector (LOCKED)
+No architectural changes needed
+Add IRDAI compliance training tracking to Phase 1.5
+Add insurance KPI templates (Claims, Policy Renewal, Persistency) to library
+
+### Operational Tool Integrations (LOCKED PRIORITY ORDER)
+Tier 1 (Phase 1.5): NICE CXone, Genesys Cloud, Freshdesk, Zoho CRM, Jira
+Tier 2 (Phase 2): Salesforce, ServiceNow, Microsoft Dynamics, Amazon Connect, Verint
+Tier 3 (Phase 3): Oracle SCM, SAP EWM, Oracle OPERA, Practo
+
+### Documents to Build (after demo)
+PRD | Database Model | Addendums | One Page Site | HR Deck | Pitch Deck
+All to include product development plan
+Build after 21 May demo
+
+### Pricing Add-Ons (LOCKED)
+- Competency Intelligence: $499/year (SHRM, Lominger 67, COPC, Custom)
+- PKT Engine: $199/month
+- COPC Methodology Pack: $299/year
+- Operational Integrations: $149/month per integration
+- Pricing page redesign needed — include Competency Intelligence with "Coming Soon" note
+
+
+---
+
+## REAL-TIME KPI BREACH ALERTING — Phase 1.5 Feature (LOCKED)
+
+### The Problem It Solves
+Current Kinalys tracks KPI scores after the fact — end of cycle or when actuals are updated. This means a manager only sees a red KPI when it is already red. By then the damage is done — an SLA has been breached, a customer has been let down, a founder has been messaged on LinkedIn.
+
+### The Feature
+Real-time alerting when a KPI is trending toward a breach — before it breaches.
+
+**How it works:**
+- Each KPI assignment has a target, a green threshold, and an amber threshold
+- When an actual value is updated and the score drops below a configurable warning threshold (e.g. 10% above the amber threshold), the system fires an alert
+- Alert goes to: the employee (self-awareness), the team lead (immediate visibility), the manager (escalation path)
+- Alert channels: in-platform notification, email, and eventually SMS/WhatsApp (Phase 2)
+- Alert includes: KPI name, current value, target, threshold breached, recommended action (from AI Coach)
+
+**Example scenario:**
+Agent's FCR drops from 85% to 71% mid-cycle. Amber threshold is 70%. System fires alert to team lead: "Priya Sharma's FCR has dropped to 71% — approaching amber threshold of 70%. Recommended action: schedule 1-on-1 and review last 10 FCR failures."
+
+Team lead sees it on Day 8 of the cycle, not Day 30.
+
+**The result:**
+Managers catch performance dips before they become customer complaints. Founders never need to be messaged on LinkedIn for a missing product refund.
+
+### Business Value
+- Unique differentiator — no mid-market HR platform in India offers real-time KPI breach alerting
+- Directly addresses the #1 pain point for BPO and D2C operations: reactive vs proactive management
+- Demo moment: show an alert firing in real time during the demo when a KPI actual is updated
+
+### Demo Use Case (use in pitch)
+"A customer received an incomplete order. They filed a complaint. 14 days later they had to message the founder on LinkedIn to get a refund. The founder spent 2 hours on a problem that should have been resolved in 20 minutes. Every system between the complaint and the resolution failed. This is not a people problem. It is an architecture problem. Kinalys makes it impossible for that alert to go unseen."
+
+### Build Spec (Phase 1.5 — July 2026)
+- DB: kpi_alert_rules table (tenant_id, kpi_name_pattern, warning_threshold_pct, alert_recipients, channels)
+- DB: kpi_alerts table (tenant_id, kpi_assignment_id, user_id, alert_type, threshold_breached, fired_at, acknowledged_at)
+- Backend: alert evaluation runs on every actual_value update in scorecard route
+- Backend: alert delivery via email (Phase 1.5), WhatsApp Business API (Phase 2)
+- Frontend: notification bell in topbar with unread count
+- Frontend: Alert settings in Organisation settings — configure thresholds per KPI category
+- Frontend: Alert history in Exec Dashboard
+
+### Pricing
+Included in Unified plan — not a separate add-on. This is a core differentiator, not an upsell.
+

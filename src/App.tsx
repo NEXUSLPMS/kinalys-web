@@ -413,7 +413,7 @@ function Dashboard() {
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+            <div className="k-grid-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
               <div className="k-card">
                 <div className="k-card-header"><div className="k-card-title">👤 My Profile</div><span className="k-pill green">Active</span></div>
                 {profile ? (

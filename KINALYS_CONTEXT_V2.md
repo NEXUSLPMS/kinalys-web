@@ -440,3 +440,88 @@ Managers catch performance dips before they become customer complaints. Founders
 ### Pricing
 Included in Unified plan — not a separate add-on. This is a core differentiator, not an upsell.
 
+
+---
+
+## PHASE 1.5 ADDITIONS (LOCKED)
+
+### Multi-Framework Competency Support
+Allow multiple competency frameworks per tenant mapped to specific departments or designations.
+
+Architecture:
+- tenant_competency_settings gets department_id and designation_id columns
+- Remove unique constraint on tenant_id — replace with unique(tenant_id, department_id, designation_id)
+- Priority order: designation-specific → department-specific → org default
+- Settings UI becomes a framework mapping table (similar to KPI templates)
+
+Example: BPO client uses Custom Framework org-wide, COPC for Customer Operations dept, Lominger for all Manager designations and above.
+
+Demo talking point (say in demo without building): "You can also assign different frameworks to different departments — your CS team on COPC while your leadership tier is on Lominger."
+
+Build: Phase 1.5 (July-September 2026)
+
+### KPI Breach Alerting (already documented above)
+Real-time alerts when KPI drops toward amber/red threshold before it breaches.
+Build: Phase 1.5
+
+---
+
+## KINALYS MASTER CONTROL PANEL (Super Admin) — Phase 2 Feature (LOCKED)
+
+### What it is
+An internal control panel accessible only to the Kinalys team (Indyaah Techbytes staff) for managing all client tenants from a single interface. Completely separate from the client-facing platform.
+
+### Access
+- Separate login — not Auth0 client login
+- Kinalys staff only — IP-restricted or VPN-gated
+- Full audit trail of every action taken by Kinalys staff on client data
+- Two-person approval for destructive actions (data deletion, plan changes)
+
+### Core Capabilities
+
+**Tenant Management**
+- View all tenants — name, plan, status, created date, last active
+- Activate / deactivate tenants
+- View tenant settings without logging in as the client
+- Impersonate a tenant (read-only view) for troubleshooting
+- Reset tenant data (with two-person approval)
+
+**Subscription and Add-On Management**
+- Enable / disable add-ons per tenant: Competency Intelligence, PKT Engine, COPC Pack, Integrations
+- Change plan tier: LMS Only / PMS Only / Unified
+- Set custom pricing or discount overrides
+- View billing status and payment history (Razorpay webhook data)
+- Extend trial periods
+- Apply founding client program terms
+
+**Support and Troubleshooting**
+- View support tickets across all tenants in one queue
+- Assign tickets to Kinalys team members
+- Read-only access to any tenant's audit log for debugging
+- View API error logs per tenant
+- Trigger manual HRIS sync for any tenant
+- Reset user passwords (triggers Auth0 password reset email)
+- View active sessions per tenant
+
+**System Health**
+- API health dashboard — uptime, error rates, response times
+- Database metrics — table sizes, slow queries, connection pool
+- Queue status — HRIS sync jobs, email alerts, scheduled tasks
+- AWS infrastructure status
+
+**Analytics (internal)**
+- DAU/MAU per tenant
+- Feature adoption — which modules are being used
+- KPI proposal volumes, scorecard update frequency
+- LMS completion rates across all tenants
+- AI coaching usage per tenant (Anthropic API cost tracking)
+
+### Architecture
+- Separate Next.js application — admin.kinalys.io (internal only)
+- Connects to same PostgreSQL DB with a super_admin role
+- All actions logged to a separate kinalys_staff_audit_log table
+- Never exposed to clients or the public internet
+
+### Build: Phase 2 (October 2026+)
+Priority within Phase 2: Build this first — needed before onboarding more than 10 clients simultaneously.
+

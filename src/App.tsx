@@ -1,6 +1,6 @@
-﻿import { useAuth0 } from '@auth0/auth0-react'
+import { useAuth0 } from '@auth0/auth0-react'
 import { useEffect, useState } from 'react'
-import { setAuthToken, getMyProfile, getStatus, getDepartments, getDashboardStats } from './api/client'
+import { setAuthToken, getMyProfile, getStatus, getDepartments, getDashboardStats, getMyTalentPosition } from './api/client'
 import Organisation from './pages/Organisation'
 import AccountSettings from './pages/AccountSettings'
 import ImportUsers from './pages/ImportUsers'
@@ -21,6 +21,7 @@ import CourseCatalog from './pages/CourseCatalog'
 import Certifications from './pages/Certifications'
 import ExecDashboard from './pages/ExecDashboard'
 import CompetencyFramework from './pages/CompetencyFramework'
+
 
 
 interface UserProfile {
@@ -76,6 +77,7 @@ function Dashboard() {
   const [apiError, setApiError] = useState<string | null>(null)
   const [activeNav, setActiveNav] = useState('home')
   const [dashStats, setDashStats] = useState<any>(null)
+  const [talentPosition, setTalentPosition] = useState<any>(null)
 
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({})
 
@@ -88,11 +90,12 @@ function Dashboard() {
       try {
         const token = await getAccessTokenSilently({ authorizationParams: { audience: 'https://api.kinalys.io' } })
         setAuthToken(token)
-       const [statusData, profileData, deptData, statsData] = await Promise.allSettled([getStatus(), getMyProfile(), getDepartments(), getDashboardStats()])
+       const [statusData, profileData, deptData, statsData, talentData] = await Promise.allSettled([getStatus(), getMyProfile(), getDepartments(), getDashboardStats(), getMyTalentPosition()])
         if (statusData.status === 'fulfilled') setStatus(statusData.value)
         if (profileData.status === 'fulfilled') setProfile(profileData.value.user)
         if (deptData.status === 'fulfilled') setDepartments(deptData.value.departments || [])
         if (statsData.status === 'fulfilled') setDashStats(statsData.value)
+        if (talentData.status === 'fulfilled') setTalentPosition(talentData.value)
       } catch (err: any) {
         setApiError(err.message)
       } finally {
@@ -268,6 +271,52 @@ function Dashboard() {
               <div className="k-page-sub">{profile?.role === 'hr_admin' ? 'HR Admin' : 'Team Member'} · {profile?.tenant?.name || 'Your workspace'} · {profile?.designation || 'Kinalys Platform'}</div>
             </div>
 
+
+            {/* 9-Box Position Card */}
+            {talentPosition?.position && (
+              <div className="k-card" style={{ marginBottom: '24px' }}>
+                <div className="k-card-header">
+                  <div className="k-card-title">My Talent Profile</div>
+                  <span style={{ fontSize: '12px', color: 'var(--k-text-muted)' }}>{talentPosition.cycle?.name}</span>
+                </div>
+                <div style={{ padding: '20px', display: 'flex', gap: '32px', alignItems: 'center' }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ marginBottom: '16px' }}>
+                      <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--k-text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>Performance Score</div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{ fontSize: '32px', fontWeight: 800, color: talentPosition.position.performance_score >= 90 ? 'var(--k-success-text)' : talentPosition.position.performance_score >= 80 ? 'var(--k-warning-text)' : 'var(--k-danger-text)' }}>
+                          {talentPosition.position.performance_score}%
+                        </div>
+                        <div style={{ flex: 1, height: '8px', background: 'var(--k-border-default)', borderRadius: '4px', overflow: 'hidden' }}>
+                          <div style={{ height: '100%', width: `${talentPosition.position.performance_score}%`, background: talentPosition.position.performance_score >= 90 ? 'var(--k-success-text)' : talentPosition.position.performance_score >= 80 ? 'var(--k-warning-text)' : 'var(--k-danger-text)', borderRadius: '4px' }} />
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--k-text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>Potential</div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        {talentPosition.position.has_potential_rating ? (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <span style={{ fontSize: '15px', fontWeight: 800, color: talentPosition.position.potential_rating >= 4 ? 'var(--k-success-text)' : talentPosition.position.potential_rating >= 3 ? 'var(--k-warning-text)' : 'var(--k-danger-text)', background: talentPosition.position.potential_rating >= 4 ? 'var(--k-success-bg)' : talentPosition.position.potential_rating >= 3 ? 'var(--k-warning-bg)' : 'var(--k-danger-bg)', padding: '4px 14px', borderRadius: '10px' }}>
+                              {talentPosition.position.potential_rating >= 4 ? 'High Potential' : talentPosition.position.potential_rating >= 3 ? 'Medium Potential' : 'Developing'}
+                            </span>
+                            <span style={{ fontSize: '12px', color: 'var(--k-text-muted)' }}>· Manager assessed</span>
+                          </div>
+                        ) : (
+                          <span style={{ fontSize: '13px', color: 'var(--k-text-muted)' }}>Not yet assessed by your manager</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ background: 'var(--k-bg-page)', borderRadius: 'var(--k-radius-md)', padding: '14px 20px', textAlign: 'center', flexShrink: 0 }}>
+                    <div style={{ fontSize: '11px', color: 'var(--k-text-muted)', marginBottom: '4px' }}>Your profile is reviewed</div>
+                    <div style={{ fontSize: '11px', color: 'var(--k-text-muted)', marginBottom: '8px' }}>by your manager each cycle.</div>
+                    <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--k-brand-primary)' }}>Performance + Potential</div>
+                    <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--k-brand-primary)' }}>drive your development plan.</div>
+                  </div>
+                </div>
+              </div>
+            )}
           <div className="k-stat-grid k-stat-grid-4" style={{ marginBottom: '24px' }}>
               <div className="k-stat-card accent">
                 <div className="k-stat-label">Overall Score</div>

@@ -436,3 +436,8 @@ export async function saveCompetencyAssessment(userId: string, data: Record<stri
   const response = await apiClient.put(`/competency/assessments/user/${userId}`, data)
   return response.data
 }
+
+export async function getMyTalentPosition() {
+  const response = await apiClient.get('/talent/my-position')
+  return response.data
+}

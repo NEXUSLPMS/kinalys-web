@@ -285,7 +285,7 @@ function Dashboard() {
                     )}
                   </button>
                   {showAlerts && (
-                    <div style={{ position: 'absolute', right: 0, top: '40px', width: '380px', background: 'var(--k-bg-surface)', border: '1px solid var(--k-border-default)', borderRadius: 'var(--k-radius-lg)', boxShadow: 'var(--k-shadow-lg)', zIndex: 1000, maxHeight: '480px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                    <div className="k-alert-dropdown" style={{ position: 'absolute', right: 0, maxWidth: 'calc(100vw - 20px)', top: '40px', width: 'min(380px, calc(100vw - 20px))', background: 'var(--k-bg-surface)', border: '1px solid var(--k-border-default)', borderRadius: 'var(--k-radius-lg)', boxShadow: 'var(--k-shadow-lg)', zIndex: 1000, maxHeight: '480px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
                       <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--k-border-default)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--k-text-primary)' }}>
                           Alerts {unreadCount > 0 && <span style={{ fontSize: '12px', color: 'white', background: '#EF4444', padding: '1px 7px', borderRadius: '10px', marginLeft: '6px' }}>{unreadCount}</span>}
@@ -324,7 +324,7 @@ function Dashboard() {
                 </div>
 
             <div style={{ marginBottom: '24px' }}>
-              <div className="k-page-title">Welcome back, {profile?.fullName || user?.name || 'there'} 👋</div>
+              <div className="k-page-title" style={{ whiteSpace: 'normal', wordBreak: 'break-word' }}>Welcome back, {profile?.fullName || user?.name || 'there'} 👋</div>
               <div className="k-page-sub">{profile?.role === 'hr_admin' ? 'HR Admin' : 'Team Member'} · {profile?.tenant?.name || 'Your workspace'} · {profile?.designation || 'Kinalys Platform'}</div>
             </div>
 
@@ -334,7 +334,7 @@ function Dashboard() {
                       <div className="k-card-title">My Talent Profile</div>
                       <span style={{ fontSize: "12px", color: "var(--k-text-muted)" }}>{talentPosition.cycle?.name}</span>
                     </div>
-                    <div style={{ padding: "20px", display: "flex", gap: "32px", alignItems: "center" }}>
+                    <div className="k-mobile-stack" style={{ padding: "20px", display: "flex", gap: "32px", alignItems: "center" }}>
                       <div style={{ flex: 1 }}>
                         <div style={{ marginBottom: "16px" }}>
                           <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--k-text-muted)", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "6px" }}>Performance Score</div>
@@ -400,13 +400,12 @@ function Dashboard() {
             </div>
 
             <div className="k-lms-banner" style={{ marginBottom: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
-                <div style={{ fontSize: '14px', fontWeight: 700 }}>📚 Learning Hours</div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>                <div style={{ fontSize: '14px', fontWeight: 700 }}>📚 Learning Hours</div>
                 {dashStats?.learning_pct >= 100 && <span className="k-pill lms">TARGET HIT — BONUS ACTIVE</span>}
                 {dashStats?.learning_pct < 100 && dashStats?.learning_pct > 0 && <span className="k-pill amber">{dashStats.learning_pct}% COMPLETE</span>}
               </div>
-              <div className="k-lms-progress"><div className="k-lms-progress-fill" style={{ width: `${dashStats?.learning_pct ?? 0}%` }}/></div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', opacity: 0.8 }}>
+              <div className="k-lms-progress"><div className="k-lms-progress-fill" style={{ width: `${dashStats?.learning_pct ?? 0, 100}%` }}/></div>
+              <div style={{ display: 'flex', justifyContent: 'flex-start', fontSize: '12px', opacity: 0.8, flexWrap: 'wrap', gap: '8px', width: '100%' }}>
                 <span>{dashStats?.completed_hours ?? 0} hrs achieved</span>
                 <span>{dashStats?.learning_pct ?? 0}% of target</span>
                 <span>Annual target: {dashStats?.learning_target ?? 40} hrs</span>

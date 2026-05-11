@@ -1,6 +1,6 @@
 import { useAuth0 } from '@auth0/auth0-react'
 import { useEffect, useState } from 'react'
-import { setAuthToken, getMyProfile, getStatus, getDepartments, getDashboardStats, getMyAlerts, markAlertRead, markAllAlertsRead, getMyTalentPosition } from './api/client'
+import { setAuthToken, getMyProfile, getStatus, getDepartments, getDashboardStats, getMyAlerts, markAlertRead, markAllAlertsRead, getMyTalentPosition, triggerDemoBreach } from './api/client'
 import Organisation from './pages/Organisation'
 import AccountSettings from './pages/AccountSettings'
 import ImportUsers from './pages/ImportUsers'
@@ -326,6 +326,30 @@ function Dashboard() {
             <div style={{ marginBottom: '24px' }}>
               <div className="k-page-title" style={{ whiteSpace: 'normal', wordBreak: 'break-word' }}>Welcome back, {profile?.fullName || user?.name || 'there'} 👋</div>
               <div className="k-page-sub">{profile?.role === 'hr_admin' ? 'HR Admin' : 'Team Member'} · {profile?.tenant?.name || 'Your workspace'} · {profile?.designation || 'Kinalys Platform'}</div>
+            </div>
+
+            {/* DEMO BREACH TRIGGER */}
+            <div style={{ marginBottom: '16px', padding: '12px 16px', background: 'var(--k-warning-bg)', border: '1px solid var(--k-warning-border)', borderRadius: 'var(--k-radius-md)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+              <div>
+                <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--k-warning-text)' }}>🎯 Demo Mode — Breach Alert Trigger</div>
+                <div style={{ fontSize: '11px', color: 'var(--k-warning-text)', opacity: 0.8 }}>Drops a live KPI to amber and fires the notification bell in real time</div>
+              </div>
+              <button
+                onClick={async () => {
+                  try {
+                    const result = await triggerDemoBreach()
+                    const freshAlerts = await getMyAlerts()
+                    setAlerts(freshAlerts.alerts || [])
+                    setUnreadCount(freshAlerts.unread_count || 0)
+                    alert(`✅ ${result.message}`)
+                  } catch (err: any) {
+                    alert('Error: ' + (err.response?.data?.error || err.message))
+                  }
+                }}
+                style={{ background: 'var(--k-warning-solid)', color: 'white', border: 'none', borderRadius: 'var(--k-radius-md)', padding: '8px 16px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--k-font-sans)' }}
+              >
+                🔔 Fire Breach Alert
+              </button>
             </div>
 
                 {talentPosition?.position && (

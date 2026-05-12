@@ -1,5 +1,5 @@
-﻿import { useState, useEffect } from 'react'
-import { getMyScorecard, updateKpiActual, getTeamScorecards, getUserScorecard, getReviewCycles, proposeKpi } from '../api/client'
+import { useState, useEffect } from 'react'
+import { getMyScorecard, updateKpiActual, getTeamScorecards, getUserScorecard, getReviewCycles, proposeKpi, logKpiWarningAcknowledged } from '../api/client'
 
 interface KpiAssignment {
   id: string
@@ -82,6 +82,7 @@ export default function Scorecard() {
     notes: '',
   })
   const [isManager, setIsManager] = useState(false)
+  const [showKpiWarning, setShowKpiWarning] = useState(false)
 
   useEffect(() => { loadInitial() }, []) // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (selectedCycle) loadMyScorecard() }, [selectedCycle]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -262,7 +263,7 @@ async function submitProposal() {
                 </div>
                 <button
                   className="k-btn k-btn-primary"
-                  onClick={() => setShowProposeModal(true)}
+                  onClick={() => { if (liveKpis.length >= 5) { setShowKpiWarning(true) } else { setShowProposeModal(true) } }}
                   style={{ fontSize: '12px', whiteSpace: 'nowrap' }}
                 >
                   + Propose KPI
@@ -451,6 +452,49 @@ async function submitProposal() {
               <div style={{ textAlign: 'center', padding: '48px', color: 'var(--k-text-muted)', fontSize: '14px' }}>
                 <div style={{ fontSize: '48px', marginBottom: '16px' }}>📊</div>
                 No KPIs assigned for this cycle yet. Your HR Admin will apply templates at the start of the cycle.
+              </div>
+            )}
+            {/* KPI Count Warning Modal */}
+            {showKpiWarning && (
+              <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+                <div style={{ background: 'var(--k-bg-card)', borderRadius: 'var(--k-radius-lg)', padding: '28px', maxWidth: '480px', width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
+                  <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
+                    <span style={{ fontSize: '28px' }}>⚠️</span>
+                    <div>
+                      <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--k-text-primary)', marginBottom: '4px' }}>Too Many KPIs?</div>
+                      <div style={{ fontSize: '13px', color: 'var(--k-text-muted)' }}>This employee already has 5 or more KPIs assigned this cycle.</div>
+                    </div>
+                  </div>
+                  <div style={{ background: 'var(--k-warning-bg)', border: '1px solid var(--k-warning-border, #fcd34d)', borderRadius: 'var(--k-radius-md)', padding: '14px 16px', marginBottom: '20px' }}>
+                    <div style={{ fontSize: '13px', color: 'var(--k-warning-text)', fontWeight: 600, marginBottom: '6px' }}>Research-backed guidance</div>
+                    <div style={{ fontSize: '12px', color: 'var(--k-warning-text)', lineHeight: 1.6 }}>
+                      Assigning more than 5 KPIs per cycle is proven to reduce focus and performance. Employees with fewer, well-defined KPIs consistently outperform those with many. Consider replacing an existing KPI rather than adding a new one.
+                    </div>
+                  </div>
+                  <div style={{ fontSize: '12px', color: 'var(--k-text-muted)', marginBottom: '20px' }}>
+                    Current live KPIs: <strong style={{ color: 'var(--k-warning-text)' }}>{liveKpis.length}</strong>. This warning will be recorded in the audit log.
+                  </div>
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <button onClick={() => setShowKpiWarning(false)}
+                      style={{ flex: 1, padding: '10px', background: 'var(--k-bg-page)', color: 'var(--k-text-secondary)', border: '1px solid var(--k-border-default)', borderRadius: 'var(--k-radius-md)', fontSize: '13px', fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--k-font-sans)' }}>
+                      Cancel
+                    </button>
+                    <button onClick={async () => {
+                        await logKpiWarningAcknowledged({
+                          kpi_count: liveKpis.length,
+                          employee_name: myScorecard?.user_full_name || 'Unknown',
+                          manager_name: 'Self-proposed',
+                          cycle_name: myScorecard?.cycle?.name || 'Current Cycle'
+                        }).catch(() => {})
+                        setShowKpiWarning(false)
+                        setShowProposeModal(true)
+                      }}
+
+                      style={{ flex: 1, padding: '10px', background: 'var(--k-warning-text)', color: 'white', border: 'none', borderRadius: 'var(--k-radius-md)', fontSize: '13px', fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--k-font-sans)' }}>
+                      I understand, proceed anyway
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
             {/* Propose KPI Modal */}

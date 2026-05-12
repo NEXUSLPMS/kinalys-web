@@ -23,6 +23,7 @@ import ExecDashboard from './pages/ExecDashboard'
 import CompetencyFramework from './pages/CompetencyFramework'
 import PKTEngine from './pages/PKTEngine'
 import COPCReport from './pages/COPCReport'
+import SixSigmaReport from './pages/SixSigmaReport'
 
 
 
@@ -172,6 +173,7 @@ function Dashboard() {
             <div className={`k-nav-item ${activeNav === 'copc' ? 'active' : ''}`} onClick={() => setActiveNav('copc')}>🏢 COPC Scorecard</div>
             <div className={`k-nav-item ${activeNav === 'copcreport' ? 'active' : ''}`} onClick={() => setActiveNav('copcreport')}>📋 COPC Report</div>
             <div className={`k-nav-item ${activeNav === 'sixsigma' ? 'active' : ''}`} onClick={() => setActiveNav('sixsigma')}>⚙️ Six Sigma</div>
+            <div className={`k-nav-item ${activeNav === 'sixsigmareport' ? 'active' : ''}`} onClick={() => setActiveNav('sixsigmareport')}>📊 Six Sigma Report</div>
             <div className={`k-nav-item ${activeNav === 'oneonone' ? 'active' : ''}`} onClick={() => setActiveNav('oneonone')}>🗣️ 1-on-1 Reviews</div>
             <div className={`k-nav-item ${activeNav === 'competency' ? 'active' : ''}`} onClick={() => setActiveNav('competency')}>🎯 Competency</div>
             <div className={`k-nav-item ${activeNav === 'pkt' ? 'active' : ''}`} onClick={() => setActiveNav('pkt')}>🧠 PKT Engine</div>
@@ -270,6 +272,8 @@ function Dashboard() {
           <PKTEngine />
           ) : activeNav === 'copcreport' ? (
           <COPCReport />
+          ) : activeNav === 'sixsigmareport' ? (
+          <SixSigmaReport />
         ) : (
           <div className="k-page">
 

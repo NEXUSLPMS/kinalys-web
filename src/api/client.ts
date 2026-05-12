@@ -503,3 +503,11 @@ export async function getCOPCReport() {
   const response = await apiClient.get('/scorecard/copc-report')
   return response.data
 }
+export async function getSixSigmaReport() {
+  const response = await apiClient.get('/scorecard/sixsigma-report')
+  return response.data
+}
+export async function logKpiWarningAcknowledged(data: { kpi_count: number; employee_name: string; manager_name: string; cycle_name: string }) {
+  const response = await apiClient.post('/kpi/warning-acknowledged', data)
+  return response.data
+}

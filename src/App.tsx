@@ -21,6 +21,7 @@ import CourseCatalog from './pages/CourseCatalog'
 import Certifications from './pages/Certifications'
 import ExecDashboard from './pages/ExecDashboard'
 import CompetencyFramework from './pages/CompetencyFramework'
+import PKTEngine from './pages/PKTEngine'
 
 
 
@@ -171,6 +172,7 @@ function Dashboard() {
             <div className={`k-nav-item ${activeNav === 'sixsigma' ? 'active' : ''}`} onClick={() => setActiveNav('sixsigma')}>⚙️ Six Sigma</div>
             <div className={`k-nav-item ${activeNav === 'oneonone' ? 'active' : ''}`} onClick={() => setActiveNav('oneonone')}>🗣️ 1-on-1 Reviews</div>
             <div className={`k-nav-item ${activeNav === 'competency' ? 'active' : ''}`} onClick={() => setActiveNav('competency')}>🎯 Competency</div>
+            <div className={`k-nav-item ${activeNav === 'pkt' ? 'active' : ''}`} onClick={() => setActiveNav('pkt')}>🧠 PKT Engine</div>
           </>}
         </div>
 
@@ -262,6 +264,8 @@ function Dashboard() {
           <SixSigma />
           ) : activeNav === 'competency' ? (
           <CompetencyFramework />
+          ) : activeNav === 'pkt' ? (
+          <PKTEngine />
         ) : (
           <div className="k-page">
 
@@ -295,7 +299,7 @@ function Dashboard() {
                             Mark all read
                           </button>
                         )}
-                        <button onClick={() => setShowAlerts(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px', color: 'var(--k-text-muted)', padding: '0 4px', lineHeight: 1 }}>✕</button>
+                        <button onClick={() => setShowAlerts(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px', color: 'var(--k-text-muted)', padding: '0 4px', lineHeight: 1 }}>✖</button>
                       </div>
                       <div style={{ overflowY: 'auto', flex: 1 }}>
                         {alerts.length === 0 ? (
@@ -398,27 +402,27 @@ function Dashboard() {
               <div className="k-stat-card accent">
                 <div className="k-stat-label">Overall Score</div>
                 <div className="k-stat-value" style={{ color: dashStats?.overall_score >= 90 ? 'var(--k-success-text)' : dashStats?.overall_score >= 80 ? 'var(--k-warning-text)' : dashStats?.overall_score ? 'var(--k-danger-text)' : 'var(--k-text-muted)' }}>
-                  {dashStats?.overall_score !== null && dashStats?.overall_score !== undefined ? `${dashStats.overall_score}%` : '—'}
+                  {dashStats?.overall_score !== null && dashStats?.overall_score !== undefined ? `${dashStats.overall_score}%` : '-'}
                 </div>
                 <div className="k-stat-trend">
-                  {dashStats?.overall_score >= 90 ? '🟢 High Performance' : dashStats?.overall_score >= 80 ? '🟡 Medium Performance' : dashStats?.overall_score ? '🔴 Needs Improvement' : 'No score yet'}
+                  {dashStats?.overall_score >= 90 ? '😊 High Performance' : dashStats?.overall_score >= 80 ? '👍 Medium Performance' : dashStats?.overall_score ? '📉 Needs Improvement' : 'No score yet'}
                 </div>
               </div>
               <div className="k-stat-card green">
                 <div className="k-stat-label">Learning Hours</div>
-                <div className="k-stat-value">{dashStats?.completed_hours ?? '—'}</div>
+                <div className="k-stat-value">{dashStats?.completed_hours ?? '-'}</div>
                 <div style={{ fontSize: '11px', color: 'var(--k-text-muted)', marginTop: '4px' }}>
                   {dashStats?.learning_pct ?? 0}% of {dashStats?.learning_target ?? 40} hr target
                 </div>
               </div>
               <div className="k-stat-card purple">
                 <div className="k-stat-label">Pending KPIs</div>
-                <div className="k-stat-value">{dashStats?.pending_kpis ?? '—'}</div>
+                <div className="k-stat-value">{dashStats?.pending_kpis ?? '-'}</div>
                 <div className="k-stat-trend">{dashStats?.pending_kpis > 0 ? 'Awaiting approval' : 'All approved'}</div>
               </div>
               <div className="k-stat-card amber">
                 <div className="k-stat-label">Certifications</div>
-                <div className="k-stat-value">{dashStats?.certifications ?? '—'}</div>
+                <div className="k-stat-value">{dashStats?.certifications ?? '-'}</div>
                 <div className="k-stat-trend">{dashStats?.upcoming_one_on_ones > 0 ? `${dashStats.upcoming_one_on_ones} upcoming 1-on-1` : 'Earned'}</div>
               </div>
             </div>

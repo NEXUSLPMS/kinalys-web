@@ -461,3 +461,41 @@ export async function triggerDemoBreach() {
   const response = await apiClient.post('/scorecard/demo-breach')
   return response.data
 }
+
+export async function getPktQuestions() {
+  const response = await apiClient.get('/pkt/questions')
+  return response.data
+}
+
+export async function createPktQuestion(data: Record<string, any>) {
+  const response = await apiClient.post('/pkt/questions', data)
+  return response.data
+}
+
+export async function deletePktQuestion(id: string) {
+  const response = await apiClient.delete(`/pkt/questions/${id}`)
+  return response.data
+}
+
+export async function startPktTest(count?: number, topic?: string) {
+  const params = new URLSearchParams()
+  if (count) params.append('count', count.toString())
+  if (topic) params.append('topic', topic)
+  const response = await apiClient.get(`/pkt/start?${params.toString()}`)
+  return response.data
+}
+
+export async function submitPktTest(data: { test_id: string; answers: { question_id: string; selected_option: string }[]; time_taken_seconds: number }) {
+  const response = await apiClient.post('/pkt/submit', data)
+  return response.data
+}
+
+export async function getPktHistory() {
+  const response = await apiClient.get('/pkt/history')
+  return response.data
+}
+
+export async function getPktStats() {
+  const response = await apiClient.get('/pkt/stats')
+  return response.data
+}

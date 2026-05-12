@@ -499,3 +499,7 @@ export async function getPktStats() {
   const response = await apiClient.get('/pkt/stats')
   return response.data
 }
+export async function getCOPCReport() {
+  const response = await apiClient.get('/scorecard/copc-report')
+  return response.data
+}

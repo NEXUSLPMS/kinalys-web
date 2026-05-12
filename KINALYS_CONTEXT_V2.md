@@ -525,3 +525,285 @@ An internal control panel accessible only to the Kinalys team (Indyaah Techbytes
 ### Build: Phase 2 (October 2026+)
 Priority within Phase 2: Build this first — needed before onboarding more than 10 clients simultaneously.
 
+
+---
+
+## KINALYS MARKETPLACE — Phase 1.5 Feature (LOCKED)
+
+### Concept
+A content marketplace embedded within the Kinalys LMS. Training providers upload their content, tag it to specific skills and KPIs, set their own price, and Kinalys adds a 15% platform commission. Clients browse, purchase, and the content automatically appears in their LMS — with skill tagging connecting course completion to KPI and competency scores via the LMS-PMS Bridge.
+
+### Why This Is Strategically Important
+- Solves the content gap — Kinalys ships with 12 courses, marketplace gives clients access to thousands
+- Network effects — providers bring their client relationships, clients discover new providers
+- Revenue diversification — transactional marketplace revenue on top of subscription ARR
+- Stickiness — clients who build a content library on Kinalys do not leave
+- Unique data story — Kinalys can measure whether performance actually improved after course completion. No other marketplace can do this.
+
+### The Killer Feature — Skill-Tagged Performance Impact
+When a provider tags their course to "First Contact Resolution" or "Call Taking Etiquette":
+- Client buys the course
+- Employee completes it
+- LMS-PMS Bridge automatically updates the relevant KPI or competency score
+- Manager sees the performance impact of the training investment in real time
+- Client can prove ROI on every training purchase
+
+No other marketplace — Udemy, Coursera, LinkedIn Learning — connects course completion to live performance data. Kinalys does.
+
+### New User Role — content_provider
+A separate login type for training providers. Not a tenant. Not an employee. A provider account with:
+- Provider registration and verification by Kinalys team
+- Content upload dashboard — SCORM, Tin Can (xAPI), video, PDF, assessment
+- Course builder with title, description, skill tags, KPI tags, pricing
+- Sales dashboard — units sold, revenue earned, payout status
+- Payout via Razorpay bank transfer (after 15% Kinalys commission deduction)
+- Content moderation queue — Kinalys reviews before publishing
+
+### Client SCORM / Tin Can / xAPI Upload
+Clients can upload their own existing training content:
+- SCORM 1.2 and SCORM 2004
+- Tin Can / xAPI
+- Video (MP4)
+- PDF
+- Assessment (custom question bank)
+Uploaded content appears in their private LMS catalog — not visible to other tenants. Free to upload, counts toward their LMS plan. Skill tagging and LMS-PMS Bridge apply to client-uploaded content too.
+
+### DB Changes Required (Sprint 9)
+- marketplace_providers table (id, name, email, verified, payout_details, created_at)
+- marketplace_courses table (provider_id, title, description, price, commission_pct, skill_tags, kpi_tags, content_type, scorm_url, status)
+- marketplace_purchases table (tenant_id, user_id, course_id, amount_paid, commission_earned, purchased_at)
+- marketplace_payouts table (provider_id, amount, status, paid_at)
+- lms_courses gets content_type column: scorm / tincan / xapi / video / pdf / assessment
+- lms_courses gets scorm_package_url column for uploaded packages
+- lms_courses gets is_marketplace BOOLEAN and provider_id FK
+
+### Pricing and Commission
+- Training providers set their own price (minimum $10 per course)
+- Kinalys takes 15% commission on every sale
+- Monthly payout to providers via Razorpay
+- Client-uploaded content: free (included in LMS plan)
+- Marketplace content: pay-per-course or bundle pricing
+
+### Provider Recruitment Strategy
+Before Sprint 9 build starts — recruit 10-15 founding providers from Sanmeet's personal network:
+- COPC consultants and trainers (Pune, Mumbai, Bengaluru)
+- Soft skills and communication training firms
+- Six Sigma and quality management trainers
+- Compliance and regulatory training providers
+- Contact centre operations specialists
+Offer founding providers: zero commission for first 6 months, featured placement, input on marketplace features.
+
+### Tax and Legal Notes
+- GST applies on marketplace commission income — consult CA before go-live
+- TDS obligations on provider payouts — structure through Razorpay
+- Provider agreement required — terms of service, content standards, IP ownership declaration
+- Content moderation policy required — quality standards, prohibited content
+
+### Build: Sprint 9 — Phase 1.5 (August-September 2026)
+Dependencies: SCORM player (Sprint 9), Razorpay live billing (Sprint 9), provider onboarding infrastructure
+
+### Demo Talking Point (use from June demo onwards)
+"Beyond the platform, we are building a marketplace where training providers can upload COPC-certified content, soft skills modules, compliance training — tag it to a specific skill or KPI — and Kinalys connects the purchase directly to performance improvement. You will be able to prove, for the first time, that your training budget moved the needle."
+
+
+---
+
+## PRICING MODEL v2 — LOCKED (Updated May 2026)
+
+### Subscription Tiers
+
+| Plan | Users | LMS Only | PMS Only | Unified |
+|---|---|---|---|---|
+| Hatchling | Up to 50 | $149/mo | $149/mo | $249/mo |
+| Starter | Up to 100 | $299/mo | $299/mo | $499/mo |
+| Growth | Up to 200 | $499/mo | $499/mo | $799/mo |
+| Scale | Up to 300 | $699/mo | $699/mo | $1,099/mo |
+| Enterprise | 700+ | Custom | Custom | Custom |
+
+**Overage:** $3 per user per month above tier limit
+**Hatchling restriction:** No custom HRIS integrations — standard 9 connectors only
+
+### Upgrade Sweet Spot Logic (LOCKED)
+- Alert at 80% of plan user limit → notify org admin + Kinalys team
+- Alert when overage kicks in → show cost vs next plan
+- Alert when overage cost exceeds next plan price difference → "You are paying more in overage than the next plan costs"
+
+### Add-Ons (unchanged)
+- Competency Intelligence: $499/year
+- PKT Engine: $199/month
+- COPC Pack: $299/year
+- Integrations: $149/month each
+- Marketplace: 15% commission
+
+### Founding Client Program (updated)
+Lock in Starter pricing regardless of growth tier, for 24 months. First 20 clients only. Valid until 31 July 2026.
+
+### Auto-Upgrade Alert System (Phase 1.5 — Sprint 9)
+**Trigger 1:** Organisation reaches 80% of plan user limit → alert fires to org admin (in-app + email) + internal Kinalys alert
+**Trigger 2:** Organisation exceeds plan limit → overage alert with cost comparison to next plan
+**Trigger 3:** Overage cost exceeds next plan price difference → automatic upgrade recommendation with savings calculation
+**Kinalys Master Control Panel (Phase 2):** Dashboard showing all orgs approaching thresholds, colour coded green/amber/red, one-click upgrade nudge, MRR impact projection
+
+
+---
+
+## FINAL PRE-DEMO 30-DAY PLAN (Locked — May 2026)
+
+### Build Phase — 15 Days (Days 1-15)
+
+| Priority | Feature | Time |
+|---|---|---|
+| 1 | PKT Engine — question bank, randomised test, score to scorecard | 2 days |
+| 2 | COPC Report View — E/S/U classification, COPC Index, trend | 1 day |
+| 3 | Six Sigma Report View — DPMO, sigma level, yield, benchmarks | 1 day |
+| 4 | Demo User Switching — HR Admin / Manager / Employee without logout | 1 day |
+| 5 | Onboarding Wizard + methodology selector per department | 1.5 days |
+| 6 | Unified Exec Dashboard with methodology filter | 1 day |
+| 7 | AI Coach Polish — structured 3-part response | half day |
+| 8 | Manager Breach Alerts — bell fires for manager too | half day |
+| 9 | Seed Demo Data — curated perfect demo state | half day |
+| 10 | AWS EC2 Deployment — demo.kinalys.io, RDS, SSL, nginx, PM2 | 2 days |
+| 11 | Demo Rehearsal Script — written 8-minute narrative | half day |
+| 12 | LinkedIn Posts 3-5 | 1 day |
+
+### Business Development Phase — 15 Days (Days 16-30)
+
+**Days 16-18 — Client Acquisition Push**
+- Send outreach email sequence to warm list of HR Heads and CHROs
+- Personal WhatsApp to 10 direct contacts in BPO and ITeS
+- Follow up on all May outreach responses
+- Target: 3 demo calls booked with real prospects
+- One signed founding client before demo day changes the investor conversation
+
+**Days 19-21 — Marketplace Provider Recruitment**
+- Identify 10 COPC consultants, soft skills trainers, compliance providers in Pune/Mumbai/Bengaluru
+- Personal outreach — WhatsApp or phone, not email
+- Pitch: Zero commission 6 months, featured placement, access to all BPO clients
+- Target: 5 verbal commitments before demo day
+- Investor answer ready: "We have X providers committed to marketplace at launch"
+
+**Days 22-24 — Demo Hardening**
+- Three full end-to-end demo runs as if investor is watching
+- Fix every rough moment, slow transition, or confusing click
+- Test on different device and different network
+- Prepare answers to 10 hardest investor questions
+- Seed perfect demo data — every number tells a story
+
+**Days 25-26 — LinkedIn Posts 3-5 + Post 6 Reveal**
+- Post 3: The cost of the invisible manager — 1-on-1s that never happen
+- Post 4: Why your best performers leave before you notice — the 9-Box story
+- Post 5: The training ROI question nobody can answer — yet
+- Post 6: The reveal — Kinalys, what it is, what it does, book a demo
+
+**Days 27-28 — Investor Preparation**
+- Update pitch deck with traction from outreach
+- Prepare one-page term sheet summary
+- Prepare answers: Why now? Why you? Why this market? What if competitor copies?
+- Prepare data room: company docs, IP assignment, financials, cap table
+
+**Days 29-30 — Rest**
+- Day 29: Full rest. No laptop.
+- Day 30: Light demo script review. One slow walkthrough. Early night.
+- Demo day: Walk in as the founder who built a full platform in 5 months with IP protected, investor documents ready, and real client conversations in progress.
+
+### The One Thing That Matters Most
+Get one client on a call. Not necessarily signed — just on a call. "I have three demos booked with CHROs at BPO companies this week" is worth more than any feature built.
+
+### Demo Day Talking Points — Methodology Integration
+- "In three clicks, your CS team is on COPC, your ops team is on Six Sigma, and your product team is on OKR. No configuration, no consultant, no implementation fee."
+- "Your quality manager currently builds the COPC report manually in Excel every month. Kinalys generates it live."
+- "Your CEO sees one dashboard. CS in COPC. Operations in Six Sigma. Product in OKR. One platform, all frameworks, zero manual consolidation."
+- "Beyond the platform, we are building a marketplace where training providers upload COPC-certified content tagged to a KPI — and Kinalys proves whether performance improved after completion."
+
+
+---
+
+## PRICING — CURRENCY STRATEGY (Locked)
+
+### Display Strategy
+- **India clients:** INR primary, USD secondary
+- **UAE / International clients:** EUR primary, USD secondary  
+- **Investor pitch deck:** USD only (investor convention)
+- **Billing:** Razorpay for INR domestic, Stripe for USD/EUR international
+
+### INR Pricing (India — primary market)
+
+| Plan | Users | LMS Only | PMS Only | Unified |
+|---|---|---|---|---|
+| Hatchling | Up to 50 | ₹12,499/mo | ₹12,499/mo | ₹20,999/mo |
+| Starter | Up to 100 | ₹24,999/mo | ₹24,999/mo | ₹41,999/mo |
+| Growth | Up to 200 | ₹41,999/mo | ₹41,999/mo | ₹66,999/mo |
+| Scale | Up to 300 | ₹58,999/mo | ₹58,999/mo | ₹92,999/mo |
+| Enterprise | 700+ | Custom | Custom | Custom |
+
+**Overage:** ₹250 per user per month
+
+### EUR Pricing (UAE / International)
+
+| Plan | Users | LMS Only | PMS Only | Unified |
+|---|---|---|---|---|
+| Hatchling | Up to 50 | €139/mo | €139/mo | €229/mo |
+| Starter | Up to 100 | €279/mo | €279/mo | €459/mo |
+| Growth | Up to 200 | €459/mo | €459/mo | €735/mo |
+| Scale | Up to 300 | €649/mo | €649/mo | €1,015/mo |
+| Enterprise | 700+ | Custom | Custom | Custom |
+
+**Overage:** €2.75 per user per month
+
+### USD Pricing (Investor deck / US reference)
+
+| Plan | Users | LMS Only | PMS Only | Unified |
+|---|---|---|---|---|
+| Hatchling | Up to 50 | $149/mo | $149/mo | $249/mo |
+| Starter | Up to 100 | $299/mo | $299/mo | $499/mo |
+| Growth | Up to 200 | $499/mo | $499/mo | $799/mo |
+| Scale | Up to 300 | $699/mo | $699/mo | $1,099/mo |
+| Enterprise | 700+ | Custom | Custom | Custom |
+
+**Overage:** $3 per user per month
+
+### Add-Ons — INR
+- Competency Intelligence: ₹41,999/year
+- PKT Engine: ₹16,999/month
+- COPC Pack: ₹24,999/year
+- Integrations: ₹12,499/month each
+- Marketplace: 15% commission
+
+### Founding Client Program
+Lock in Starter pricing for 24 months regardless of growth tier.
+First 20 clients only. Valid until 31 July 2026.
+INR: ₹41,999/mo Unified locked for 24 months
+USD: $499/mo Unified locked for 24 months
+
+
+---
+
+## PRICING — MULTI-CURRENCY (Locked May 2026)
+
+### Exchange Rates Used
+- 1 USD = ₹95.85 INR
+- 1 USD = €0.92 EUR (1 EUR ≈ $1.08)
+
+### Unified Plan Pricing — All Currencies
+
+| Plan | Users | USD/mo | INR/mo | EUR/mo |
+|---|---|---|---|---|
+| Hatchling | Up to 50 | $249 | ₹23,999 | €229 |
+| Starter | Up to 100 | $499 | ₹47,999 | €459 |
+| Growth | Up to 200 | $799 | ₹76,999 | €739 |
+| Scale | Up to 300 | $1,099 | ₹1,04,999 | €1,019 |
+| Enterprise | 700+ | Custom | Custom | Custom |
+
+### Overage
+- USD: $3/user/month
+- INR: ₹299/user/month
+- EUR: €2.75/user/month
+
+### Currency Display Rules
+- Pitch deck: USD only (investor convention)
+- HR deck India: INR primary, USD secondary
+- HR deck UAE/International: EUR primary, USD secondary
+- Website pricing page: INR primary with USD/EUR toggle
+- Razorpay billing: INR for Indian clients
+- Stripe: USD/EUR for international clients
+

@@ -24,6 +24,7 @@ import CompetencyFramework from './pages/CompetencyFramework'
 import PKTEngine from './pages/PKTEngine'
 import COPCReport from './pages/COPCReport'
 import SixSigmaReport from './pages/SixSigmaReport'
+import DemoSwitcher from './components/DemoSwitcher'
 
 
 
@@ -513,6 +514,7 @@ function Dashboard() {
         )}
       </div>
 
+      <DemoSwitcher />
     </div>
   )
 }

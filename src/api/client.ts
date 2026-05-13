@@ -15,6 +15,15 @@ export const apiClient = axios.create({
 })
 
 // Attach the Auth0 token to every request automatically
+
+// Demo mode interceptor — sends override user id as header
+apiClient.interceptors.request.use((config) => {
+  const demoUserId = localStorage.getItem('kinalys_demo_user_id')
+  if (demoUserId) {
+    config.headers['X-Demo-User-Id'] = demoUserId
+  }
+  return config
+})
 export function setAuthToken(token: string) {
   apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`
 }

@@ -524,3 +524,31 @@ export async function getHrAdmins() {
   const response = await apiClient.get('/users/hr-admins')
   return response.data
 }
+export async function getPredictiveTeam() {
+  const response = await apiClient.get('/predictive/team')
+  return response.data
+}
+
+export async function getPredictiveMe() {
+  const response = await apiClient.get('/predictive/me')
+  return response.data
+}
+export async function submitEmployeeFlag(data: { employee_id: string; flag_type: 'pip' | 'release'; manager_comment: string; performance_snapshot: any }) {
+  const response = await apiClient.post('/flags', data)
+  return response.data
+}
+
+export async function getEmployeeFlags(employeeId: string) {
+  const response = await apiClient.get(`/flags/employee/${employeeId}`)
+  return response.data
+}
+
+export async function getPendingFlags() {
+  const response = await apiClient.get('/flags/pending')
+  return response.data
+}
+
+export async function confirmFlagConversation(flagId: string, hrComment: string) {
+  const response = await apiClient.put(`/flags/${flagId}/confirm`, { hr_comment: hrComment })
+  return response.data
+}

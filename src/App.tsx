@@ -26,6 +26,7 @@ import COPCReport from './pages/COPCReport'
 import SixSigmaReport from './pages/SixSigmaReport'
 import DemoSwitcher from './components/DemoSwitcher'
 import HrAdminManagement from './pages/HrAdminManagement'
+import PredictiveAnalysis from './pages/PredictiveAnalysis'
 
 
 
@@ -154,6 +155,7 @@ function Dashboard() {
       scorecard:     ['super_admin','hr_admin','executive','leadership','manager','team_lead','individual_contributor'],
       ai:            ['super_admin','hr_admin','executive','leadership','manager','team_lead','individual_contributor'],
       settings:      ['super_admin','hr_admin'],
+      predictive:    ['super_admin','hr_admin','executive','leadership','manager'],
     }
     return (access[feature] || []).includes(role)
   }
@@ -203,6 +205,7 @@ function Dashboard() {
           </div>
           {!collapsedSections['performance'] && <>
             {canSee('exec') && <div className={`k-nav-item ${activeNav === 'exec' ? 'active' : ''}`} onClick={() => setActiveNav('exec')}>Exec Dashboard</div>}
+            {canSee('predictive') && <div className={`k-nav-item ${activeNav === 'predictive' ? 'active' : ''}`} onClick={() => setActiveNav('predictive')}>Predictive Analysis</div>}
             {canSee('scorecard') && <div className={`k-nav-item ${activeNav === 'scorecard' ? 'active' : ''}`} onClick={() => setActiveNav('scorecard')}>My Scorecard</div>}
             {canSee('ai') && <div className={`k-nav-item ${activeNav === 'ai' ? 'active' : ''}`} onClick={() => setActiveNav('ai')}>AI Coaching</div>}
             {canSee('copc') && <div className={`k-nav-item ${activeNav === 'copc' ? 'active' : ''}`} onClick={() => setActiveNav('copc')}>COPC Scorecard</div>}
@@ -233,8 +236,7 @@ function Dashboard() {
               {canSee('talent') && <div className={`k-nav-item ${activeNav === 'talent' ? 'active' : ''}`} onClick={() => setActiveNav('talent')}>Talent Grid</div>}
               {canSee('users') && <div className={`k-nav-item ${activeNav === 'users' ? 'active' : ''}`} onClick={() => setActiveNav('users')}>User Management</div>}
               {canSee('kpi') && <div className={`k-nav-item ${activeNav === 'kpi' ? 'active' : ''}`} onClick={() => setActiveNav('kpi')}>KPI Templates</div>}
-              {canSee('exec') && <div className={`k-nav-item ${activeNav === 'exec' ? 'active' : ''}`} onClick={() => setActiveNav('exec')}>Exec Dashboard</div>}
-            </>}
+               </>}
           </div>
         )}
 
@@ -325,6 +327,8 @@ function Dashboard() {
           <SixSigmaReport />
           ) : activeNav === 'hradmin' ? (
           <HrAdminManagement />
+          ) : activeNav === 'predictive' ? (
+          <PredictiveAnalysis />
         ) : (
           <div className="k-page">
 

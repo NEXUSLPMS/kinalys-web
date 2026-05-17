@@ -520,3 +520,7 @@ export async function logKpiWarningAcknowledged(data: { kpi_count: number; emplo
   const response = await apiClient.post('/kpi/warning-acknowledged', data)
   return response.data
 }
+export async function getHrAdmins() {
+  const response = await apiClient.get('/users/hr-admins')
+  return response.data
+}

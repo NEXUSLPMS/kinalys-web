@@ -25,6 +25,7 @@ import PKTEngine from './pages/PKTEngine'
 import COPCReport from './pages/COPCReport'
 import SixSigmaReport from './pages/SixSigmaReport'
 import DemoSwitcher from './components/DemoSwitcher'
+import HrAdminManagement from './pages/HrAdminManagement'
 
 
 
@@ -124,6 +125,39 @@ function Dashboard() {
 
   const isAdmin = profile?.role === 'hr_admin' || profile?.role === 'executive'
 
+  const role = profile?.role || 'individual_contributor'
+  const isLeadership = ['super_admin','hr_admin','executive','leadership'].includes(role)
+  const isManager = ['super_admin','hr_admin','executive','leadership','manager','team_lead'].includes(role)
+  const isAdminOnly = ['super_admin','hr_admin'].includes(role)
+  const canSee = (feature: string): boolean => {
+    const access: Record<string, string[]> = {
+      exec:          ['super_admin','hr_admin','executive','leadership'],
+      copcreport:    ['super_admin','hr_admin','executive','leadership','manager'],
+      sixsigmareport:['super_admin','hr_admin','executive','leadership','manager'],
+      oneonone:      ['super_admin','hr_admin','executive','leadership','manager','team_lead','individual_contributor'],
+      pkt:           ['super_admin','hr_admin','manager','team_lead','individual_contributor'],
+      competency:    ['super_admin','hr_admin','executive','leadership','manager','team_lead','individual_contributor'],
+      copc:          ['super_admin','hr_admin','manager','team_lead','individual_contributor'],
+      sixsigma:      ['super_admin','hr_admin','manager','team_lead','individual_contributor'],
+      talent:        ['super_admin','hr_admin','executive','leadership','manager'],
+      okr:           ['super_admin','hr_admin','executive','leadership','manager'],
+      bsc:           ['super_admin','hr_admin','executive','leadership'],
+      org:           ['super_admin','hr_admin'],
+      import:        ['super_admin','hr_admin'],
+      users:         ['super_admin','hr_admin'],
+      kpi:           ['super_admin','hr_admin'],
+      learning:      ['super_admin','hr_admin','manager','team_lead','individual_contributor'],
+      catalog:       ['super_admin','hr_admin','manager','team_lead','individual_contributor'],
+      certs:         ['super_admin','hr_admin','manager','team_lead','individual_contributor'],
+      kb:            ['super_admin','hr_admin','executive','leadership','manager','team_lead','individual_contributor'],
+      support:       ['super_admin','hr_admin','executive','leadership','manager','team_lead','individual_contributor'],
+      scorecard:     ['super_admin','hr_admin','executive','leadership','manager','team_lead','individual_contributor'],
+      ai:            ['super_admin','hr_admin','executive','leadership','manager','team_lead','individual_contributor'],
+      settings:      ['super_admin','hr_admin'],
+    }
+    return (access[feature] || []).includes(role)
+  }
+
   return (
     <div className="k-shell">
 
@@ -152,9 +186,9 @@ function Dashboard() {
             Learning <span style={{ fontSize: '10px' }}>{collapsedSections['learning'] ? '▶' : '▼'}</span>
           </div>
           {!collapsedSections['learning'] && <>
-            <div className={`k-nav-item ${activeNav === 'learning' ? 'active' : ''}`} onClick={() => setActiveNav('learning')}>🎓 My Learning</div>
-            <div className={`k-nav-item ${activeNav === 'catalog' ? 'active' : ''}`} onClick={() => setActiveNav('catalog')}>📚 Course Catalog</div>
-            <div className={`k-nav-item ${activeNav === 'certs' ? 'active' : ''}`} onClick={() => setActiveNav('certs')}>🏆 Certifications</div>
+            {canSee('learning') && <div className={`k-nav-item ${activeNav === 'learning' ? 'active' : ''}`} onClick={() => setActiveNav('learning')}>My Learning</div>}
+            {canSee('catalog') && <div className={`k-nav-item ${activeNav === 'catalog' ? 'active' : ''}`} onClick={() => setActiveNav('catalog')}>Course Catalog</div>}
+            {canSee('certs') && <div className={`k-nav-item ${activeNav === 'certs' ? 'active' : ''}`} onClick={() => setActiveNav('certs')}>Certifications</div>}
                       </>}
         </div>
 
@@ -168,16 +202,16 @@ function Dashboard() {
             Performance <span style={{ fontSize: '10px' }}>{collapsedSections['performance'] ? '▶' : '▼'}</span>
           </div>
           {!collapsedSections['performance'] && <>
-            <div className={`k-nav-item ${activeNav === 'exec' ? 'active' : ''}`} onClick={() => setActiveNav('exec')}>📈 Exec Dashboard</div>
-            <div className={`k-nav-item ${activeNav === 'scorecard' ? 'active' : ''}`} onClick={() => setActiveNav('scorecard')}>📊 My Scorecard</div>
-            <div className={`k-nav-item ${activeNav === 'ai' ? 'active' : ''}`} onClick={() => setActiveNav('ai')}>🤖 AI Coaching</div>
-            <div className={`k-nav-item ${activeNav === 'copc' ? 'active' : ''}`} onClick={() => setActiveNav('copc')}>🏢 COPC Scorecard</div>
-            <div className={`k-nav-item ${activeNav === 'copcreport' ? 'active' : ''}`} onClick={() => setActiveNav('copcreport')}>📋 COPC Report</div>
-            <div className={`k-nav-item ${activeNav === 'sixsigma' ? 'active' : ''}`} onClick={() => setActiveNav('sixsigma')}>⚙️ Six Sigma</div>
-            <div className={`k-nav-item ${activeNav === 'sixsigmareport' ? 'active' : ''}`} onClick={() => setActiveNav('sixsigmareport')}>📊 Six Sigma Report</div>
-            <div className={`k-nav-item ${activeNav === 'oneonone' ? 'active' : ''}`} onClick={() => setActiveNav('oneonone')}>🗣️ 1-on-1 Reviews</div>
-            <div className={`k-nav-item ${activeNav === 'competency' ? 'active' : ''}`} onClick={() => setActiveNav('competency')}>🎯 Competency</div>
-            <div className={`k-nav-item ${activeNav === 'pkt' ? 'active' : ''}`} onClick={() => setActiveNav('pkt')}>🧠 PKT Engine</div>
+            {canSee('exec') && <div className={`k-nav-item ${activeNav === 'exec' ? 'active' : ''}`} onClick={() => setActiveNav('exec')}>Exec Dashboard</div>}
+            {canSee('scorecard') && <div className={`k-nav-item ${activeNav === 'scorecard' ? 'active' : ''}`} onClick={() => setActiveNav('scorecard')}>My Scorecard</div>}
+            {canSee('ai') && <div className={`k-nav-item ${activeNav === 'ai' ? 'active' : ''}`} onClick={() => setActiveNav('ai')}>AI Coaching</div>}
+            {canSee('copc') && <div className={`k-nav-item ${activeNav === 'copc' ? 'active' : ''}`} onClick={() => setActiveNav('copc')}>COPC Scorecard</div>}
+            {canSee('copcreport') && <div className={`k-nav-item ${activeNav === 'copcreport' ? 'active' : ''}`} onClick={() => setActiveNav('copcreport')}>COPC Report</div>}
+            {canSee('sixsigma') && <div className={`k-nav-item ${activeNav === 'sixsigma' ? 'active' : ''}`} onClick={() => setActiveNav('sixsigma')}>Six Sigma Scorecard</div>}
+            {canSee('sixsigmareport') && <div className={`k-nav-item ${activeNav === 'sixsigmareport' ? 'active' : ''}`} onClick={() => setActiveNav('sixsigmareport')}>Six Sigma Report</div>}
+            {canSee('oneonone') && <div className={`k-nav-item ${activeNav === 'oneonone' ? 'active' : ''}`} onClick={() => setActiveNav('oneonone')}>1-on-1 Reviews</div>}
+            {canSee('competency') && <div className={`k-nav-item ${activeNav === 'competency' ? 'active' : ''}`} onClick={() => setActiveNav('competency')}>Competency</div>}
+            {canSee('pkt') && <div className={`k-nav-item ${activeNav === 'pkt' ? 'active' : ''}`} onClick={() => setActiveNav('pkt')}>PKT Engine</div>}
           </>}
         </div>
 
@@ -192,14 +226,14 @@ function Dashboard() {
               Management <span style={{ fontSize: '10px' }}>{collapsedSections['management'] ? '▶' : '▼'}</span>
             </div>
             {!collapsedSections['management'] && <>
-              <div className={`k-nav-item ${activeNav === 'org' ? 'active' : ''}`} onClick={() => setActiveNav('org')}>🏢 Organisation</div>
-              <div className={`k-nav-item ${activeNav === 'import' ? 'active' : ''}`} onClick={() => setActiveNav('import')}>📥 Import Users</div>
-              <div className={`k-nav-item ${activeNav === 'bsc' ? 'active' : ''}`} onClick={() => setActiveNav('bsc')}>⚖️ Balanced Scorecard</div>
-              <div className={`k-nav-item ${activeNav === 'okr' ? 'active' : ''}`} onClick={() => setActiveNav('okr')}>🎯 OKR Framework</div>
-              <div className={`k-nav-item ${activeNav === 'talent' ? 'active' : ''}`} onClick={() => setActiveNav('talent')}>🎯 Talent Grid</div>
-              <div className={`k-nav-item ${activeNav === 'users' ? 'active' : ''}`} onClick={() => setActiveNav('users')}>👥 User Management</div>
-              <div className={`k-nav-item ${activeNav === 'kpi' ? 'active' : ''}`} onClick={() => setActiveNav('kpi')}>📋 KPI Templates</div>
-              <div className={`k-nav-item ${activeNav === 'exec' ? 'active' : ''}`} onClick={() => setActiveNav('exec')}>📈 Exec Dashboard</div>
+              {canSee('org') && <div className={`k-nav-item ${activeNav === 'org' ? 'active' : ''}`} onClick={() => setActiveNav('org')}>Organisation</div>}
+              {canSee('import') && <div className={`k-nav-item ${activeNav === 'import' ? 'active' : ''}`} onClick={() => setActiveNav('import')}>Import Users</div>}
+              {canSee('bsc') && <div className={`k-nav-item ${activeNav === 'bsc' ? 'active' : ''}`} onClick={() => setActiveNav('bsc')}>Balanced Scorecard</div>}
+              {canSee('okr') && <div className={`k-nav-item ${activeNav === 'okr' ? 'active' : ''}`} onClick={() => setActiveNav('okr')}>OKR Framework</div>}
+              {canSee('talent') && <div className={`k-nav-item ${activeNav === 'talent' ? 'active' : ''}`} onClick={() => setActiveNav('talent')}>Talent Grid</div>}
+              {canSee('users') && <div className={`k-nav-item ${activeNav === 'users' ? 'active' : ''}`} onClick={() => setActiveNav('users')}>User Management</div>}
+              {canSee('kpi') && <div className={`k-nav-item ${activeNav === 'kpi' ? 'active' : ''}`} onClick={() => setActiveNav('kpi')}>KPI Templates</div>}
+              {canSee('exec') && <div className={`k-nav-item ${activeNav === 'exec' ? 'active' : ''}`} onClick={() => setActiveNav('exec')}>Exec Dashboard</div>}
             </>}
           </div>
         )}
@@ -214,10 +248,24 @@ function Dashboard() {
             Help <span style={{ fontSize: '10px' }}>{collapsedSections['help'] ? '▶' : '▼'}</span>
           </div>
           {!collapsedSections['help'] && <>
-            <div className={`k-nav-item ${activeNav === 'kb' ? 'active' : ''}`} onClick={() => setActiveNav('kb')}>📖 Knowledge Base</div>
-            <div className={`k-nav-item ${activeNav === 'support' ? 'active' : ''}`} onClick={() => setActiveNav('support')}>🎫 Support Tickets</div>
+            {canSee('kb') && <div className={`k-nav-item ${activeNav === 'kb' ? 'active' : ''}`} onClick={() => setActiveNav('kb')}>Knowledge Base</div>}
+            {canSee('support') && <div className={`k-nav-item ${activeNav === 'support' ? 'active' : ''}`} onClick={() => setActiveNav('support')}>Support Tickets</div>}
           </>}
         </div>
+        {/* Platform - super_admin only */}
+        {role === 'super_admin' && (
+          <div className="k-sidebar-section" style={{ marginTop: '4px' }}>
+            <div className="k-sidebar-label" onClick={() => toggleSection('platform')} style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', userSelect: 'none' }}>
+              Platform <span style={{ fontSize: '10px' }}>{collapsedSections['platform'] ? '▶' : '▼'}</span>
+            </div>
+            {!collapsedSections['platform'] && <>
+              <div className={`k-nav-item ${activeNav === 'hradmin' ? 'active' : ''}`} onClick={() => setActiveNav('hradmin')}>HR Admin Management</div>
+              <div className={`k-nav-item ${activeNav === 'auditlog' ? 'active' : ''}`} onClick={() => setActiveNav('auditlog')}>Audit Log</div>
+              <div className={`k-nav-item ${activeNav === 'addons' ? 'active' : ''}`} onClick={() => setActiveNav('addons')}>Add-on Management</div>
+              <div className={`k-nav-item ${activeNav === 'orgsetup' ? 'active' : ''}`} onClick={() => setActiveNav('orgsetup')}>Organisation Setup</div>
+            </>}
+          </div>
+        )}
 
         <div style={{ marginTop: 'auto', borderTop: '1px solid var(--k-border-default)', padding: '12px 0' }}>
           <div className={`k-nav-item ${activeNav === 'settings' ? 'active' : ''}`} onClick={() => setActiveNav('settings')} style={{ margin: '0 var(--k-space-3)' }}>
@@ -275,6 +323,8 @@ function Dashboard() {
           <COPCReport />
           ) : activeNav === 'sixsigmareport' ? (
           <SixSigmaReport />
+          ) : activeNav === 'hradmin' ? (
+          <HrAdminManagement />
         ) : (
           <div className="k-page">
 

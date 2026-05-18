@@ -403,7 +403,7 @@ function Dashboard() {
 
             <div style={{ marginBottom: '24px' }}>
               <div className="k-page-title" style={{ whiteSpace: 'normal', wordBreak: 'break-word' }}>Welcome back, {profile?.fullName || user?.name || 'there'} 👋</div>
-              <div className="k-page-sub">{profile?.role === 'hr_admin' ? 'HR Admin' : 'Team Member'} · {profile?.tenant?.name || 'Your workspace'} · {profile?.designation || 'Kinalys Platform'}</div>
+              <div className="k-page-sub">{profile?.role === 'super_admin' ? 'Org Admin' : profile?.role === 'hr_admin' ? 'HR Admin' : profile?.role === 'executive' ? 'Executive' : profile?.role === 'leadership' ? 'Leadership' : profile?.role === 'manager' ? 'Manager' : profile?.role === 'team_lead' ? 'Team Lead' : 'Employee'} · {profile?.tenant?.name || 'Your workspace'} · {profile?.designation || 'Kinalys Platform'}</div>
             </div>
 
             {/* DEMO BREACH TRIGGER */}

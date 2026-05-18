@@ -12,7 +12,7 @@ export default function ExecDashboard() {
   const [search, setSearch] = useState('')
   const [filterDept, setFilterDept] = useState('all')
   const [filterManager, setFilterManager] = useState('all')
-  const [filterDesignation, setFilterDesignation] = useState('all')
+  const [filterDesignation, setFilterDesignation] = useState<string[]>([])
   const [filterBand, setFilterBand] = useState('all')
   const [filterRag, setFilterRag] = useState('all')
   const [filterPending, setFilterPending] = useState(false)
@@ -100,7 +100,7 @@ export default function ExecDashboard() {
 
   // Active filter count
   const activeFilters = [
-    search, filterDept !== 'all', filterDesignation !== 'all',
+    search, filterDept !== 'all', filterDesignation.length > 0,
     filterBand !== 'all', filterRag !== 'all', filterPending
   ].filter(Boolean).length
 
@@ -109,7 +109,7 @@ export default function ExecDashboard() {
     if (search && !m.full_name.toLowerCase().includes(search.toLowerCase()) &&
         !m.designation_name?.toLowerCase().includes(search.toLowerCase())) return false
     if (filterDept !== 'all' && m.department_name !== filterDept) return false
-    if (filterDesignation !== 'all' && m.designation_name !== filterDesignation) return false
+    if (filterDesignation.length > 0 && !filterDesignation.includes(m.designation_name)) return false
     if (filterBand !== 'all' && getBandKey(m.calculated_score) !== filterBand) return false
     if (filterRag === 'green' && Number(m.green_kpis) === 0) return false
     if (filterRag === 'amber' && Number(m.amber_kpis) === 0) return false
@@ -122,21 +122,21 @@ export default function ExecDashboard() {
     setSearch('')
     setFilterDept('all')
     setFilterManager('all')
-    setFilterDesignation('all')
+    setFilterDesignation([])
     setFilterBand('all')
     setFilterRag('all')
     setFilterPending(false)
   }
 
-  // Aggregate stats from full team (not filtered)
-  const scoredMembers = team.filter(m => m.calculated_score !== null)
+  // Aggregate stats — react to active filters
+  const scoredMembers = filtered.filter((m: any) => m.calculated_score !== null)
   const avgScore = scoredMembers.length > 0
-    ? Math.round(scoredMembers.reduce((sum, m) => sum + Number(m.calculated_score), 0) / scoredMembers.length * 10) / 10
+    ? Math.round(scoredMembers.reduce((s: number, m: any) => s + Number(m.calculated_score), 0) / scoredMembers.length * 10) / 10
     : null
-  const highPerf = team.filter(m => m.calculated_score !== null && m.calculated_score >= 90).length
-  const medPerf = team.filter(m => m.calculated_score !== null && m.calculated_score >= 80 && m.calculated_score < 90).length
-  const needsImprovement = team.filter(m => m.calculated_score !== null && m.calculated_score < 80).length
-  const notScored = team.filter(m => m.calculated_score === null).length
+  const highPerf = filtered.filter((m: any) => m.calculated_score !== null && m.calculated_score >= 90).length
+  const medPerf = filtered.filter((m: any) => m.calculated_score !== null && m.calculated_score >= 80 && m.calculated_score < 90).length
+  const needsImprovement = filtered.filter((m: any) => m.calculated_score !== null && m.calculated_score < 80).length
+  const notScored = filtered.filter((m: any) => m.calculated_score === null).length
   const totalGreen = team.reduce((sum, m) => sum + Number(m.green_kpis || 0), 0)
   const totalAmber = team.reduce((sum, m) => sum + Number(m.amber_kpis || 0), 0)
   const totalRed = team.reduce((sum, m) => sum + Number(m.red_kpis || 0), 0)
@@ -298,6 +298,13 @@ export default function ExecDashboard() {
     )
   }
 
+  if (typeof document !== 'undefined' && !document.getElementById('desig-style')) {
+    const s = document.createElement('style')
+    s.id = 'desig-style'
+    s.textContent = '#desig-dropdown.open { display: block !important; }'
+    document.head.appendChild(s)
+  }
+
   // ── MAIN DASHBOARD VIEW ───────────────────────────────────────
   return (
     <div style={{ height: '100%', overflowY: 'auto' }}>
@@ -319,25 +326,25 @@ export default function ExecDashboard() {
 
         {/* Stat cards — clickable to filter */}
         <div className="k-stat-grid k-stat-grid-4" style={{ marginBottom: '24px' }}>
-          <div className="k-stat-card accent" style={{ cursor: 'pointer' }} onClick={() => setFilterBand('all')}>
+          <div className="k-stat-card accent">
             <div className="k-stat-label">Org Average Score</div>
             <div className="k-stat-value" style={{ color: getScoreColor(avgScore) }}>{avgScore !== null ? `${avgScore}%` : '—'}</div>
             <div className="k-stat-trend">{scoredMembers.length} of {team.length} scored</div>
           </div>
-          <div className="k-stat-card green" style={{ cursor: 'pointer', outline: filterBand === 'high' ? '2px solid var(--k-success-text)' : 'none' }} onClick={() => setFilterBand(filterBand === 'high' ? 'all' : 'high')}>
+          <div className="k-stat-card green">
             <div className="k-stat-label">High Performance</div>
             <div className="k-stat-value">{highPerf}</div>
-            <div className="k-stat-trend">Score ≥ 90% · Click to filter</div>
+            <div className="k-stat-trend">Score ≥ 90%</div>
           </div>
-          <div className="k-stat-card amber" style={{ cursor: 'pointer', outline: filterBand === 'medium' ? '2px solid var(--k-warning-text)' : 'none' }} onClick={() => setFilterBand(filterBand === 'medium' ? 'all' : 'medium')}>
+          <div className="k-stat-card amber">
             <div className="k-stat-label">Medium Performance</div>
             <div className="k-stat-value">{medPerf}</div>
-            <div className="k-stat-trend">Score 80–89% · Click to filter</div>
+            <div className="k-stat-trend">Score 80–89%</div>
           </div>
-          <div className="k-stat-card purple" style={{ cursor: 'pointer', outline: filterBand === 'needs_improvement' ? '2px solid var(--k-danger-text)' : 'none' }} onClick={() => setFilterBand(filterBand === 'needs_improvement' ? 'all' : 'needs_improvement')}>
+          <div className="k-stat-card purple">
             <div className="k-stat-label">Needs Improvement</div>
             <div className="k-stat-value">{needsImprovement}</div>
-            <div className="k-stat-trend">Score below 80% · Click to filter</div>
+            <div className="k-stat-trend">Score below 80%</div>
           </div>
         </div>
 
@@ -420,10 +427,24 @@ export default function ExecDashboard() {
               <option value="all">All Departments</option>
               {departments.filter(d => d !== 'all').map(d => <option key={d} value={d}>{d}</option>)}
             </select>
-            <select value={filterDesignation} onChange={e => setFilterDesignation(e.target.value)} style={{ fontSize: '13px', padding: '7px 12px', borderRadius: 'var(--k-radius-md)', border: `1px solid ${filterDesignation !== 'all' ? 'var(--k-brand-primary)' : 'var(--k-border-input)'}`, background: filterDesignation !== 'all' ? 'var(--k-brand-faint)' : 'var(--k-bg-input)', color: 'var(--k-text-primary)', fontFamily: 'var(--k-font-sans)', cursor: 'pointer' }}>
-              <option value="all">All Designations</option>
-              {designations.filter(d => d !== 'all').map(d => <option key={d} value={d}>{d}</option>)}
-            </select>
+            <div style={{ position: 'relative' }}>
+              <div onClick={() => document.getElementById('desig-dropdown')?.classList.toggle('open')}
+                style={{ fontSize: '13px', padding: '7px 12px', borderRadius: 'var(--k-radius-md)', border: `1px solid ${filterDesignation.length > 0 ? 'var(--k-brand-primary)' : 'var(--k-border-input)'}`, background: filterDesignation.length > 0 ? 'var(--k-brand-faint)' : 'var(--k-bg-input)', color: 'var(--k-text-primary)', fontFamily: 'var(--k-font-sans)', cursor: 'pointer', minWidth: '180px', userSelect: 'none' }}>
+                {filterDesignation.length === 0 ? 'All Designations' : `${filterDesignation.length} selected`}
+              </div>
+              <div id="desig-dropdown" style={{ display: 'none', position: 'absolute', top: '100%', left: 0, zIndex: 100, background: 'var(--k-bg-page, white)', border: '1px solid var(--k-border-default)', borderRadius: 'var(--k-radius-md)', boxShadow: '0 4px 16px rgba(0,0,0,0.12)', minWidth: '220px', maxHeight: '260px', overflowY: 'auto', padding: '6px 0' }}
+                onMouseLeave={() => document.getElementById('desig-dropdown')?.classList.remove('open')}>
+                {designations.filter(d => d !== 'all').map(d => (
+                  <div key={d} onClick={() => setFilterDesignation(prev => prev.includes(d) ? prev.filter(x => x !== d) : [...prev, d])}
+                    style={{ padding: '8px 14px', fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--k-text-primary)', background: filterDesignation.includes(d) ? 'var(--k-brand-faint)' : 'transparent' }}>
+                    <span style={{ width: '14px', height: '14px', borderRadius: '3px', border: `2px solid ${filterDesignation.includes(d) ? 'var(--k-brand-primary)' : 'var(--k-border-default)'}`, background: filterDesignation.includes(d) ? 'var(--k-brand-primary)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      {filterDesignation.includes(d) && <span style={{ color: 'white', fontSize: '10px', fontWeight: 700 }}>✓</span>}
+                    </span>
+                    {d}
+                  </div>
+                ))}
+              </div>
+            </div>
             <select value={filterBand} onChange={e => setFilterBand(e.target.value)} style={{ fontSize: '13px', padding: '7px 12px', borderRadius: 'var(--k-radius-md)', border: `1px solid ${filterBand !== 'all' ? 'var(--k-brand-primary)' : 'var(--k-border-input)'}`, background: filterBand !== 'all' ? 'var(--k-brand-faint)' : 'var(--k-bg-input)', color: 'var(--k-text-primary)', fontFamily: 'var(--k-font-sans)', cursor: 'pointer' }}>
               <option value="all">All Performance Bands</option>
               <option value="high">High Performance (≥90%)</option>

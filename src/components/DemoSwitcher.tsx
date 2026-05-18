@@ -14,6 +14,8 @@ export const DEMO_PERSONAS = [
   { user_id: 'ee811f7a-d0ed-4641-ad67-34dbad4d5d41', name: 'Rahul Mehta', role: 'Developer — Excellent', roleKey: 'individual_contributor', emoji: '⭐', description: 'Top IT performer · 4σ · DPMO champion', dept: 'Information Technology' },
   { user_id: '6a1dada9-59ff-478d-986a-aa6b8bba6e54', name: 'Pooja Iyer', role: 'HR Executive', roleKey: 'individual_contributor', emoji: '👩‍💼', description: 'HR · BSC · Strong performer', dept: 'Human Resources' },
   { user_id: '712c9b7d-1df1-4854-918b-2795f00988a4', name: 'Aryan Kapoor', role: 'Sales Executive', roleKey: 'individual_contributor', emoji: '📈', description: 'Sales · BSC · Improving Q2', dept: 'Sales & Business Development' },
+  { user_id: '81918669-7266-491f-bc6d-7661f94de6a2', name: 'Vishal Mehta', role: 'IT Engineer', roleKey: 'individual_contributor', emoji: '🔴', description: 'IT · Six Sigma · DPMO struggling', dept: 'Information Technology' },
+  { user_id: 'fe858eb0-6b4f-4032-b816-e87ac7eaacff', name: 'Suresh Iyer', role: 'IT Engineer', roleKey: 'individual_contributor', emoji: '📉', description: 'IT · Six Sigma · Red DPMO', dept: 'Information Technology' },
 ]
 
 const DEMO_KEY = 'kinalys_demo_user_id'

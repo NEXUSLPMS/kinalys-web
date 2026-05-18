@@ -28,6 +28,7 @@ import DemoSwitcher from './components/DemoSwitcher'
 import HrAdminManagement from './pages/HrAdminManagement'
 import HrFlagsInbox from './pages/HrFlagsInbox'
 import PredictiveAnalysis from './pages/PredictiveAnalysis'
+import Recommendations from './pages/Recommendations'
 
 
 
@@ -155,6 +156,7 @@ function Dashboard() {
       support:       ['super_admin','hr_admin','executive','leadership','manager','team_lead','individual_contributor'],
       scorecard:     ['super_admin','hr_admin','executive','leadership','manager','team_lead','individual_contributor'],
       ai:            ['super_admin','hr_admin','executive','leadership','manager','team_lead','individual_contributor'],
+      recommendations: ['super_admin','hr_admin','executive','leadership','manager','team_lead','individual_contributor'],
       settings:      ['super_admin','hr_admin'],
       predictive:    ['super_admin','hr_admin','executive','leadership','manager'],
       hrflags:       ['super_admin','hr_admin'],
@@ -210,6 +212,7 @@ function Dashboard() {
             {canSee('predictive') && <div className={`k-nav-item ${activeNav === 'predictive' ? 'active' : ''}`} onClick={() => setActiveNav('predictive')}>Predictive Analysis</div>}
             {canSee('scorecard') && <div className={`k-nav-item ${activeNav === 'scorecard' ? 'active' : ''}`} onClick={() => setActiveNav('scorecard')}>My Scorecard</div>}
             {canSee('ai') && <div className={`k-nav-item ${activeNav === 'ai' ? 'active' : ''}`} onClick={() => setActiveNav('ai')}>AI Coaching</div>}
+            {canSee('recommendations') && <div className={`k-nav-item ${activeNav === 'recommendations' ? 'active' : ''}`} onClick={() => setActiveNav('recommendations')}>AI Recommendations</div>}
             {canSee('copc') && <div className={`k-nav-item ${activeNav === 'copc' ? 'active' : ''}`} onClick={() => setActiveNav('copc')}>COPC Scorecard</div>}
             {canSee('copcreport') && <div className={`k-nav-item ${activeNav === 'copcreport' ? 'active' : ''}`} onClick={() => setActiveNav('copcreport')}>COPC Report</div>}
             {canSee('sixsigma') && <div className={`k-nav-item ${activeNav === 'sixsigma' ? 'active' : ''}`} onClick={() => setActiveNav('sixsigma')}>Six Sigma Scorecard</div>}
@@ -335,6 +338,8 @@ function Dashboard() {
           <PredictiveAnalysis />
           ) : activeNav === 'hrflags' ? (
           <HrFlagsInbox />
+          ) : activeNav === 'recommendations' ? (
+          <Recommendations />
         ) : (
           <div className="k-page">
 

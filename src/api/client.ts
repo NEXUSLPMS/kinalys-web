@@ -561,3 +561,12 @@ export async function getHrExecutives() {
   const response = await apiClient.get('/flags/hr-executives')
   return response.data
 }
+export async function getMyRecommendations() {
+  const response = await apiClient.get('/recommendations/my')
+  return response.data
+}
+
+export async function getTeamMemberRecommendations(userId: string) {
+  const response = await apiClient.get(`/recommendations/team/${userId}`)
+  return response.data
+}

@@ -26,6 +26,7 @@ import COPCReport from './pages/COPCReport'
 import SixSigmaReport from './pages/SixSigmaReport'
 import DemoSwitcher from './components/DemoSwitcher'
 import HrAdminManagement from './pages/HrAdminManagement'
+import HrFlagsInbox from './pages/HrFlagsInbox'
 import PredictiveAnalysis from './pages/PredictiveAnalysis'
 
 
@@ -156,6 +157,7 @@ function Dashboard() {
       ai:            ['super_admin','hr_admin','executive','leadership','manager','team_lead','individual_contributor'],
       settings:      ['super_admin','hr_admin'],
       predictive:    ['super_admin','hr_admin','executive','leadership','manager'],
+      hrflags:       ['super_admin','hr_admin'],
     }
     return (access[feature] || []).includes(role)
   }
@@ -236,6 +238,7 @@ function Dashboard() {
               {canSee('talent') && <div className={`k-nav-item ${activeNav === 'talent' ? 'active' : ''}`} onClick={() => setActiveNav('talent')}>Talent Grid</div>}
               {canSee('users') && <div className={`k-nav-item ${activeNav === 'users' ? 'active' : ''}`} onClick={() => setActiveNav('users')}>User Management</div>}
               {canSee('kpi') && <div className={`k-nav-item ${activeNav === 'kpi' ? 'active' : ''}`} onClick={() => setActiveNav('kpi')}>KPI Templates</div>}
+              {canSee('hrflags') && <div className={`k-nav-item ${activeNav === 'hrflags' ? 'active' : ''}`} onClick={() => setActiveNav('hrflags')}>Flags Inbox</div>}
                </>}
           </div>
         )}
@@ -254,6 +257,7 @@ function Dashboard() {
             {canSee('support') && <div className={`k-nav-item ${activeNav === 'support' ? 'active' : ''}`} onClick={() => setActiveNav('support')}>Support Tickets</div>}
           </>}
         </div>
+
         {/* Platform - super_admin only */}
         {role === 'super_admin' && (
           <div className="k-sidebar-section" style={{ marginTop: '4px' }}>
@@ -329,6 +333,8 @@ function Dashboard() {
           <HrAdminManagement />
           ) : activeNav === 'predictive' ? (
           <PredictiveAnalysis />
+          ) : activeNav === 'hrflags' ? (
+          <HrFlagsInbox />
         ) : (
           <div className="k-page">
 

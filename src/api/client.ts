@@ -533,7 +533,7 @@ export async function getPredictiveMe() {
   const response = await apiClient.get('/predictive/me')
   return response.data
 }
-export async function submitEmployeeFlag(data: { employee_id: string; flag_type: 'pip' | 'release'; manager_comment: string; performance_snapshot: any }) {
+export async function submitEmployeeFlag(data: { employee_id: string; flag_type: 'pip' | 'release'; manager_comment: string; performance_snapshot: any; pip_start_date?: string; pip_end_date?: string }) {
   const response = await apiClient.post('/flags', data)
   return response.data
 }
@@ -550,5 +550,14 @@ export async function getPendingFlags() {
 
 export async function confirmFlagConversation(flagId: string, hrComment: string) {
   const response = await apiClient.put(`/flags/${flagId}/confirm`, { hr_comment: hrComment })
+  return response.data
+}
+export async function delegateFlag(flagId: string, data: { delegate_to: string; due_date: string; delegation_notes: string }) {
+  const response = await apiClient.post(`/flags/${flagId}/delegate`, data)
+  return response.data
+}
+
+export async function getHrExecutives() {
+  const response = await apiClient.get('/flags/hr-executives')
   return response.data
 }

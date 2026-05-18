@@ -11,6 +11,8 @@ export default function PredictiveAnalysis() {
   const [selectedEmployee, setSelectedEmployee] = useState<any>(null)
   const [flagType, setFlagType] = useState<'pip' | 'release' | null>(null)
   const [flagComment, setFlagComment] = useState('')
+  const [pipStartDate, setPipStartDate] = useState('')
+  const [pipEndDate, setPipEndDate] = useState('')
   const [flagLoading, setFlagLoading] = useState(false)
   const [flagSuccess, setFlagSuccess] = useState('')
   const [flagError, setFlagError] = useState('')
@@ -79,10 +81,17 @@ export default function PredictiveAnalysis() {
     setFlagLoading(true)
     setFlagError('')
     try {
+      if (flagType === 'pip' && (!pipStartDate || !pipEndDate)) {
+        setFlagError('PIP start and end dates are required.')
+        setFlagLoading(false)
+        return
+      }
       await submitEmployeeFlag({
         employee_id: selectedEmployee.user_id,
         flag_type: flagType,
         manager_comment: flagComment.trim(),
+        pip_start_date: flagType === 'pip' ? pipStartDate : undefined,
+        pip_end_date: flagType === 'pip' ? pipEndDate : undefined,
         performance_snapshot: {
           current_score: selectedEmployee.current_score,
           predicted_score: selectedEmployee.predicted_score,
@@ -198,7 +207,7 @@ export default function PredictiveAnalysis() {
                 const isSelected = selectedEmployee?.user_id === p.user_id
                 return (
                   <div key={p.user_id}
-                    onClick={() => { setSelectedEmployee(isSelected ? null : p); setFlagType(null); setFlagComment(''); setFlagSuccess(''); setFlagError('') }}
+                    onClick={() => { setSelectedEmployee(isSelected ? null : p); setFlagType(null); setFlagComment(''); setFlagSuccess(''); setFlagError(''); setPipStartDate(''); setPipEndDate('') }}
                     style={{ display: 'grid', gridTemplateColumns: '2fr 1.5fr 1fr 1fr 1fr 1.2fr', padding: '12px 16px', borderBottom: '1px solid var(--k-border-default)', cursor: 'pointer',
                       background: isSelected ? 'var(--k-brand-faint)' : p.slip_alert ? 'var(--k-warning-bg)' : 'transparent',
                       borderLeft: isSelected ? '3px solid var(--k-brand-primary)' : '3px solid transparent' }}>
@@ -344,6 +353,31 @@ export default function PredictiveAnalysis() {
                   </div>
                 )}
 
+                {flagType === 'pip' && (
+                  <div style={{ marginBottom: '10px' }}>
+                    <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--k-text-muted)', marginBottom: '6px' }}>PIP DURATION</div>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: '10px', color: 'var(--k-text-muted)', marginBottom: '3px' }}>Start Date</div>
+                        <input type="date" value={pipStartDate} onChange={e => setPipStartDate(e.target.value)}
+                          min={new Date().toISOString().split('T')[0]}
+                          style={{ width: '100%', fontSize: '12px', padding: '7px', borderRadius: 'var(--k-radius-md)', border: '1px solid var(--k-border-input)', background: 'var(--k-bg-input)', color: 'var(--k-text-primary)', fontFamily: 'var(--k-font-sans)', boxSizing: 'border-box' }} />
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: '10px', color: 'var(--k-text-muted)', marginBottom: '3px' }}>End Date</div>
+                        <input type="date" value={pipEndDate} onChange={e => setPipEndDate(e.target.value)}
+                          min={pipStartDate || new Date().toISOString().split('T')[0]}
+                          style={{ width: '100%', fontSize: '12px', padding: '7px', borderRadius: 'var(--k-radius-md)', border: '1px solid var(--k-border-input)', background: 'var(--k-bg-input)', color: 'var(--k-text-primary)', fontFamily: 'var(--k-font-sans)', boxSizing: 'border-box' }} />
+                      </div>
+                    </div>
+                    {pipStartDate && pipEndDate && (
+                      <div style={{ fontSize: '10px', color: 'var(--k-brand-primary)', marginTop: '4px' }}>
+                        Duration: {Math.ceil((new Date(pipEndDate).getTime() - new Date(pipStartDate).getTime()) / (1000 * 60 * 60 * 24))} days
+                      </div>
+                    )}
+                  </div>
+                )}
+                
                 <div style={{ marginBottom: '8px' }}>
                   <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--k-text-muted)', marginBottom: '4px' }}>
                     {flagType === 'pip' ? 'What coaching has been attempted? What improvement is expected?' : 'Business justification for release recommendation'}

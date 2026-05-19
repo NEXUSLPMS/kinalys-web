@@ -89,20 +89,21 @@ export const THEMES: Theme[] = [
     tier: 'sprint4',
   },
   
-  {
+{
     id: 'avengers',
     name: 'Avengers',
     description: 'Deep navy and gold — heroic and aspirational',
     color: '#C9A84C',
-    available: false,
+    available: true,   // ← change from false
     tier: 'pro',
   },
-  {
+
+{
     id: 'ironman',
     name: 'Iron Man',
     description: 'Black and gold with arc reactor teal — JARVIS mode',
     color: '#FFD700',
-    available: false,
+    available: true,   // ← change from false
     tier: 'pro',
   },
 ]

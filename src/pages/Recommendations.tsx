@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { getMyRecommendations } from '../api/client'
+import AILoadingAnimation from '../components/AILoadingAnimation'
 
 export default function Recommendations() {
   const [data, setData] = useState<any>(null)
@@ -21,20 +22,22 @@ export default function Recommendations() {
   }
 
   function ragColor(rag: string) {
-    if (rag === 'red') return 'var(--k-danger-text)'
-    return 'var(--k-warning-text)'
+    if (rag === 'red') return '#FFFFFF'
+    return '#FFFFFF'
   }
 
   function ragBg(rag: string) {
-    if (rag === 'red') return 'var(--k-danger-bg)'
-    return 'var(--k-warning-bg)'
+    if (rag === 'red') return '#DC2626'
+    return '#D97706'
   }
 
   if (loading) return (
     <div className="k-page">
-      <div style={{ color: 'var(--k-text-muted)', fontSize: '14px', padding: '40px 0' }}>
-        Analysing your KPI gaps and finding the best courses...
+      <div style={{ marginBottom: '24px' }}>
+        <div className="k-page-title">AI Course Recommendations</div>
+        <div className="k-page-sub">Analysing your performance data and matching courses...</div>
       </div>
+      <AILoadingAnimation />
     </div>
   )
 
@@ -75,7 +78,7 @@ export default function Recommendations() {
               <div style={{ fontSize: '15px', fontWeight: 700, color: ragColor(rec.kpi_rag) }}>{rec.kpi_name}</div>
               <div style={{ fontSize: '12px', color: ragColor(rec.kpi_rag), marginTop: '2px' }}>Current score: {rec.kpi_score}%</div>
             </div>
-            <span style={{ fontSize: '11px', fontWeight: 700, padding: '4px 12px', borderRadius: '20px', background: 'white', color: ragColor(rec.kpi_rag), textTransform: 'uppercase' }}>
+            <span style={{ fontSize: '11px', fontWeight: 700, padding: '4px 12px', borderRadius: '20px', background: 'rgba(255,255,255,0.25)', color: '#FFFFFF', textTransform: 'uppercase' }}>
               {rec.kpi_rag === 'red' ? 'Below Target' : 'Needs Attention'}
             </span>
           </div>

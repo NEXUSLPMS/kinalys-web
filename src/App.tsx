@@ -29,6 +29,7 @@ import HrAdminManagement from './pages/HrAdminManagement'
 import HrFlagsInbox from './pages/HrFlagsInbox'
 import PredictiveAnalysis from './pages/PredictiveAnalysis'
 import Recommendations from './pages/Recommendations'
+import StatRing from './components/StatRing'
 
 
 
@@ -187,7 +188,7 @@ function Dashboard() {
             🏠 Dashboard
           </div>
         </div>
-        
+
         {/* Learning */}
         <div className="k-sidebar-section">
           <div
@@ -437,75 +438,98 @@ function Dashboard() {
             </div>
 
                 {talentPosition?.position && (
-                  <div className="k-card" style={{ marginBottom: "24px" }}>
+<div className="k-card" style={{ marginBottom: '24px' }}>
                     <div className="k-card-header">
                       <div className="k-card-title">My Talent Profile</div>
-                      <span style={{ fontSize: "12px", color: "var(--k-text-muted)" }}>{talentPosition.cycle?.name}</span>
+                      <span style={{ fontSize: '12px', color: 'var(--k-text-muted)' }}>{talentPosition.cycle?.name}</span>
                     </div>
-                    <div className="k-mobile-stack" style={{ padding: "20px", display: "flex", gap: "32px", alignItems: "center" }}>
+                    <div className="k-mobile-stack" style={{ padding: '20px', display: 'flex', gap: '32px', alignItems: 'center' }}>
                       <div style={{ flex: 1 }}>
-                        <div style={{ marginBottom: "16px" }}>
-                          <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--k-text-muted)", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "6px" }}>Performance Score</div>
-                          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                            <div style={{ fontSize: "32px", fontWeight: 800, color: talentPosition.position.performance_score >= 90 ? "var(--k-success-text)" : talentPosition.position.performance_score >= 80 ? "var(--k-warning-text)" : "var(--k-danger-text)" }}>
+                        <div style={{ marginBottom: '16px' }}>
+                          <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--k-text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>Performance Score</div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <div style={{ fontSize: '32px', fontWeight: 800, color: talentPosition.position.performance_score >= 90 ? 'var(--k-success-text)' : talentPosition.position.performance_score >= 80 ? 'var(--k-warning-text)' : 'var(--k-danger-text)' }}>
                               {talentPosition.position.performance_score}%
                             </div>
-                            <div style={{ flex: 1, height: "8px", background: "var(--k-border-default)", borderRadius: "4px", overflow: "hidden" }}>
-                              <div style={{ height: "100%", width: `${talentPosition.position.performance_score}%`, background: talentPosition.position.performance_score >= 90 ? "var(--k-success-text)" : talentPosition.position.performance_score >= 80 ? "var(--k-warning-text)" : "var(--k-danger-text)", borderRadius: "4px" }} />
+                            <div style={{ flex: 1, height: '8px', background: 'var(--k-border-default)', borderRadius: '4px', overflow: 'hidden' }}>
+                              <div style={{ height: '100%', width: `${talentPosition.position.performance_score}%`, background: talentPosition.position.performance_score >= 90 ? 'var(--k-success-text)' : talentPosition.position.performance_score >= 80 ? 'var(--k-warning-text)' : 'var(--k-danger-text)', borderRadius: '4px' }} />
                             </div>
                           </div>
                         </div>
                         <div>
-                          <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--k-text-muted)", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "6px" }}>Potential</div>
+                          <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--k-text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>Potential</div>
                           {talentPosition.position.has_potential_rating ? (
-                            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                              <span style={{ fontSize: "15px", fontWeight: 800, color: talentPosition.position.potential_rating >= 4 ? "var(--k-success-text)" : talentPosition.position.potential_rating >= 3 ? "var(--k-warning-text)" : "var(--k-danger-text)", background: talentPosition.position.potential_rating >= 4 ? "var(--k-success-bg)" : talentPosition.position.potential_rating >= 3 ? "var(--k-warning-bg)" : "var(--k-danger-bg)", padding: "4px 14px", borderRadius: "10px" }}>
-                                {talentPosition.position.potential_rating >= 4 ? "High Potential" : talentPosition.position.potential_rating >= 3 ? "Medium Potential" : "Developing"}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                              <span style={{ fontSize: '15px', fontWeight: 800, color: talentPosition.position.potential_rating >= 4 ? 'var(--k-success-text)' : talentPosition.position.potential_rating >= 3 ? 'var(--k-warning-text)' : 'var(--k-danger-text)', background: talentPosition.position.potential_rating >= 4 ? 'var(--k-success-bg)' : talentPosition.position.potential_rating >= 3 ? 'var(--k-warning-bg)' : 'var(--k-danger-bg)', padding: '4px 14px', borderRadius: '10px' }}>
+                                {talentPosition.position.potential_rating >= 4 ? 'High Potential' : talentPosition.position.potential_rating >= 3 ? 'Medium Potential' : 'Developing'}
                               </span>
-                              <span style={{ fontSize: "12px", color: "var(--k-text-muted)" }}>Manager assessed</span>
+                              <span style={{ fontSize: '12px', color: 'var(--k-text-muted)' }}>Manager assessed</span>
                             </div>
                           ) : (
-                            <span style={{ fontSize: "13px", color: "var(--k-text-muted)" }}>Not yet assessed by your manager</span>
+                            <span style={{ fontSize: '13px', color: 'var(--k-text-muted)' }}>Not yet assessed by your manager</span>
                           )}
                         </div>
                       </div>
-                      <div style={{ background: "var(--k-bg-page)", borderRadius: "var(--k-radius-md)", padding: "14px 20px", textAlign: "center", flexShrink: 0 }}>
-                        <div style={{ fontSize: "11px", color: "var(--k-text-muted)", marginBottom: "4px" }}>Your profile is reviewed</div>
-                        <div style={{ fontSize: "11px", color: "var(--k-text-muted)", marginBottom: "8px" }}>by your manager each cycle.</div>
-                        <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--k-brand-primary)" }}>Performance + Potential</div>
-                        <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--k-brand-primary)" }}>drive your development plan.</div>
+                      <div style={{ background: 'var(--k-bg-page)', borderRadius: 'var(--k-radius-md)', padding: '14px 20px', textAlign: 'center', flexShrink: 0 }}>
+                        <div style={{ fontSize: '11px', color: 'var(--k-text-muted)', marginBottom: '4px' }}>Your profile is reviewed</div>
+                        <div style={{ fontSize: '11px', color: 'var(--k-text-muted)', marginBottom: '8px' }}>by your manager each cycle.</div>
+                        <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--k-brand-primary)' }}>Performance + Potential</div>
+                        <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--k-brand-primary)' }}>drive your development plan.</div>
                       </div>
                     </div>
                   </div>
                 )}
-          <div className="k-stat-grid k-stat-grid-4" style={{ marginBottom: '24px' }}>
-              <div className="k-stat-card accent">
-                <div className="k-stat-label">Overall Score</div>
-                <div className="k-stat-value" style={{ color: dashStats?.overall_score >= 90 ? 'var(--k-success-text)' : dashStats?.overall_score >= 80 ? 'var(--k-warning-text)' : dashStats?.overall_score ? 'var(--k-danger-text)' : 'var(--k-text-muted)' }}>
-                  {dashStats?.overall_score !== null && dashStats?.overall_score !== undefined ? `${dashStats.overall_score}%` : '-'}
-                </div>
-                <div className="k-stat-trend">
-                  {dashStats?.overall_score >= 90 ? '😊 High Performance' : dashStats?.overall_score >= 80 ? '👍 Medium Performance' : dashStats?.overall_score ? '📉 Needs Improvement' : 'No score yet'}
-                </div>
-              </div>
-              <div className="k-stat-card green">
-                <div className="k-stat-label">Learning Hours</div>
-                <div className="k-stat-value">{dashStats?.completed_hours ?? '-'}</div>
-                <div style={{ fontSize: '11px', color: 'var(--k-text-muted)', marginTop: '4px' }}>
-                  {dashStats?.learning_pct ?? 0}% of {dashStats?.learning_target ?? 40} hr target
-                </div>
-              </div>
-              <div className="k-stat-card purple">
-                <div className="k-stat-label">Pending KPIs</div>
-                <div className="k-stat-value">{dashStats?.pending_kpis ?? '-'}</div>
-                <div className="k-stat-trend">{dashStats?.pending_kpis > 0 ? 'Awaiting approval' : 'All approved'}</div>
-              </div>
-              <div className="k-stat-card amber">
-                <div className="k-stat-label">Certifications</div>
-                <div className="k-stat-value">{dashStats?.certifications ?? '-'}</div>
-                <div className="k-stat-trend">{dashStats?.upcoming_one_on_ones > 0 ? `${dashStats.upcoming_one_on_ones} upcoming 1-on-1` : 'Earned'}</div>
-              </div>
-            </div>
+
+                  <div className="k-stat-grid k-stat-grid-4" style={{ marginBottom: '24px' }}>
+                    <div className="k-stat-card accent" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div>
+                        <div className="k-stat-label">Overall Score</div>
+                        <div className="k-stat-value" style={{ color: dashStats?.overall_score >= 90 ? 'var(--k-success-text)' : dashStats?.overall_score >= 80 ? 'var(--k-warning-text)' : dashStats?.overall_score ? 'var(--k-danger-text)' : 'var(--k-text-muted)' }}>
+                          {dashStats?.overall_score != null ? `${dashStats.overall_score}%` : '—'}
+                        </div>
+                        <div className="k-stat-trend">
+                          {dashStats?.overall_score >= 90 ? '🟢 High Performance' : dashStats?.overall_score >= 80 ? '🟡 On Track' : dashStats?.overall_score ? '🔴 Needs Attention' : 'No score yet'}
+                        </div>
+                      </div>
+                      <StatRing
+                        value={dashStats?.overall_score ?? 0}
+                        color={dashStats?.overall_score >= 90 ? 'var(--k-success-text)' : dashStats?.overall_score >= 80 ? 'var(--k-warning-text)' : dashStats?.overall_score ? 'var(--k-danger-text)' : 'var(--k-text-muted)'}
+                      />
+                    </div>
+                    <div className="k-stat-card green" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div>
+                        <div className="k-stat-label">Learning Hours</div>
+                        <div className="k-stat-value">{dashStats?.completed_hours ?? '-'}</div>
+                        <div className="k-stat-trend">{dashStats?.learning_pct > 0 ? `${dashStats.learning_pct}% of target` : 'No target set'}</div>
+                      </div>
+                      <StatRing
+                        value={dashStats?.learning_pct ?? 0}
+                        color="var(--k-success-text)"
+                      />
+                    </div>
+                    <div className="k-stat-card purple" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div>
+                        <div className="k-stat-label">Pending KPIs</div>
+                        <div className="k-stat-value">{dashStats?.pending_kpis ?? '-'}</div>
+                        <div className="k-stat-trend">{dashStats?.pending_kpis > 0 ? 'Awaiting approval' : 'All approved'}</div>
+                      </div>
+                      <StatRing
+                        value={dashStats?.pending_kpis > 0 ? Math.min(100, dashStats.pending_kpis * 10) : 100}
+                        color={dashStats?.pending_kpis > 0 ? 'var(--k-ai-solid)' : 'var(--k-success-text)'}
+                      />
+                    </div>
+                    <div className="k-stat-card amber" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div>
+                        <div className="k-stat-label">Certifications</div>
+                        <div className="k-stat-value">{dashStats?.certifications ?? '-'}</div>
+                        <div className="k-stat-trend">{dashStats?.upcoming_one_on_ones > 0 ? `${dashStats.upcoming_one_on_ones} upcoming 1-on-1` : 'Earned'}</div>
+                      </div>
+                      <StatRing
+                        value={dashStats?.certifications > 0 ? Math.min(100, dashStats.certifications * 20) : 0}
+                        color="var(--k-warning-text)"
+                      />
+                    </div>
+                  </div>
 
             <div className="k-lms-banner" style={{ marginBottom: '24px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>                <div style={{ fontSize: '14px', fontWeight: 700 }}>📚 Learning Hours</div>

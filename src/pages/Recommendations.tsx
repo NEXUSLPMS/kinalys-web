@@ -103,7 +103,7 @@ export default function Recommendations() {
                         <span style={{ fontSize: '24px', flexShrink: 0 }}>{course.thumbnail_emoji || '📚'}</span>
                         <div style={{ flex: 1 }}>
                           <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--k-text-primary)', marginBottom: '2px' }}>{course.title}</div>
-                          <div style={{ fontSize: '11px', color: 'var(--k-text-muted)' }}>{course.category} · {course.difficulty} · {course.duration_hours}hrs</div>
+                          <div style={{ fontSize: '13px', color: 'var(--k-text-muted)' }}>{course.category} · {course.difficulty} · {course.duration_hours}hrs</div>
                           {course.already_enrolled && (
                             <span style={{ fontSize: '10px', fontWeight: 700, color: 'var(--k-success-text)', background: 'var(--k-success-bg)', padding: '2px 6px', borderRadius: '8px', marginTop: '4px', display: 'inline-block' }}>Already enrolled</span>
                           )}
@@ -129,7 +129,7 @@ export default function Recommendations() {
                 <div style={{ padding: '14px', background: 'var(--k-bg-page)', borderRadius: 'var(--k-radius-md)', border: '1px solid var(--k-border-default)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--k-text-primary)', marginBottom: '2px' }}>{rec.marketplace_suggestion.title}</div>
-                    <div style={{ fontSize: '11px', color: 'var(--k-text-muted)', marginBottom: '4px' }}>
+                    <div style={{ fontSize: '12px', color: 'var(--k-text-muted)', marginBottom: '4px' }}>
                       {rec.internal_courses?.length === 0 ? `Available on ${rec.marketplace_suggestion.provider}` : rec.marketplace_suggestion.provider}
                     </div>
                     {rec.marketplace_suggestion.reason && (

@@ -181,7 +181,13 @@ function Dashboard() {
 
       {/* Sidebar */}
       <div className="k-sidebar">
-
+{/* Dashboard */}
+        <div className="k-sidebar-section" style={{ marginBottom: '4px' }}>
+          <div className={`k-nav-item ${activeNav === 'home' ? 'active' : ''}`} onClick={() => setActiveNav('home')}>
+            🏠 Dashboard
+          </div>
+        </div>
+        
         {/* Learning */}
         <div className="k-sidebar-section">
           <div

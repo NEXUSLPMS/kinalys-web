@@ -111,16 +111,16 @@ export default function CourseCatalog() {
                   <div style={{ background: 'var(--k-bg-page)', padding: '20px', textAlign: 'center', borderBottom: '1px solid var(--k-border-default)' }}>
                     <div style={{ fontSize: '40px', marginBottom: '8px' }}>{course.thumbnail_emoji}</div>
                     <div style={{ display: 'flex', gap: '6px', justifyContent: 'center', flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: '10px', fontWeight: 700, color: diff.color, background: diff.bg, padding: '2px 8px', borderRadius: '8px' }}>{course.difficulty}</span>
-                      <span style={{ fontSize: '10px', fontWeight: 700, color: 'var(--k-brand-primary)', background: 'var(--k-brand-faint)', padding: '2px 8px', borderRadius: '8px' }}>{course.category}</span>
-                      {course.is_mandatory && <span style={{ fontSize: '10px', fontWeight: 700, color: 'var(--k-danger-text)', background: 'var(--k-danger-bg)', padding: '2px 8px', borderRadius: '8px' }}>Mandatory</span>}
+                      <span style={{ fontSize: '12px', fontWeight: 700, color: diff.color, background: diff.bg, padding: '2px 8px', borderRadius: '8px' }}>{course.difficulty}</span>
+                      <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--k-brand-primary)', background: 'var(--k-brand-faint)', padding: '2px 8px', borderRadius: '8px' }}>{course.category}</span>
+                      <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--k-danger-text)', background: 'var(--k-danger-bg)', padding: '2px 8px', borderRadius: '8px' }}>Mandatory</span>
                     </div>
                   </div>
 
                   {/* Card body */}
                   <div style={{ padding: '16px', flex: 1, display: 'flex', flexDirection: 'column' }}>
                     <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--k-text-primary)', marginBottom: '6px', lineHeight: 1.3 }}>{course.title}</div>
-                    <div style={{ fontSize: '12px', color: 'var(--k-text-muted)', lineHeight: 1.6, marginBottom: '12px', flex: 1 }}>{course.description}</div>
+                    <div style={{ fontSize: '13px', color: 'var(--k-text-muted)', lineHeight: 1.6, marginBottom: '12px', flex: 1 }}>{course.description}</div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', color: 'var(--k-text-muted)', marginBottom: '12px' }}>
                       <span>{course.instructor}</span>
                       <span style={{ fontWeight: 700, color: 'var(--k-brand-primary)' }}>{course.duration_hours} hrs</span>

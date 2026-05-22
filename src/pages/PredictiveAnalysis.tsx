@@ -227,8 +227,8 @@ export default function PredictiveAnalysis() {
                       {p.delta !== null && <span style={{ fontSize: '10px', color: trend.color }}>{p.delta >= 0 ? '+' : ''}{p.delta}%</span>}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
-                      {p.slip_alert && <span style={{ fontSize: '9px', fontWeight: 700, color: 'var(--k-warning-text)', background: 'var(--k-warning-bg)', padding: '2px 5px', borderRadius: '8px' }}>SLIP</span>}
-                      {p.predicted_rag && <span style={{ fontSize: '9px', fontWeight: 700, color: ragColor(p.predicted_rag), background: ragBg(p.predicted_rag), padding: '2px 6px', borderRadius: '8px', textTransform: 'capitalize' }}>{p.predicted_rag}</span>}
+                      {p.slip_alert && !p.predicted_rag && <span style={{ fontSize: '9px', fontWeight: 700, color: 'var(--k-warning-text)', background: 'var(--k-warning-bg)', padding: '2px 5px', borderRadius: '8px' }}>SLIP</span>}
+                      {p.predicted_rag && <span style={{ fontSize: '9px', fontWeight: 700, color: ragColor(p.predicted_rag), background: ragBg(p.predicted_rag), padding: '2px 6px', borderRadius: '8px', textTransform: 'capitalize' }}>{p.predicted_rag}{p.slip_alert ? ' ⚠' : ''}</span>}
                     </div>
                   </div>
                 )

@@ -1,5 +1,6 @@
 ﻿import { useState, useEffect } from 'react'
 import { getTeamScorecards, getReviewCycles, getUserScorecard } from '../api/client'
+import StatRing from '../components/StatRing'
 
 export default function ExecDashboard() {
   const [team, setTeam] = useState<any[]>([])
@@ -324,29 +325,41 @@ export default function ExecDashboard() {
           <div style={{ background: 'var(--k-danger-bg)', border: '1px solid var(--k-danger-border)', borderRadius: 'var(--k-radius-md)', padding: '12px 16px', marginBottom: '20px', fontSize: '13px', color: 'var(--k-danger-text)' }}>{error}</div>
         )}
 
-        {/* Stat cards — clickable to filter */}
         <div className="k-stat-grid k-stat-grid-4" style={{ marginBottom: '24px' }}>
-          <div className="k-stat-card accent">
-            <div className="k-stat-label">Org Average Score</div>
-            <div className="k-stat-value" style={{ color: getScoreColor(avgScore) }}>{avgScore !== null ? `${avgScore}%` : '—'}</div>
-            <div className="k-stat-trend">{scoredMembers.length} of {team.length} scored</div>
+          <div className="k-stat-card accent" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <div className="k-stat-label">Org Average Score</div>
+              <div className="k-stat-value" style={{ color: getScoreColor(avgScore) }}>{avgScore !== null ? `${avgScore}%` : '—'}</div>
+              <div className="k-stat-trend">{scoredMembers.length} of {filtered.length} scored</div>
+            </div>
+            <StatRing value={avgScore ?? 0} color={getScoreColor(avgScore)} />
           </div>
-          <div className="k-stat-card green">
-            <div className="k-stat-label">High Performance</div>
-            <div className="k-stat-value">{highPerf}</div>
-            <div className="k-stat-trend">Score ≥ 90%</div>
+          <div className="k-stat-card green" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <div className="k-stat-label">High Performance</div>
+              <div className="k-stat-value">{highPerf}</div>
+              <div className="k-stat-trend">Score ≥ 90%</div>
+            </div>
+            <StatRing value={filtered.length > 0 ? Math.round((highPerf / filtered.length) * 100) : 0} color="var(--k-success-text)" />
           </div>
-          <div className="k-stat-card amber">
-            <div className="k-stat-label">Medium Performance</div>
-            <div className="k-stat-value">{medPerf}</div>
-            <div className="k-stat-trend">Score 80–89%</div>
+          <div className="k-stat-card amber" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <div className="k-stat-label">Medium Performance</div>
+              <div className="k-stat-value">{medPerf}</div>
+              <div className="k-stat-trend">Score 80–89%</div>
+            </div>
+            <StatRing value={filtered.length > 0 ? Math.round((medPerf / filtered.length) * 100) : 0} color="var(--k-warning-text)" />
           </div>
-          <div className="k-stat-card purple">
-            <div className="k-stat-label">Needs Improvement</div>
-            <div className="k-stat-value">{needsImprovement}</div>
-            <div className="k-stat-trend">Score below 80%</div>
+          <div className="k-stat-card purple" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <div className="k-stat-label">Needs Improvement</div>
+              <div className="k-stat-value">{needsImprovement}</div>
+              <div className="k-stat-trend">Score below 80%</div>
+            </div>
+            <StatRing value={filtered.length > 0 ? Math.round((needsImprovement / filtered.length) * 100) : 0} color="var(--k-danger-text)" />
           </div>
         </div>
+         
 
         {/* KPI Health + Distribution */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>

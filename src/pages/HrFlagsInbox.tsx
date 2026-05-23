@@ -1,6 +1,27 @@
 import { useState, useEffect } from 'react'
 import { getPendingFlags, confirmFlagConversation, delegateFlag, getHrExecutives } from '../api/client'
 
+function isGenuineComment(text: string): boolean {
+  const t = text.trim()
+  if (t.length < 20) return false
+  const words = t.split(/\s+/).filter(w => w.length > 0)
+  if (words.length < 4) return false
+  if (!words.some(w => w.length > 3)) return false
+  const lowerText = t.toLowerCase()
+  const blocked = ['this is a test', 'test comment', 'testing', 'just testing', 'test test',
+    'hello world', 'lorem ipsum', 'blah blah', 'n/a', 'nothing', 'no comment',
+    'asdf', 'qwerty', 'please approve', 'approve this', 'tbd', 'will add later']
+  if (blocked.some(b => lowerText.includes(b))) return false
+  const charCounts = lowerText.split('').reduce((acc: Record<string, number>, c: string) => { acc[c] = (acc[c] || 0) + 1; return acc }, {})
+  const maxRepeat = Math.max(...(Object.values(charCounts) as number[]))
+  if (maxRepeat / t.length > 0.6) return false
+  const noSpaces = lowerText.replace(/\s/g, '')
+  const runs = ['qwertyuiop', 'asdfghjkl', 'zxcvbnm', '1234567890']
+  if (runs.some(run => noSpaces.includes(run.slice(0, 6)))) return false
+  return true
+}
+
+
 export default function HrFlagsInbox() {
   const [data, setData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -211,7 +232,7 @@ export default function HrFlagsInbox() {
 
         {/* Action panel */}
         {selectedFlag && (
-          <div style={{ width: '360px', flexShrink: 0 }}>
+          <div style={{ width: '480px', flexShrink: 0 }}>
             <div className="k-card" style={{ padding: '20px', borderTop: `4px solid ${selectedFlag.flag_type === 'pip' ? 'var(--k-warning-text)' : 'var(--k-danger-text)'}` }}>
               <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--k-text-primary)', marginBottom: '2px' }}>{selectedFlag.employee_name}</div>
               <div style={{ fontSize: '12px', color: 'var(--k-text-muted)', marginBottom: '16px' }}>
@@ -227,6 +248,59 @@ export default function HrFlagsInbox() {
               {selectedFlag.flag_type === 'pip' && (
                 <div style={{ background: 'var(--k-warning-bg)', border: '1px solid var(--k-warning-border, #fcd34d)', borderRadius: 'var(--k-radius-md)', padding: '10px', marginBottom: '12px', fontSize: '11px', color: 'var(--k-warning-text)', lineHeight: 1.5 }}>
                   After confirmation, PIP flag becomes visible to the employee. Manager and employee will be notified.
+                </div>
+              )}
+
+              {/* PIP Form Data — show what manager submitted */}
+              {selectedFlag.flag_type === 'pip' && selectedFlag.pip_form_data && (
+                <div style={{ background: 'var(--k-bg-page)', border: '1px solid var(--k-border-default)', borderRadius: 'var(--k-radius-lg)', padding: '14px', marginBottom: '12px' }}>
+                  <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--k-text-muted)', letterSpacing: '1px', marginBottom: '10px' }}>PIP DETAILS — SUBMITTED BY MANAGER</div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '10px' }}>
+                    <div style={{ background: 'var(--k-bg-card)', borderRadius: 'var(--k-radius-md)', padding: '8px 10px' }}>
+                      <div style={{ fontSize: '10px', color: 'var(--k-text-muted)', marginBottom: '2px' }}>Duration</div>
+                      <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--k-text-primary)' }}>
+                        {selectedFlag.pip_form_data.duration_days ? `${selectedFlag.pip_form_data.duration_days} days` : '-'}
+                        {selectedFlag.pip_start_date ? ` · ${new Date(selectedFlag.pip_start_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })} to ${new Date(selectedFlag.pip_end_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}` : ''}
+                      </div>
+                    </div>
+                    <div style={{ background: 'var(--k-bg-card)', borderRadius: 'var(--k-radius-md)', padding: '8px 10px' }}>
+                      <div style={{ fontSize: '10px', color: 'var(--k-text-muted)', marginBottom: '2px' }}>Review Frequency</div>
+                      <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--k-text-primary)', textTransform: 'capitalize' }}>
+                        {selectedFlag.pip_form_data.review_frequency || 'Weekly'}
+                      </div>
+                    </div>
+                  </div>
+
+                  {selectedFlag.pip_form_data.kpi_targets && Object.keys(selectedFlag.pip_form_data.kpi_targets).length > 0 && (
+                    <div style={{ marginBottom: '10px' }}>
+                      <div style={{ fontSize: '10px', color: 'var(--k-text-muted)', marginBottom: '6px', fontWeight: 700 }}>KPI TARGETS</div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        {Object.entries(selectedFlag.pip_form_data.kpi_targets).map(([kpi, target]: [string, any]) => (
+                          <div key={kpi} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '5px 8px', background: 'var(--k-bg-card)', borderRadius: 'var(--k-radius-sm)', fontSize: '12px' }}>
+                            <span style={{ color: 'var(--k-text-secondary)' }}>{kpi}</span>
+                            <span style={{ fontWeight: 700, color: 'var(--k-brand-primary)' }}>{target}% target</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedFlag.pip_form_data.support_plan && (
+                    <div>
+                      <div style={{ fontSize: '10px', color: 'var(--k-text-muted)', marginBottom: '4px', fontWeight: 700 }}>SUPPORT PLAN</div>
+                      <div style={{ fontSize: '12px', color: 'var(--k-text-primary)', lineHeight: 1.6, padding: '8px', background: 'var(--k-bg-card)', borderRadius: 'var(--k-radius-md)' }}>
+                        {selectedFlag.pip_form_data.support_plan}
+                      </div>
+                    </div>
+                  )}
+
+                  <div style={{ marginTop: '10px' }}>
+                    <div style={{ fontSize: '10px', color: 'var(--k-text-muted)', marginBottom: '4px', fontWeight: 700 }}>MANAGER NOTES</div>
+                    <div style={{ fontSize: '12px', color: 'var(--k-text-primary)', lineHeight: 1.6, padding: '8px', background: 'var(--k-bg-card)', borderRadius: 'var(--k-radius-md)' }}>
+                      {selectedFlag.manager_comment || selectedFlag.manager_notes || selectedFlag.reason}
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -259,15 +333,15 @@ export default function HrFlagsInbox() {
                     rows={5}
                     style={{ width: '100%', fontSize: '12px', padding: '8px', borderRadius: 'var(--k-radius-md)', border: '1px solid var(--k-border-input)', background: 'var(--k-bg-input)', color: 'var(--k-text-primary)', fontFamily: 'var(--k-font-sans)', resize: 'vertical', boxSizing: 'border-box' }} />
                   <div style={{ fontSize: '10px', color: hrComment.trim().length < 20 ? 'var(--k-danger-text)' : 'var(--k-success-text)', marginTop: '2px', marginBottom: '10px' }}>
-                    {hrComment.trim().length}/20 minimum characters
+                    {isGenuineComment(hrComment) ? 'Notes look good' : `${hrComment.trim().split(/\s+/).filter((w: string) => w.length > 0).length} words — need at least 4 meaningful words`}{hrComment.trim().length}/20 minimum characters
                   </div>
                   {actionError && <div style={{ fontSize: '12px', color: 'var(--k-danger-text)', marginBottom: '8px' }}>{actionError}</div>}
                   <div style={{ display: 'flex', gap: '8px' }}>
-                    <button onClick={resetPanel} style={{ flex: 1, padding: '9px', background: 'var(--k-bg-page)', border: '1px solid var(--k-border-default)', borderRadius: 'var(--k-radius-md)', fontSize: '12px', fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--k-font-sans)', color: 'var(--k-text-secondary)' }}>Cancel</button>
-                    <button onClick={handleConfirm} disabled={processing || hrComment.trim().length < 20}
-                      style={{ flex: 2, padding: '9px', background: selectedFlag.flag_type === 'pip' ? 'var(--k-warning-text)' : 'var(--k-danger-text)', border: 'none', borderRadius: 'var(--k-radius-md)', fontSize: '12px', fontWeight: 700, cursor: processing || hrComment.trim().length < 20 ? 'not-allowed' : 'pointer', fontFamily: 'var(--k-font-sans)', color: 'white', opacity: processing || hrComment.trim().length < 20 ? 0.6 : 1 }}>
+                 <button onClick={handleConfirm} disabled={processing || !isGenuineComment(hrComment)}
+                      style={{ flex: 2, padding: '9px', background: selectedFlag.flag_type === 'pip' ? 'var(--k-warning-text)' : 'var(--k-danger-text)', border: 'none', borderRadius: 'var(--k-radius-md)', fontSize: '12px', fontWeight: 700, cursor: processing || !isGenuineComment(hrComment) ? 'not-allowed' : 'pointer', fontFamily: 'var(--k-font-sans)', color: 'white', opacity: processing || !isGenuineComment(hrComment) ? 0.6 : 1 }}>
                       {processing ? 'Confirming...' : 'Confirm Conversation Done'}
                     </button>
+                    
                   </div>
                 </div>
               )}

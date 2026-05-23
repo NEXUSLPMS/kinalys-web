@@ -533,7 +533,7 @@ export async function getPredictiveMe() {
   const response = await apiClient.get('/predictive/me')
   return response.data
 }
-export async function submitEmployeeFlag(data: { employee_id: string; flag_type: 'pip' | 'release'; manager_comment: string; performance_snapshot: any; pip_start_date?: string; pip_end_date?: string }) {
+export async function submitEmployeeFlag(data: { employee_id: string; flag_type: 'pip' | 'release'; manager_comment: string; performance_snapshot: any; pip_start_date?: string; pip_end_date?: string; pip_form_data?: any }) {
   const response = await apiClient.post('/flags', data)
   return response.data
 }

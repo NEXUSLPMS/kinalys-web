@@ -1,6 +1,6 @@
 import { useAuth0 } from '@auth0/auth0-react'
 import { useEffect, useState } from 'react'
-import { setAuthToken, getMyProfile, getStatus, getDepartments, getDashboardStats, getMyAlerts, markAlertRead, markAllAlertsRead, getMyTalentPosition, triggerDemoBreach } from './api/client'
+import { setAuthToken, getMyProfile, getStatus, getDepartments, getDashboardStats, getMyAlerts, markAlertRead, markAllAlertsRead, getMyTalentPosition, triggerDemoBreach, getMyPip, acknowledgePip } from './api/client'
 import Organisation from './pages/Organisation'
 import AccountSettings from './pages/AccountSettings'
 import ImportUsers from './pages/ImportUsers'
@@ -91,6 +91,11 @@ function Dashboard() {
   const [unreadCount, setUnreadCount] = useState(0)
   const [showAlerts, setShowAlerts] = useState(false)
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({})
+  const [myPip, setMyPip] = useState<any>(null)
+  const [pipAckResponse, setPipAckResponse] = useState('')
+  const [pipAckLoading, setPipAckLoading] = useState(false)
+  const [pipAckSuccess, setPipAckSuccess] = useState(false)
+
 
   function toggleSection(section: string) {
     setCollapsedSections(prev => ({ ...prev, [section]: !prev[section] }))
@@ -100,16 +105,17 @@ function Dashboard() {
     async function loadData() {
       try {
         const token = await getAccessTokenSilently({ authorizationParams: { audience: 'https://api.kinalys.io' } })
-        setAuthToken(token)
-        const [statusData, profileData, deptData, statsData, talentData, alertsData] = await Promise.allSettled([getStatus(), getMyProfile(), getDepartments(), getDashboardStats(), getMyTalentPosition(), getMyAlerts()])
+        const [statusData, profileData, deptData, statsData, talentData, alertsData, pipData] = await Promise.allSettled([getStatus(), getMyProfile(), getDepartments(), getDashboardStats(), getMyTalentPosition(), getMyAlerts(), getMyPip()])
         if (profileData.status === 'fulfilled') setProfile(profileData.value.user)
         if (deptData.status === 'fulfilled') setDepartments(deptData.value.departments || [])
         if (statsData.status === 'fulfilled') setDashStats(statsData.value)
         if (talentData.status === 'fulfilled') setTalentPosition(talentData.value)
         if (alertsData.status === 'fulfilled') {
-            setAlerts(alertsData.value.alerts || [])
-            setUnreadCount(alertsData.value.unread_count || 0)
-          }
+          setAlerts(alertsData.value.alerts || [])
+          setUnreadCount(alertsData.value.unread_count || 0)
+        }
+        if (pipData.status === 'fulfilled') setMyPip(pipData.value.pip)
+      
       } catch (err: any) {
         setApiError(err.message)
       } finally {
@@ -436,6 +442,127 @@ function Dashboard() {
                 🔔 Fire Breach Alert
               </button>
             </div>
+
+{myPip && (
+                  <div className="k-card" style={{ marginBottom: '24px', borderTop: '4px solid var(--k-warning-text)' }}>
+                    <div className="k-card-header">
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <span style={{ fontSize: '18px' }}>⚠️</span>
+                        <div className="k-card-title" style={{ color: 'var(--k-warning-text)' }}>Performance Improvement Plan — Action Required</div>
+                      </div>
+                      <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--k-warning-text)', background: 'var(--k-warning-bg)', padding: '3px 10px', borderRadius: '20px' }}>
+                       {myPip.status === 'pending_employee_ack' ? 'Performance Improvement Plan — Action Required' : 'Performance Improvement Plan — Active'}
+  
+                      </span>
+                    </div>
+                    <div style={{ padding: '16px' }}>
+                      <div style={{ fontSize: '13px', color: 'var(--k-text-muted)', marginBottom: '16px', lineHeight: 1.6 }}>
+                        {myPip.status === 'pending_employee_ack'
+                          ? 'Your manager has raised a Performance Improvement Plan. Please review the details below and acknowledge to activate your plan.'
+                          : 'Your Performance Improvement Plan is active. Focus on the KPI targets below and attend all scheduled review sessions.'}
+                      </div>
+
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', marginBottom: '16px' }}>
+                        <div style={{ background: 'var(--k-bg-page)', borderRadius: 'var(--k-radius-md)', padding: '10px 14px' }}>
+                          <div style={{ fontSize: '10px', color: 'var(--k-text-muted)', marginBottom: '3px', fontWeight: 700 }}>DURATION</div>
+                          <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--k-text-primary)' }}>
+                            {myPip.pip_form_data?.duration_days ? `${myPip.pip_form_data.duration_days} days` : '-'}
+                          </div>
+                        </div>
+                        <div style={{ background: 'var(--k-bg-page)', borderRadius: 'var(--k-radius-md)', padding: '10px 14px' }}>
+                          <div style={{ fontSize: '10px', color: 'var(--k-text-muted)', marginBottom: '3px', fontWeight: 700 }}>START DATE</div>
+                          <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--k-text-primary)' }}>
+                            {myPip.pip_start_date ? new Date(myPip.pip_start_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}
+                          </div>
+                        </div>
+                        <div style={{ background: 'var(--k-bg-page)', borderRadius: 'var(--k-radius-md)', padding: '10px 14px' }}>
+                          <div style={{ fontSize: '10px', color: 'var(--k-text-muted)', marginBottom: '3px', fontWeight: 700 }}>END DATE</div>
+                          <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--k-text-primary)' }}>
+                            {myPip.pip_end_date ? new Date(myPip.pip_end_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '16px' }}>
+                        <div style={{ background: 'var(--k-bg-page)', borderRadius: 'var(--k-radius-md)', padding: '10px 14px' }}>
+                          <div style={{ fontSize: '10px', color: 'var(--k-text-muted)', marginBottom: '3px', fontWeight: 700 }}>REVIEW FREQUENCY</div>
+                          <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--k-text-primary)', textTransform: 'capitalize' }}>
+                            {myPip.pip_form_data?.review_frequency || '-'}
+                          </div>
+                        </div>
+                        <div style={{ background: 'var(--k-bg-page)', borderRadius: 'var(--k-radius-md)', padding: '10px 14px' }}>
+                          <div style={{ fontSize: '10px', color: 'var(--k-text-muted)', marginBottom: '3px', fontWeight: 700 }}>RAISED BY</div>
+                          <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--k-text-primary)' }}>
+                            {myPip.manager_name || '-'}
+                          </div>
+                        </div>
+                      </div>
+
+                      {myPip.pip_form_data?.kpi_targets && Object.keys(myPip.pip_form_data.kpi_targets).length > 0 && (
+                        <div style={{ marginBottom: '16px' }}>
+                          <div style={{ fontSize: '10px', color: 'var(--k-text-muted)', marginBottom: '8px', fontWeight: 700 }}>KPI IMPROVEMENT TARGETS</div>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                            {Object.entries(myPip.pip_form_data.kpi_targets).map(([kpi, target]: [string, any]) => (
+                              <div key={kpi} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: 'var(--k-bg-page)', borderRadius: 'var(--k-radius-md)', borderLeft: '3px solid var(--k-warning-text)' }}>
+                                <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--k-text-primary)' }}>{kpi}</span>
+                                <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--k-warning-text)' }}>{target}% target</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {myPip.pip_form_data?.support_plan && (
+                        <div style={{ marginBottom: '16px' }}>
+                          <div style={{ fontSize: '10px', color: 'var(--k-text-muted)', marginBottom: '6px', fontWeight: 700 }}>SUPPORT PLAN</div>
+                          <div style={{ fontSize: '12px', color: 'var(--k-text-primary)', lineHeight: 1.6, padding: '10px 14px', background: 'var(--k-bg-page)', borderRadius: 'var(--k-radius-md)', borderLeft: '3px solid var(--k-brand-primary)' }}>
+                            {myPip.pip_form_data.support_plan}
+                          </div>
+                        </div>
+                      )}
+
+                      {myPip.status === 'pending_employee_ack' && (
+                        <div style={{ borderTop: '1px solid var(--k-border-default)', paddingTop: '16px' }}>
+                          <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--k-text-muted)', marginBottom: '6px' }}>YOUR RESPONSE (OPTIONAL)</div>
+                          <textarea
+                            value={pipAckResponse}
+                            onChange={e => setPipAckResponse(e.target.value)}
+                            placeholder="You may add a response or comments before acknowledging..."
+                            rows={3}
+                            style={{ width: '100%', fontSize: '12px', padding: '8px', borderRadius: 'var(--k-radius-md)', border: '1px solid var(--k-border-input)', background: 'var(--k-bg-input)', color: 'var(--k-text-primary)', fontFamily: 'var(--k-font-sans)', resize: 'vertical', boxSizing: 'border-box', marginBottom: '12px' }}
+                          />
+                          <button
+                            disabled={pipAckLoading}
+                            onClick={async () => {
+                              setPipAckLoading(true)
+                              try {
+                                await acknowledgePip(myPip.id, pipAckResponse)
+                                setPipAckSuccess(true)
+                                setMyPip({ ...myPip, status: 'pip_active' })
+                              } catch (err: any) {
+                                alert(err.response?.data?.message || 'Failed to acknowledge PIP.')
+                              } finally {
+                                setPipAckLoading(false)
+                              }
+                            }}
+                            style={{ width: '100%', padding: '12px', background: 'var(--k-warning-text)', border: 'none', borderRadius: 'var(--k-radius-md)', fontSize: '13px', fontWeight: 700, cursor: pipAckLoading ? 'not-allowed' : 'pointer', fontFamily: 'var(--k-font-sans)', color: 'white', opacity: pipAckLoading ? 0.6 : 1 }}>
+                            {pipAckLoading ? 'Acknowledging...' : 'I Acknowledge This Performance Improvement Plan'}
+                          </button>
+                          <div style={{ fontSize: '11px', color: 'var(--k-text-muted)', textAlign: 'center', marginTop: '8px' }}>
+                            By acknowledging you confirm you have read and understood this PIP. This action is timestamped and cannot be undone.
+                          </div>
+                        </div>
+                      )}
+
+                      {myPip.status === 'pip_active' && (
+                        <div style={{ background: 'var(--k-success-bg)', border: '1px solid var(--k-success-border)', borderRadius: 'var(--k-radius-md)', padding: '12px 16px', fontSize: '12px', color: 'var(--k-success-text)', fontWeight: 600 }}>
+                          ✅ You have acknowledged this PIP. Your improvement plan is now active.
+                        </div>
+                      )}
+
+                    </div>
+                  </div>
+                )}
 
                 {talentPosition?.position && (
 <div className="k-card" style={{ marginBottom: '24px' }}>

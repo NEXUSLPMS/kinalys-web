@@ -538,6 +538,16 @@ export async function submitEmployeeFlag(data: { employee_id: string; flag_type:
   return response.data
 }
 
+export async function getMyPip() {
+  const response = await apiClient.get('/flags/my-pip')
+  return response.data
+}
+
+export async function acknowledgePip(flagId: string, employeeResponse?: string) {
+  const response = await apiClient.put(`/flags/${flagId}/acknowledge`, { employee_response: employeeResponse })
+  return response.data
+}
+
 export async function getEmployeeFlags(employeeId: string) {
   const response = await apiClient.get(`/flags/employee/${employeeId}`)
   return response.data

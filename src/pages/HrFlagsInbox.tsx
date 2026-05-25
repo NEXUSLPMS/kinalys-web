@@ -1,5 +1,6 @@
+
 import { useState, useEffect } from 'react'
-import { getPendingFlags, confirmFlagConversation, delegateFlag, getHrExecutives } from '../api/client'
+import { getPendingFlags, confirmFlagConversation, delegateFlag, getHrExecutives, confirmPipClosure } from '../api/client'
 
 function isGenuineComment(text: string): boolean {
   const t = text.trim()
@@ -36,6 +37,7 @@ export default function HrFlagsInbox() {
   const [processing, setProcessing] = useState(false)
   const [successMsg, setSuccessMsg] = useState('')
   const [actionError, setActionError] = useState('')
+  const [closureNotes, setClosureNotes] = useState('')
   const [filterType, setFilterType] = useState<'ALL' | 'pip' | 'release'>('ALL')
 
   useEffect(() => { load() }, [])
@@ -62,6 +64,7 @@ export default function HrFlagsInbox() {
     setDueDate('')
     setDelegationNotes('')
     setActionError('')
+    setClosureNotes('')
   }
 
   async function handleConfirm() {
@@ -305,7 +308,61 @@ export default function HrFlagsInbox() {
               )}
 
               {/* Action selector */}
-              {!action && (
+              {!action && selectedFlag.status === 'pending_hr_closure' && (
+                <div>
+                  <div style={{ background: 'var(--k-warning-bg)', border: '1px solid var(--k-warning-border)', borderRadius: 'var(--k-radius-md)', padding: '12px 14px', marginBottom: '14px' }}>
+                    <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--k-warning-text)', marginBottom: '6px' }}>MANAGER CLOSURE RECOMMENDATION</div>
+                    <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--k-text-primary)', textTransform: 'capitalize', marginBottom: '4px' }}>
+                      Outcome: {selectedFlag.final_outcome || 'Not specified'}
+                    </div>
+                    {selectedFlag.final_outcome_notes && (
+                      <div style={{ fontSize: '12px', color: 'var(--k-text-primary)', lineHeight: 1.5, marginTop: '6px' }}>
+                        {selectedFlag.final_outcome_notes}
+                      </div>
+                    )}
+                  </div>
+                  <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--k-text-muted)', marginBottom: '4px' }}>HR CLOSURE NOTES</div>
+                  <textarea value={closureNotes} onChange={e => setClosureNotes(e.target.value)}
+                    placeholder="Document your review of this closure recommendation..."
+                    rows={3}
+                    style={{ width: '100%', fontSize: '12px', padding: '8px', borderRadius: 'var(--k-radius-md)', border: '1px solid var(--k-border-input)', background: 'var(--k-bg-input)', color: 'var(--k-text-primary)', fontFamily: 'var(--k-font-sans)', resize: 'vertical', boxSizing: 'border-box', marginBottom: '10px' }} />
+                  {actionError && <div style={{ fontSize: '12px', color: 'var(--k-danger-text)', marginBottom: '8px' }}>{actionError}</div>}
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button onClick={async () => {
+                      if (closureNotes.trim().length < 10) { setActionError('Please add closure notes of at least 10 characters.'); return }
+                      setProcessing(true)
+                      try {
+                        await confirmPipClosure(selectedFlag.id, { approved: false, hr_notes: closureNotes })
+                        setSuccessMsg('Closure rejected. PIP returned to active.')
+                        resetPanel()
+                        await load()
+                      } catch (err: any) {
+                        setActionError(err.response?.data?.message || 'Failed.')
+                      } finally { setProcessing(false) }
+                    }} disabled={processing}
+                      style={{ flex: 1, padding: '9px', background: 'var(--k-bg-page)', border: '1px solid var(--k-danger-border)', borderRadius: 'var(--k-radius-md)', fontSize: '12px', fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--k-font-sans)', color: 'var(--k-danger-text)' }}>
+                      Reject
+                    </button>
+                    <button onClick={async () => {
+                      if (closureNotes.trim().length < 10) { setActionError('Please add closure notes of at least 10 characters.'); return }
+                      setProcessing(true)
+                      try {
+                        await confirmPipClosure(selectedFlag.id, { approved: true, hr_notes: closureNotes })
+                        setSuccessMsg(`PIP closure approved as ${selectedFlag.final_outcome}.`)
+                        resetPanel()
+                        await load()
+                      } catch (err: any) {
+                        setActionError(err.response?.data?.message || 'Failed.')
+                      } finally { setProcessing(false) }
+                    }} disabled={processing}
+                      style={{ flex: 1, padding: '9px', background: selectedFlag.final_outcome === 'successful' ? 'var(--k-success-text)' : selectedFlag.final_outcome === 'unsuccessful' ? 'var(--k-danger-text)' : 'var(--k-warning-text)', border: 'none', borderRadius: 'var(--k-radius-md)', fontSize: '12px', fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--k-font-sans)', color: 'white' }}>
+                      Approve Closure
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {!action && selectedFlag.status !== 'pending_hr_closure' && (
                 <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
                   <button onClick={() => setAction('confirm')}
                     style={{ flex: 1, padding: '10px', background: 'var(--k-brand-primary)', border: 'none', borderRadius: 'var(--k-radius-md)', fontSize: '12px', fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--k-font-sans)', color: 'white' }}>

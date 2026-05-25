@@ -30,6 +30,7 @@ import HrFlagsInbox from './pages/HrFlagsInbox'
 import PredictiveAnalysis from './pages/PredictiveAnalysis'
 import Recommendations from './pages/Recommendations'
 import StatRing from './components/StatRing'
+import PipCheckins from './pages/PipCheckins'
 
 
 
@@ -167,6 +168,8 @@ function Dashboard() {
       settings:      ['super_admin','hr_admin'],
       predictive:    ['super_admin','hr_admin','executive','leadership','manager'],
       hrflags:       ['super_admin','hr_admin'],
+      pip_checkins:  ['super_admin','hr_admin','manager','team_lead'],
+
     }
     return (access[feature] || []).includes(role)
   }
@@ -220,6 +223,9 @@ function Dashboard() {
           >
             Performance <span style={{ fontSize: '10px' }}>{collapsedSections['performance'] ? '▶' : '▼'}</span>
           </div>
+          {canSee('predictive') && <div className={`k-nav-item ${activeNav === 'predictive' ? 'active' : ''}`} onClick={() => setActiveNav('predictive')}>Predictive Analysis</div>}
+          {canSee('pip_checkins') && <div className={`k-nav-item ${activeNav === 'pip_checkins' ? 'active' : ''}`} onClick={() => setActiveNav('pip_checkins')}>PIP Check-ins</div>}
+          
           {!collapsedSections['performance'] && <>
             {canSee('exec') && <div className={`k-nav-item ${activeNav === 'exec' ? 'active' : ''}`} onClick={() => setActiveNav('exec')}>Exec Dashboard</div>}
             {canSee('predictive') && <div className={`k-nav-item ${activeNav === 'predictive' ? 'active' : ''}`} onClick={() => setActiveNav('predictive')}>Predictive Analysis</div>}
@@ -353,6 +359,10 @@ function Dashboard() {
           <HrFlagsInbox />
           ) : activeNav === 'recommendations' ? (
           <Recommendations />
+          ) : activeNav === 'predictive' ? (
+<PredictiveAnalysis />
+) : activeNav === 'pip_checkins' ? (
+          <PipCheckins />
         ) : (
           <div className="k-page">
 

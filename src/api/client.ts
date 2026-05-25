@@ -548,6 +548,26 @@ export async function acknowledgePip(flagId: string, employeeResponse?: string) 
   return response.data
 }
 
+export async function getActivePips() {
+  const response = await apiClient.get('/flags/active-pips')
+  return response.data
+}
+
+export async function getPipCheckins(flagId: string) {
+  const response = await apiClient.get(`/flags/pip-checkins/${flagId}`)
+  return response.data
+}
+
+export async function logPipCheckin(data: { flag_id: string; status: string; notes: string; kpi_updates?: Record<string, any> }) {
+  const response = await apiClient.post('/flags/pip-checkins', data)
+  return response.data
+}
+
+export async function closePip(flagId: string, data: { outcome: string; outcome_notes: string }) {
+  const response = await apiClient.put(`/flags/${flagId}/close`, data)
+  return response.data
+}
+
 export async function getEmployeeFlags(employeeId: string) {
   const response = await apiClient.get(`/flags/employee/${employeeId}`)
   return response.data
@@ -578,5 +598,10 @@ export async function getMyRecommendations() {
 
 export async function getTeamMemberRecommendations(userId: string) {
   const response = await apiClient.get(`/recommendations/team/${userId}`)
+  return response.data
+}
+
+export async function confirmPipClosure(flagId: string, data: { approved: boolean; hr_notes: string }) {
+  const response = await apiClient.put(`/flags/${flagId}/confirm-closure`, data)
   return response.data
 }

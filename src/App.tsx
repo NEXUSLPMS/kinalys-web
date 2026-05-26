@@ -1,6 +1,7 @@
 import { useAuth0 } from '@auth0/auth0-react'
 import { useEffect, useState } from 'react'
-import { setAuthToken, getMyProfile, getStatus, getDepartments, getDashboardStats, getMyAlerts, markAlertRead, markAllAlertsRead, getMyTalentPosition, triggerDemoBreach, getMyPip, acknowledgePip } from './api/client'
+import { setAuthToken, getMyProfile, getStatus, getDepartments, getDashboardStats, getMyAlerts, markAlertRead, markAllAlertsRead, getMyTalentPosition, triggerDemoBreach, getMyPip, acknowledgePip, getPrivacyStatus } from './api/client'
+import { PrivacyAcknowledgementModal } from './components/PrivacyAcknowledgementModal'
 import Organisation from './pages/Organisation'
 import AccountSettings from './pages/AccountSettings'
 import ImportUsers from './pages/ImportUsers'
@@ -96,7 +97,12 @@ function Dashboard() {
   const [pipAckResponse, setPipAckResponse] = useState('')
   const [pipAckLoading, setPipAckLoading] = useState(false)
   const [pipAckSuccess, setPipAckSuccess] = useState(false)
-
+  const [privacyStatus, setPrivacyStatus] = useState<{
+    needs_acknowledgement: boolean
+    current_version: string
+    organization_name: string
+    acknowledgement_text: string
+  } | null>(null)
 
   function toggleSection(section: string) {
     setCollapsedSections(prev => ({ ...prev, [section]: !prev[section] }))
@@ -106,7 +112,7 @@ function Dashboard() {
     async function loadData() {
       try {
         const token = await getAccessTokenSilently({ authorizationParams: { audience: 'https://api.kinalys.io' } })
-        const [statusData, profileData, deptData, statsData, talentData, alertsData, pipData] = await Promise.allSettled([getStatus(), getMyProfile(), getDepartments(), getDashboardStats(), getMyTalentPosition(), getMyAlerts(), getMyPip()])
+        const [statusData, profileData, deptData, statsData, talentData, alertsData, pipData, privacyData] = await Promise.allSettled([getStatus(), getMyProfile(), getDepartments(), getDashboardStats(), getMyTalentPosition(), getMyAlerts(), getMyPip(), getPrivacyStatus()])
         if (profileData.status === 'fulfilled') setProfile(profileData.value.user)
         if (deptData.status === 'fulfilled') setDepartments(deptData.value.departments || [])
         if (statsData.status === 'fulfilled') setDashStats(statsData.value)
@@ -117,6 +123,10 @@ function Dashboard() {
         }
         if (pipData.status === 'fulfilled') setMyPip(pipData.value.pip)
       
+          if (privacyData.status === 'fulfilled' && privacyData.value.needs_acknowledgement) {
+          setPrivacyStatus(privacyData.value)
+        }
+        
       } catch (err: any) {
         setApiError(err.message)
       } finally {
@@ -174,6 +184,17 @@ function Dashboard() {
     return (access[feature] || []).includes(role)
   }
 
+  if (privacyStatus?.needs_acknowledgement) {
+    return (
+      <PrivacyAcknowledgementModal
+        organizationName={privacyStatus.organization_name}
+        acknowledgementText={privacyStatus.acknowledgement_text}
+        currentVersion={privacyStatus.current_version}
+        onAcknowledged={() => setPrivacyStatus(null)}
+      />
+    )
+  }
+  
   return (
     <div className="k-shell">
 

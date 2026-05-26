@@ -605,3 +605,29 @@ export async function confirmPipClosure(flagId: string, data: { approved: boolea
   const response = await apiClient.put(`/flags/${flagId}/confirm-closure`, data)
   return response.data
 }
+
+// ─── Privacy Acknowledgement ──────────────────────────────────────────
+// Add these two functions to the END of src/api/client.ts
+// (after line 604, after confirmPipClosure)
+
+export async function getPrivacyStatus() {
+  const { data } = await apiClient.get('/privacy/status')
+  return data as {
+    needs_acknowledgement: boolean
+    current_version: string
+    organization_name: string
+    acknowledgement_text: string
+    acknowledged_at: string | null
+  }
+}
+
+export async function acknowledgePrivacy(version: string) {
+  const { data } = await apiClient.post('/privacy/acknowledge', { acknowledgement_version: version })
+  return data as {
+    success: boolean
+    was_new: boolean
+    acknowledgement_id: string
+    acknowledged_at: string
+    version: string
+  }
+}

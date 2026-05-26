@@ -1276,3 +1276,116 @@ body {
     grid-template-columns: 1fr !important;
   }
 }
+/* ─── Privacy Acknowledgement Modal ───────────────────────────────────
+   Blocking overlay shown on first login (or after version bump).
+   Append this entire block to the END of src/styles/kinalys.css
+   ────────────────────────────────────────────────────────────────── */
+
+.k-privacy-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+  padding: var(--k-space-4);
+}
+
+.k-privacy-modal {
+  background: var(--k-bg-card);
+  border: 1px solid var(--k-border);
+  border-radius: 16px;
+  max-width: 640px;
+  width: 100%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+}
+
+.k-privacy-content {
+  padding: var(--k-space-6) var(--k-space-6) var(--k-space-4);
+  overflow-y: auto;
+  flex: 1 1 auto;
+}
+
+.k-privacy-heading {
+  font-family: var(--k-font-display);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--k-text-primary);
+  margin: 0 0 var(--k-space-4);
+  line-height: 1.25;
+}
+
+.k-privacy-para {
+  font-family: var(--k-font-body);
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--k-text-secondary);
+  margin: 0 0 var(--k-space-3);
+}
+
+.k-privacy-bullets {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 var(--k-space-4);
+}
+
+.k-privacy-bullets li {
+  font-family: var(--k-font-body);
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--k-text-secondary);
+  padding: var(--k-space-2) 0 var(--k-space-2) var(--k-space-4);
+  position: relative;
+  border-bottom: 1px solid var(--k-border-faint);
+}
+
+.k-privacy-bullets li:last-child {
+  border-bottom: none;
+}
+
+.k-privacy-bullets li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 16px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--k-brand-primary);
+}
+
+.k-privacy-error {
+  margin: 0 var(--k-space-6) var(--k-space-3);
+  padding: var(--k-space-3);
+  background: var(--k-red-faint, rgba(239, 68, 68, 0.1));
+  color: var(--k-red, #ef4444);
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: var(--k-font-body);
+}
+
+.k-privacy-actions {
+  padding: var(--k-space-4) var(--k-space-6) var(--k-space-6);
+  border-top: 1px solid var(--k-border-faint);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.k-privacy-btn {
+  min-width: 220px;
+  padding: var(--k-space-3) var(--k-space-5);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.k-privacy-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

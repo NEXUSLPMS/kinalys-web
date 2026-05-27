@@ -28,6 +28,7 @@ import SixSigmaReport from './pages/SixSigmaReport'
 import DemoSwitcher from './components/DemoSwitcher'
 import HrAdminManagement from './pages/HrAdminManagement'
 import HrFlagsInbox from './pages/HrFlagsInbox'
+import HrDeparturesInbox from './pages/HrDeparturesInbox'
 import PredictiveAnalysis from './pages/PredictiveAnalysis'
 import Recommendations from './pages/Recommendations'
 import StatRing from './components/StatRing'
@@ -178,6 +179,7 @@ function Dashboard() {
       settings:      ['super_admin','hr_admin'],
       predictive:    ['super_admin','hr_admin','executive','leadership','manager'],
       hrflags:       ['super_admin','hr_admin'],
+      departures:    ['super_admin','hr_admin','executive'],
       pip_checkins:  ['super_admin','hr_admin','manager','team_lead'],
 
     }
@@ -282,6 +284,7 @@ function Dashboard() {
               {canSee('users') && <div className={`k-nav-item ${activeNav === 'users' ? 'active' : ''}`} onClick={() => setActiveNav('users')}>User Management</div>}
               {canSee('kpi') && <div className={`k-nav-item ${activeNav === 'kpi' ? 'active' : ''}`} onClick={() => setActiveNav('kpi')}>KPI Templates</div>}
               {canSee('hrflags') && <div className={`k-nav-item ${activeNav === 'hrflags' ? 'active' : ''}`} onClick={() => setActiveNav('hrflags')}>Flags Inbox</div>}
+              {canSee('departures') && <div className={`k-nav-item ${activeNav === 'departures' ? 'active' : ''}`} onClick={() => setActiveNav('departures')}>Departures Inbox</div>}
                </>}
           </div>
         )}
@@ -378,6 +381,8 @@ function Dashboard() {
           <PredictiveAnalysis />
           ) : activeNav === 'hrflags' ? (
           <HrFlagsInbox />
+          ) : activeNav === 'departures' ? (
+          <HrDeparturesInbox />
           ) : activeNav === 'recommendations' ? (
           <Recommendations />
           ) : activeNav === 'predictive' ? (

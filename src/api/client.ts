@@ -622,12 +622,63 @@ export async function getPrivacyStatus() {
 }
 
 export async function acknowledgePrivacy(version: string) {
-  const { data } = await apiClient.post('/privacy/acknowledge', { acknowledgement_version: version })
-  return data as {
+const { data } = await apiClient.post('/privacy/acknowledge', { acknowledgement_version: version })
+return data as {
+success: boolean
+was_new: boolean
+acknowledgement_id: string
+acknowledged_at: string
+version: string
+}
+}
+
+export async function softDeleteUser(
+  userId: string,
+  data: { exit_reason: string; exit_date?: string; notes: string }
+) {
+  const { data: res } = await apiClient.delete(`/users/${userId}`, { data })
+  return res as {
     success: boolean
-    was_new: boolean
-    acknowledgement_id: string
-    acknowledged_at: string
-    version: string
+    message: string
+    target_id: string
+    was_already_departed: boolean
+    departure_event: {
+      departure_event_id: string
+      was_created: boolean
+      billing_year: number
+      idempotency_key: string
+    }
   }
+}
+
+export async function listDepartures(filters?: {
+  brief_status?: string
+  trigger_source?: string
+  from?: string
+  to?: string
+  limit?: number
+}) {
+  const params = new URLSearchParams()
+  if (filters?.brief_status) params.set('brief_status', filters.brief_status)
+  if (filters?.trigger_source) params.set('trigger_source', filters.trigger_source)
+  if (filters?.from) params.set('from', filters.from)
+  if (filters?.to) params.set('to', filters.to)
+  if (filters?.limit) params.set('limit', String(filters.limit))
+  const qs = params.toString()
+  const { data } = await apiClient.get(`/departures${qs ? `?${qs}` : ''}`)
+  return data as {
+    departures: any[]
+    count: number
+    summary: {
+      by_billing_year: Record<string, number>
+      by_trigger_source: Record<string, number>
+      by_brief_status: Record<string, number>
+    }
+    filters_applied: Record<string, any>
+  }
+}
+
+export async function getDeparture(id: string) {
+  const { data } = await apiClient.get(`/departures/${id}`)
+  return data as { departure: any }
 }

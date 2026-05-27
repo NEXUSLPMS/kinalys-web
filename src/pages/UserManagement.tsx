@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
-import { getManagedUsers, updateManagedUser, getDepartments, getDesignations } from '../api/client'
+import { getManagedUsers, updateManagedUser, getDepartments, getDesignations, softDeleteUser } from '../api/client'
+import { MarkAsDepartedModal } from '../components/MarkAsDepartedModal'
 
 interface ManagedUser {
   id: string
@@ -19,13 +20,15 @@ interface ManagedUser {
 }
 
 const ROLES = ['individual_contributor', 'team_lead', 'manager', 'hr_admin', 'executive']
-const STATUSES = ['active', 'on_leave', 'probation', 'inactive']
+const STATUSES = ['active', 'probation', 'on_leave', 'notice_period', 'suspended', 'departed']
 
 const STATUS_COLORS: Record<string, { color: string; bg: string }> = {
-  active:    { color: 'var(--k-success-text)', bg: 'var(--k-success-bg)' },
-  on_leave:  { color: 'var(--k-warning-text)', bg: 'var(--k-warning-bg)' },
-  probation: { color: '#6B21A8', bg: '#F3E8FF' },
-  inactive:  { color: 'var(--k-danger-text)', bg: 'var(--k-danger-bg)' },
+  active:        { color: 'var(--k-success-text)', bg: 'var(--k-success-bg)' },
+  probation:     { color: '#6B21A8',               bg: '#F3E8FF' },
+  on_leave:      { color: 'var(--k-warning-text)', bg: 'var(--k-warning-bg)' },
+  notice_period: { color: '#92400E',               bg: '#FEF3C7' },
+  suspended:     { color: '#9F1239',               bg: '#FFE4E6' },
+  departed:      { color: 'var(--k-danger-text)',  bg: 'var(--k-danger-bg)' },
 }
 
 export default function UserManagement() {
@@ -35,6 +38,7 @@ export default function UserManagement() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selectedUser, setSelectedUser] = useState<ManagedUser | null>(null)
+  const [selectedForRemoval, setSelectedForRemoval] = useState<ManagedUser | null>(null)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
 
@@ -283,12 +287,21 @@ export default function UserManagement() {
                       )}
                     </td>
                     <td style={{ padding: '10px 12px' }}>
-                      <button
-                        onClick={() => openEdit(user)}
-                        style={{ fontSize: '11px', padding: '4px 10px', borderRadius: 'var(--k-radius-md)', border: '1px solid var(--k-border-default)', background: 'var(--k-bg-surface)', color: 'var(--k-text-secondary)', cursor: 'pointer', fontFamily: 'var(--k-font-sans)' }}
-                      >
-                        ✏️ Edit
-                      </button>
+                      <div style={{ display: 'flex', gap: '6px' }}>
+                        <button
+                          onClick={() => openEdit(user)}
+                          style={{ fontSize: '11px', padding: '4px 10px', borderRadius: 'var(--k-radius-md)', border: '1px solid var(--k-border-default)', background: 'var(--k-bg-surface)', color: 'var(--k-text-secondary)', cursor: 'pointer', fontFamily: 'var(--k-font-sans)' }}
+                        >
+                          ✏️ Edit
+                        </button>
+                        <button
+                          onClick={() => setSelectedForRemoval(user)}
+                          title={user.employment_status === 'departed' ? 'Already departed — finalise removal' : 'Mark as Departed'}
+                          style={{ fontSize: '11px', padding: '4px 10px', borderRadius: 'var(--k-radius-md)', border: '1px solid var(--k-danger-text)', background: 'var(--k-bg-surface)', color: 'var(--k-danger-text)', cursor: 'pointer', fontFamily: 'var(--k-font-sans)' }}
+                        >
+                          🗙 Remove
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 )
@@ -389,6 +402,24 @@ export default function UserManagement() {
               </div>
             </div>
           </div>
+        )}
+
+        {selectedForRemoval && (
+          <MarkAsDepartedModal
+            user={{
+              id: selectedForRemoval.id,
+              full_name: selectedForRemoval.full_name,
+              email: selectedForRemoval.email,
+              role: selectedForRemoval.role,
+              department_name: selectedForRemoval.department_name,
+              employment_status: selectedForRemoval.employment_status,
+            }}
+            onClose={() => setSelectedForRemoval(null)}
+            onSuccess={() => {
+              setSelectedForRemoval(null)
+              loadUsers()
+            }}
+          />
         )}
 
       </div>

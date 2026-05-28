@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
-import { getManagedUsers, updateManagedUser, getDepartments, getDesignations, softDeleteUser } from '../api/client'
+import { getManagedUsers, updateManagedUser, getDepartments, getDesignations, softDeleteUser, suggestBriefsForUser } from '../api/client'
 import { MarkAsDepartedModal } from '../components/MarkAsDepartedModal'
+import { BriefViewerModal } from '../components/BriefViewerModal'
 
 interface ManagedUser {
   id: string
@@ -17,6 +18,16 @@ interface ManagedUser {
   hris_external_id: string | null
   hris_sync_source: string | null
   created_at: string
+}
+
+interface BriefSuggestion {
+  departure_event_id: string
+  employee_id: string
+  executive_summary: string
+  generated_at: string
+  departed_at: string
+  employee_name: string
+  employee_role: string
 }
 
 const ROLES = ['individual_contributor', 'team_lead', 'manager', 'hr_admin', 'executive']
@@ -51,6 +62,11 @@ export default function UserManagement() {
   // Edit form
   const [editForm, setEditForm] = useState<Partial<ManagedUser>>({})
 
+  // Onboarding hook — map of department_id -> ready brief suggestions
+  const [deptBriefs, setDeptBriefs] = useState<Record<string, BriefSuggestion[]>>({})
+  const [viewerDepartureId, setViewerDepartureId] = useState<string | null>(null)
+  const [viewerName, setViewerName] = useState<string>('Employee')
+
   const loadUsers = useCallback(async () => {
     setLoading(true)
     try {
@@ -82,6 +98,36 @@ export default function UserManagement() {
     return () => clearTimeout(timer)
   }, [loadUsers])
 
+  // After users load, fetch brief suggestions for each ACTIVE user's department.
+  // We dedupe by department so we only query each department once. The result
+  // tells us which active employees sit in a department that has a ready brief
+  // from a recently-departed colleague — surfaced as an onboarding indicator.
+  useEffect(() => {
+    let cancelled = false
+    async function loadSuggestions() {
+      const activeUsers = users.filter(u => u.employment_status !== 'departed' && u.department_id)
+      const uniqueDeptByUser: Record<string, string> = {}
+      for (const u of activeUsers) {
+        if (u.department_id && !(u.department_id in uniqueDeptByUser)) {
+          uniqueDeptByUser[u.department_id] = u.id
+        }
+      }
+      const entries = Object.entries(uniqueDeptByUser)
+      const results: Record<string, BriefSuggestion[]> = {}
+      await Promise.allSettled(entries.map(async ([deptId, sampleUserId]) => {
+        try {
+          const res = await suggestBriefsForUser(sampleUserId)
+          if (res.suggestions && res.suggestions.length > 0) {
+            results[deptId] = res.suggestions
+          }
+        } catch { /* ignore per-dept failures */ }
+      }))
+      if (!cancelled) setDeptBriefs(results)
+    }
+    if (users.length > 0) loadSuggestions()
+    return () => { cancelled = true }
+  }, [users])
+
   function openEdit(user: ManagedUser) {
     setSelectedUser(user)
     setEditForm({
@@ -109,6 +155,11 @@ export default function UserManagement() {
     } finally {
       setSaving(false)
     }
+  }
+
+  function openBriefViewer(departureId: string, name: string) {
+    setViewerName(name)
+    setViewerDepartureId(departureId)
   }
 
   const statusCounts = STATUSES.reduce((acc, s) => {
@@ -139,7 +190,7 @@ export default function UserManagement() {
             { status: 'active',    label: 'Active',    desc: 'Currently employed',  cardClass: 'green'  },
             { status: 'on_leave',  label: 'On Leave',  desc: 'Temporarily away',    cardClass: 'amber'  },
             { status: 'probation', label: 'Probation', desc: 'Trial period',        cardClass: 'purple' },
-            { status: 'inactive',  label: 'Inactive',  desc: 'No longer employed',  cardClass: 'accent' },
+            { status: 'departed',  label: 'Departed',  desc: 'No longer employed',  cardClass: 'accent' },
           ].map(({ status, label, desc, cardClass }) => (
             <div
               key={status}
@@ -162,7 +213,7 @@ export default function UserManagement() {
           ))}
         </div>
 
-{/* Active filter indicator + clear */}
+        {/* Active filter indicator + clear */}
         {(filterStatus || filterDept || filterRole || search) && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', flexWrap: 'wrap' }}>
             <span style={{ fontSize: '12px', color: 'var(--k-text-muted)' }}>Filtering by:</span>
@@ -250,6 +301,11 @@ export default function UserManagement() {
             <tbody>
               {users.map(user => {
                 const statusStyle = STATUS_COLORS[user.employment_status] || STATUS_COLORS.active
+                // Onboarding hook: does this active user's department have a ready brief?
+                const deptSuggestions = (user.employment_status !== 'departed' && user.department_id)
+                  ? (deptBriefs[user.department_id] || [])
+                  : []
+                const hasBrief = deptSuggestions.length > 0
                 return (
                   <tr key={user.id} style={{ borderBottom: '1px solid var(--k-border-default)' }}>
                     <td style={{ padding: '10px 12px' }}>
@@ -257,6 +313,15 @@ export default function UserManagement() {
                       <div style={{ fontSize: '11px', color: 'var(--k-text-muted)' }}>{user.email}</div>
                       {user.hris_external_id && (
                         <div style={{ fontSize: '10px', color: 'var(--k-text-muted)', fontFamily: 'var(--k-font-mono)' }}>{user.hris_external_id}</div>
+                      )}
+                      {hasBrief && (
+                        <button
+                          onClick={() => openBriefViewer(deptSuggestions[0].departure_event_id, deptSuggestions[0].employee_name)}
+                          title={`Role Intelligence Brief available from ${deptSuggestions[0].employee_name}, who recently left this department`}
+                          style={{ marginTop: '4px', fontSize: '10px', fontWeight: 600, color: 'var(--k-ai-text, var(--k-brand-primary))', background: 'var(--k-ai-bg, var(--k-brand-faint))', border: 'none', padding: '2px 8px', borderRadius: '10px', cursor: 'pointer', fontFamily: 'var(--k-font-sans)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                        >
+                          📋 Role brief available{deptSuggestions.length > 1 ? ` (${deptSuggestions.length})` : ''}
+                        </button>
                       )}
                     </td>
                     <td style={{ padding: '10px 12px', fontSize: '12px', color: 'var(--k-text-secondary)' }}>
@@ -419,6 +484,14 @@ export default function UserManagement() {
               setSelectedForRemoval(null)
               loadUsers()
             }}
+          />
+        )}
+
+        {viewerDepartureId && (
+          <BriefViewerModal
+            departureId={viewerDepartureId}
+            employeeName={viewerName}
+            onClose={() => setViewerDepartureId(null)}
           />
         )}
 

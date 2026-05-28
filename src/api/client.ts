@@ -682,3 +682,39 @@ export async function getDeparture(id: string) {
   const { data } = await apiClient.get(`/departures/${id}`)
   return data as { departure: any }
 }
+
+export async function generateBrief(departureId: string) {
+  const { data } = await apiClient.post(`/departures/${departureId}/generate-brief`, {})
+  return data as {
+    success: boolean
+    brief_id: string
+    tokens_input: number
+    tokens_output: number
+    duration_ms: number
+  }
+}
+
+export async function getBrief(departureId: string) {
+  const { data } = await apiClient.get(`/briefs/${departureId}`)
+  return data as { brief: any }
+}
+
+// Append this to the END of src/api/client.ts (after getBrief)
+
+export async function suggestBriefsForUser(userId: string) {
+  const { data } = await apiClient.get(`/briefs/suggest-for-user/${userId}`)
+  return data as {
+    suggestions: Array<{
+      departure_event_id: string
+      employee_id: string
+      executive_summary: string
+      generated_at: string
+      departed_at: string
+      employee_name: string
+      employee_role: string
+    }>
+    count: number
+    department_id?: string
+    reason?: string
+  }
+}

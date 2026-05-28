@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
-import { listDepartures, getDeparture } from '../api/client'
+import { listDepartures, getDeparture, generateBrief } from '../api/client'
+import { BriefViewerModal } from '../components/BriefViewerModal'
+import AILoadingAnimation from '../components/AILoadingAnimation'
 
 // ──────────────────────────────────────────────────────────────────────
 // HR Departures Inbox (Org Memory Tier 1)
@@ -89,6 +91,9 @@ export default function HrDeparturesInbox() {
   const [selected, setSelected] = useState<Departure | null>(null)
   const [selectedDetail, setSelectedDetail] = useState<any>(null)
   const [detailLoading, setDetailLoading] = useState(false)
+  const [generatingId, setGeneratingId] = useState<string | null>(null)
+  const [viewerDepartureId, setViewerDepartureId] = useState<string | null>(null)
+  const [genError, setGenError] = useState<string | null>(null)
 
   // Filters
   const [filterTrigger, setFilterTrigger] = useState('')
@@ -132,6 +137,29 @@ export default function HrDeparturesInbox() {
   function closeDetail() {
     setSelected(null)
     setSelectedDetail(null)
+  }
+
+  async function handleGenerate(departureId: string) {
+    setGeneratingId(departureId)
+    setGenError(null)
+    try {
+      await generateBrief(departureId)
+      await load()
+      if (selected?.id === departureId) {
+        const data = await getDeparture(departureId)
+        setSelectedDetail(data.departure)
+        setSelected({ ...selected, brief_status: 'ready' })
+      }
+      setViewerDepartureId(departureId)
+    } catch (err: any) {
+      setGenError(err?.response?.data?.message || err.message || 'Brief generation failed.')
+      await load()
+      if (selected?.id === departureId) {
+        setSelected({ ...selected, brief_status: 'failed' })
+      }
+    } finally {
+      setGeneratingId(null)
+    }
   }
 
   const currentYear = new Date().getUTCFullYear()
@@ -377,25 +405,48 @@ export default function HrDeparturesInbox() {
                   <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--k-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>
                     Role Intelligence Brief
                   </div>
-                  {selected.brief_status === 'ready' ? (
-                    <div style={{ padding: '12px 14px', background: 'var(--k-success-bg)', color: 'var(--k-success-text)', borderRadius: 'var(--k-radius-md)', fontSize: '13px' }}>
-                      Brief ready. Generated {formatDateTime(selected.brief_generated_at || '')}.
-                      {/* Day 4 will add "View Brief" button here */}
+                  {generatingId === selected.id ? (
+                    <div style={{ padding: '20px 14px', background: 'var(--k-bg-page)', borderRadius: 'var(--k-radius-md)', textAlign: 'center' }}>
+                      <AILoadingAnimation />
+                      <div style={{ fontSize: '12px', color: 'var(--k-text-muted)', marginTop: '10px' }}>
+                        Generating Role Intelligence Brief… this takes up to 30 seconds.
+                      </div>
                     </div>
-                  ) : selected.brief_status === 'pending' ? (
-                    <div style={{ padding: '12px 14px', background: 'var(--k-warning-bg)', color: 'var(--k-warning-text)', borderRadius: 'var(--k-radius-md)', fontSize: '13px' }}>
-                      Brief generation pending. The AI generator service will pick this up next.
+                  ) : selected.brief_status === 'ready' ? (
+                    <div style={{ padding: '12px 14px', background: 'var(--k-success-bg)', color: 'var(--k-success-text)', borderRadius: 'var(--k-radius-md)', fontSize: '13px' }}>
+                      <div style={{ marginBottom: '10px' }}>
+                        Brief ready. Generated {formatDateTime(selected.brief_generated_at || '')}.
+                      </div>
+                      <button
+                        onClick={() => setViewerDepartureId(selected.id)}
+                        style={{ fontSize: '12px', fontWeight: 600, padding: '6px 14px', borderRadius: 'var(--k-radius-md)', border: 'none', background: 'var(--k-brand-primary)', color: 'white', cursor: 'pointer', fontFamily: 'var(--k-font-sans)' }}
+                      >
+                        View Brief
+                      </button>
                     </div>
                   ) : selected.brief_status === 'generating' ? (
                     <div style={{ padding: '12px 14px', background: 'var(--k-warning-bg)', color: 'var(--k-warning-text)', borderRadius: 'var(--k-radius-md)', fontSize: '13px' }}>
                       Brief is currently being generated…
                     </div>
                   ) : (
-                    <div style={{ padding: '12px 14px', background: 'var(--k-danger-bg)', color: 'var(--k-danger-text)', borderRadius: 'var(--k-radius-md)', fontSize: '13px' }}>
-                      Brief generation failed.
-                      {selectedDetail.brief_generation_error && (
-                        <div style={{ marginTop: '6px', fontSize: '12px' }}>{selectedDetail.brief_generation_error}</div>
+                    <div style={{ padding: '12px 14px', background: selected.brief_status === 'failed' ? 'var(--k-danger-bg)' : 'var(--k-warning-bg)', color: selected.brief_status === 'failed' ? 'var(--k-danger-text)' : 'var(--k-warning-text)', borderRadius: 'var(--k-radius-md)', fontSize: '13px' }}>
+                      <div style={{ marginBottom: '10px' }}>
+                        {selected.brief_status === 'failed'
+                          ? 'Brief generation failed. You can retry.'
+                          : 'No brief generated yet.'}
+                      </div>
+                      {genError && (
+                        <div style={{ marginBottom: '10px', fontSize: '12px' }}>{genError}</div>
                       )}
+                      {selectedDetail?.brief_generation_error && selected.brief_status === 'failed' && (
+                        <div style={{ marginBottom: '10px', fontSize: '12px', opacity: 0.85 }}>{selectedDetail.brief_generation_error}</div>
+                      )}
+                      <button
+                        onClick={() => handleGenerate(selected.id)}
+                        style={{ fontSize: '12px', fontWeight: 600, padding: '6px 14px', borderRadius: 'var(--k-radius-md)', border: 'none', background: 'var(--k-brand-primary)', color: 'white', cursor: 'pointer', fontFamily: 'var(--k-font-sans)' }}
+                      >
+                        {selected.brief_status === 'failed' ? 'Retry Generation' : 'Generate Brief'}
+                      </button>
                     </div>
                   )}
                 </div>
@@ -413,6 +464,16 @@ export default function HrDeparturesInbox() {
             )}
           </div>
         </div>
+      )}
+
+      {viewerDepartureId && (
+        <BriefViewerModal
+          departureId={viewerDepartureId}
+          employeeName={
+            departures.find(d => d.id === viewerDepartureId)?.employee_name || 'Employee'
+          }
+          onClose={() => setViewerDepartureId(null)}
+        />
       )}
 
     </div>

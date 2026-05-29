@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { AdaptiveLearningCard } from '../components/AdaptiveLearningCard'
 import { getMyScorecard, updateKpiActual, getTeamScorecards, getUserScorecard, getReviewCycles, proposeKpi, logKpiWarningAcknowledged } from '../api/client'
 
 interface KpiAssignment {
@@ -309,6 +310,8 @@ async function submitProposal() {
               </div>
             )}
 
+            <AdaptiveLearningCard />
+            
             {/* Live KPIs */}
             {liveKpis.length > 0 && (
               <div className="k-card" style={{ marginBottom: '16px' }}>

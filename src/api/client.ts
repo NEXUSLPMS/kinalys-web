@@ -718,3 +718,32 @@ export async function suggestBriefsForUser(userId: string) {
     reason?: string
   }
 }
+
+// Append this to the END of src/api/client.ts (after the last existing function)
+
+export async function getMyAdaptiveAssignments() {
+  const { data } = await apiClient.get('/adaptive-learning/my-assignments')
+  return data as {
+    assignments: Array<{
+      enrollment_id: string
+      course_id: string
+      status: string
+      progress_pct: number
+      assigned_reason: string
+      enrolled_at: string
+      due_date: string | null
+      course_title: string
+      course_description: string | null
+      course_category: string | null
+      course_difficulty: string | null
+      duration_hours: number
+      thumbnail_emoji: string | null
+      instructor: string | null
+      source_kpi_name: string | null
+      source_kpi_rag: string | null
+      assigned_by_name: string | null
+    }>
+    total_count: number
+    counts_by_reason: Record<string, number>
+  }
+}

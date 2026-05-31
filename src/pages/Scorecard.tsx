@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { AdaptiveLearningCard } from '../components/AdaptiveLearningCard'
 import { getMyScorecard, updateKpiActual, getTeamScorecards, getUserScorecard, getReviewCycles, proposeKpi, logKpiWarningAcknowledged } from '../api/client'
+import StatRing from '../components/StatRing'
 
 interface KpiAssignment {
   id: string
@@ -58,7 +59,7 @@ const RAG_CONFIG: Record<string, { color: string; bg: string; label: string }> =
   red:   { color: 'var(--k-danger-text)',  bg: 'var(--k-danger-bg)',  label: '🔴' },
 }
 
-export default function Scorecard() {
+export default function Scorecard({ onNavigate }: { onNavigate?: () => void }) {
   const [view, setView] = useState<'my' | 'team' | 'member'>('my')
   const [myScorecard, setMyScorecard] = useState<any>(null)
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([])
@@ -274,17 +275,20 @@ async function submitProposal() {
 
             {/* Score summary */}
             <div className="k-stat-grid k-stat-grid-4" style={{ marginBottom: '24px' }}>
-              <div className="k-stat-card accent">
-                <div className="k-stat-label">Overall Score</div>
-                <div className="k-stat-value" style={{ color: getScoreColor(myScorecard?.calculated_score) }}>
-                  {myScorecard?.calculated_score ?? '—'}%
+              <div className="k-stat-card accent" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div>
+                  <div className="k-stat-label">Overall Score</div>
+                  <div className="k-stat-value" style={{ color: getScoreColor(myScorecard?.calculated_score) }}>
+                    {myScorecard?.calculated_score ?? '—'}%
+                  </div>
+                  <div className="k-stat-trend">
+                    {myScorecard?.calculated_score >= 90 ? '🟢 High Performance'
+                      : myScorecard?.calculated_score >= 80 ? '🟡 Medium Performance'
+                      : myScorecard?.calculated_score > 0 ? '🔴 Needs Improvement'
+                      : 'No score yet'}
+                  </div>
                 </div>
-                <div className="k-stat-trend">
-                  {myScorecard?.calculated_score >= 90 ? '🟢 High Performance'
-                    : myScorecard?.calculated_score >= 80 ? '🟡 Medium Performance'
-                    : myScorecard?.calculated_score > 0 ? '🔴 Needs Improvement'
-                    : 'No score yet'}
-                </div>
+                <StatRing value={myScorecard?.calculated_score ?? 0} color={getScoreColor(myScorecard?.calculated_score)} />
               </div>
               <div className="k-stat-card green">
                 <div className="k-stat-label">Live KPIs</div>
@@ -310,7 +314,7 @@ async function submitProposal() {
               </div>
             )}
 
-            <AdaptiveLearningCard />
+            <AdaptiveLearningCard onNavigate={onNavigate} />
             
             {/* Live KPIs */}
             {liveKpis.length > 0 && (

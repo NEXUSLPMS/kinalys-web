@@ -54,10 +54,10 @@ export default function COPCReport() {
     setLoading(true)
     try {
       const [data, profile] = await Promise.all([getCOPCReport(), getMyProfile()])
-      console.log('PROFILE:', JSON.stringify(profile))
       setUserRole(profile?.user?.role || '')
       setUserId(profile?.user?.id || '')
       setSummary(data.summary || null)
+      setEmployees(data.employees || [])
       setCycle(data.cycle || null)
     } catch (err: any) {
       setError('Failed to load COPC report')

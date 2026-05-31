@@ -123,11 +123,11 @@ function Dashboard() {
           setUnreadCount(alertsData.value.unread_count || 0)
         }
         if (pipData.status === 'fulfilled') setMyPip(pipData.value.pip)
-      
+
           if (privacyData.status === 'fulfilled' && privacyData.value.needs_acknowledgement) {
           setPrivacyStatus(privacyData.value)
         }
-        
+
       } catch (err: any) {
         setApiError(err.message)
       } finally {
@@ -196,7 +196,7 @@ function Dashboard() {
       />
     )
   }
-  
+
   return (
     <div className="k-shell">
 
@@ -246,12 +246,10 @@ function Dashboard() {
           >
             Performance <span style={{ fontSize: '10px' }}>{collapsedSections['performance'] ? '▶' : '▼'}</span>
           </div>
-          {canSee('predictive') && <div className={`k-nav-item ${activeNav === 'predictive' ? 'active' : ''}`} onClick={() => setActiveNav('predictive')}>Predictive Analysis</div>}
-          {canSee('pip_checkins') && <div className={`k-nav-item ${activeNav === 'pip_checkins' ? 'active' : ''}`} onClick={() => setActiveNav('pip_checkins')}>PIP Check-ins</div>}
-          
           {!collapsedSections['performance'] && <>
-            {canSee('exec') && <div className={`k-nav-item ${activeNav === 'exec' ? 'active' : ''}`} onClick={() => setActiveNav('exec')}>Exec Dashboard</div>}
             {canSee('predictive') && <div className={`k-nav-item ${activeNav === 'predictive' ? 'active' : ''}`} onClick={() => setActiveNav('predictive')}>Predictive Analysis</div>}
+            {canSee('pip_checkins') && <div className={`k-nav-item ${activeNav === 'pip_checkins' ? 'active' : ''}`} onClick={() => setActiveNav('pip_checkins')}>PIP Check-ins</div>}
+            {canSee('exec') && <div className={`k-nav-item ${activeNav === 'exec' ? 'active' : ''}`} onClick={() => setActiveNav('exec')}>Exec Dashboard</div>}
             {canSee('scorecard') && <div className={`k-nav-item ${activeNav === 'scorecard' ? 'active' : ''}`} onClick={() => setActiveNav('scorecard')}>My Scorecard</div>}
             {canSee('ai') && <div className={`k-nav-item ${activeNav === 'ai' ? 'active' : ''}`} onClick={() => setActiveNav('ai')}>AI Coaching</div>}
             {canSee('recommendations') && <div className={`k-nav-item ${activeNav === 'recommendations' ? 'active' : ''}`} onClick={() => setActiveNav('recommendations')}>AI Recommendations</div>}
@@ -338,7 +336,7 @@ function Dashboard() {
         ) : activeNav === 'bsc' ? (
           <BalancedScorecard />
         ) : activeNav === 'scorecard' ? (
-          <Scorecard />
+          <Scorecard onNavigate={() => setActiveNav('learning')} />
           ) : activeNav === 'oneonone' ? (
           <OneOnOne />
         ) : activeNav === 'ai' ? (
@@ -378,16 +376,14 @@ function Dashboard() {
           ) : activeNav === 'hradmin' ? (
           <HrAdminManagement />
           ) : activeNav === 'predictive' ? (
-          <PredictiveAnalysis />
+          <PredictiveAnalysis onNavigate={(target) => setActiveNav(target)} />
           ) : activeNav === 'hrflags' ? (
           <HrFlagsInbox />
           ) : activeNav === 'departures' ? (
           <HrDeparturesInbox />
           ) : activeNav === 'recommendations' ? (
           <Recommendations />
-          ) : activeNav === 'predictive' ? (
-<PredictiveAnalysis />
-) : activeNav === 'pip_checkins' ? (
+        ) : activeNav === 'pip_checkins' ? (
           <PipCheckins />
         ) : (
           <div className="k-page">
@@ -488,7 +484,7 @@ function Dashboard() {
                       </div>
                       <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--k-warning-text)', background: 'var(--k-warning-bg)', padding: '3px 10px', borderRadius: '20px' }}>
                        {myPip.status === 'pending_employee_ack' ? 'Performance Improvement Plan — Action Required' : 'Performance Improvement Plan — Active'}
-  
+
                       </span>
                     </div>
                     <div style={{ padding: '16px' }}>

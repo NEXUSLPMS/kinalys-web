@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { getPredictiveTeam, getPredictiveMe, getMyProfile, submitEmployeeFlag, getUserScorecard } from '../api/client'
+import StatRing from '../components/StatRing'
 
-export default function PredictiveAnalysis() {
+export default function PredictiveAnalysis({ onNavigate }: { onNavigate?: (target: string) => void }) {
   const [teamData, setTeamData] = useState<any>(null)
   const [meData, setMeData] = useState<any>(null)
   const [profile, setProfile] = useState<any>(null)
@@ -215,15 +216,18 @@ export default function PredictiveAnalysis() {
           <>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '16px' }}>
               {[
-                { label: 'AVG Q3 PROJECTION', value: `${filteredAvg}%`, color: scoreColor(filteredAvg), bg: 'var(--k-bg-card)' },
-                { label: 'IMPROVING', value: filteredImproving, sub: 'employees', color: 'var(--k-success-text)', bg: 'var(--k-success-bg)' },
-                { label: 'DECLINING', value: filteredDeclining, sub: 'employees', color: 'var(--k-danger-text)', bg: 'var(--k-danger-bg)' },
-                { label: 'SLIP ALERTS', value: filteredAlerts, sub: 'Green to Amber risk', color: filteredAlerts > 0 ? 'var(--k-warning-text)' : 'var(--k-text-muted)', bg: filteredAlerts > 0 ? 'var(--k-warning-bg)' : 'var(--k-bg-card)' },
+                { label: 'AVG Q3 PROJECTION', value: `${filteredAvg}%`, ring: filteredAvg, color: scoreColor(filteredAvg), bg: 'var(--k-bg-card)' },
+                { label: 'IMPROVING', value: filteredImproving, sub: 'employees', ring: filteredWithData.length > 0 ? Math.round((filteredImproving / filteredWithData.length) * 100) : 0, color: 'var(--k-success-text)', bg: 'var(--k-success-bg)' },
+                { label: 'DECLINING', value: filteredDeclining, sub: 'employees', ring: filteredWithData.length > 0 ? Math.round((filteredDeclining / filteredWithData.length) * 100) : 0, color: 'var(--k-danger-text)', bg: 'var(--k-danger-bg)' },
+                { label: 'SLIP ALERTS', value: filteredAlerts, sub: 'Green to Amber risk', ring: filteredWithData.length > 0 ? Math.round((filteredAlerts / filteredWithData.length) * 100) : 0, color: filteredAlerts > 0 ? 'var(--k-warning-text)' : 'var(--k-text-muted)', bg: filteredAlerts > 0 ? 'var(--k-warning-bg)' : 'var(--k-bg-card)' },
               ].map(c => (
-                <div key={c.label} className="k-card" style={{ padding: '16px', textAlign: 'center', background: c.bg }}>
-                  <div style={{ fontSize: '10px', fontWeight: 700, color: c.color, letterSpacing: '1px', marginBottom: '6px' }}>{c.label}</div>
-                  <div style={{ fontSize: '30px', fontWeight: 800, color: c.color, fontFamily: 'var(--k-font-display)' }}>{c.value}</div>
-                  {(c as any).sub && <div style={{ fontSize: '11px', color: c.color, marginTop: '2px' }}>{(c as any).sub}</div>}
+                <div key={c.label} className="k-card" style={{ padding: '16px', background: c.bg, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+                  <div style={{ textAlign: 'left' }}>
+                    <div style={{ fontSize: '10px', fontWeight: 700, color: c.color, letterSpacing: '1px', marginBottom: '6px' }}>{c.label}</div>
+                    <div style={{ fontSize: '30px', fontWeight: 800, color: c.color, fontFamily: 'var(--k-font-display)' }}>{c.value}</div>
+                    {(c as any).sub && <div style={{ fontSize: '11px', color: c.color, marginTop: '2px' }}>{(c as any).sub}</div>}
+                  </div>
+                  <StatRing value={(c as any).ring} color={c.color} />
                 </div>
               ))}
             </div>
@@ -361,11 +365,11 @@ export default function PredictiveAnalysis() {
 
             {!flagType && !flagSuccess && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <button onClick={() => console.log('navigate to 1on1')}
+                <button onClick={() => onNavigate?.('oneonone')}
                   style={{ padding: '10px', background: 'var(--k-bg-page)', border: '1px solid var(--k-border-default)', borderRadius: 'var(--k-radius-md)', fontSize: '12px', fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--k-font-sans)', color: 'var(--k-text-primary)', textAlign: 'left' }}>
                   Schedule 1-on-1 with {selectedEmployee.full_name.split(' ')[0]}
                 </button>
-                <button onClick={() => console.log('recommend course')}
+                <button onClick={() => onNavigate?.('catalog')}
                   style={{ padding: '10px', background: 'var(--k-bg-page)', border: '1px solid var(--k-border-default)', borderRadius: 'var(--k-radius-md)', fontSize: '12px', fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--k-font-sans)', color: 'var(--k-text-primary)', textAlign: 'left' }}>
                   Recommend a Course
                 </button>

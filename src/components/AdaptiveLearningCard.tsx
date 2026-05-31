@@ -77,7 +77,7 @@ const STATUS_BUTTON_LABEL: Record<string, string> = {
   completed: 'Review',
 }
 
-export function AdaptiveLearningCard() {
+export function AdaptiveLearningCard({ onNavigate }: { onNavigate?: () => void }) {
   const [data, setData] = useState<ApiResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -238,7 +238,7 @@ export function AdaptiveLearningCard() {
               </div>
 
               <button
-                onClick={() => window.location.href = '/my-learning'}
+                onClick={() => onNavigate?.()}
                 style={{
                   fontSize: '12px',
                   fontWeight: 600,
@@ -266,7 +266,7 @@ export function AdaptiveLearningCard() {
           textAlign: 'center',
         }}>
           <button
-            onClick={() => window.location.href = '/my-learning'}
+            onClick={() => onNavigate?.()}
             style={{
               background: 'none',
               border: 'none',

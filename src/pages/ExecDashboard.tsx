@@ -26,6 +26,15 @@ export default function ExecDashboard() {
   useEffect(() => { loadData() }, []) // eslint-disable-line
   useEffect(() => { if (selectedCycle) loadTeam() }, [selectedCycle]) // eslint-disable-line
 
+  function normalizeTeam(rows: any[]): any[] {
+    return (rows || []).map(m => ({
+      ...m,
+      calculated_score: m.calculated_score === null || m.calculated_score === undefined
+        ? null
+        : Number(m.calculated_score),
+    }))
+  }
+
   async function loadData() {
     setLoading(true)
     try {
@@ -34,7 +43,7 @@ export default function ExecDashboard() {
         getReviewCycles(),
       ])
       if (teamData.status === 'fulfilled') {
-        setTeam(teamData.value.team || [])
+       setTeam(normalizeTeam(teamData.value.team))
         setSelectedCycle(teamData.value.cycle_id || '')
       }
       if (cycleData.status === 'fulfilled') setCycles(cycleData.value.cycles || [])
@@ -48,7 +57,7 @@ export default function ExecDashboard() {
   async function loadTeam() {
     try {
       const data = await getTeamScorecards(selectedCycle)
-      setTeam(data.team || [])
+      setTeam(normalizeTeam(data.team))
     } catch (err: any) {
       setError(err.message)
     }

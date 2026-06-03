@@ -362,7 +362,7 @@ export default function HrFlagsInbox() {
                 </div>
               )}
 
-              {!action && selectedFlag.status !== 'pending_hr_closure' && (
+              {!action && selectedFlag.status === 'pending_hr' && (
                 <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
                   <button onClick={() => setAction('confirm')}
                     style={{ flex: 1, padding: '10px', background: 'var(--k-brand-primary)', border: 'none', borderRadius: 'var(--k-radius-md)', fontSize: '12px', fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--k-font-sans)', color: 'white' }}>
@@ -372,6 +372,24 @@ export default function HrFlagsInbox() {
                     style={{ flex: 1, padding: '10px', background: 'var(--k-bg-page)', border: '1px solid var(--k-border-default)', borderRadius: 'var(--k-radius-md)', fontSize: '12px', fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--k-font-sans)', color: 'var(--k-text-primary)' }}>
                     Delegate to HR Exec
                   </button>
+                </div>
+              )}
+
+              {!action && ['hr_reviewing', 'conversation_done', 'pending_employee_ack', 'pip_active', 'extended'].includes(selectedFlag.status) && (
+                <div style={{ background: 'var(--k-bg-page)', border: '1px solid var(--k-border-default)', borderRadius: 'var(--k-radius-md)', padding: '12px 14px', marginBottom: '16px' }}>
+                  <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--k-text-muted)', marginBottom: '6px' }}>LIFECYCLE STATUS</div>
+                  <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--k-text-primary)', marginBottom: '4px' }}>
+                    {selectedFlag.status === 'pending_employee_ack' ? 'Awaiting employee acknowledgement'
+                      : selectedFlag.status === 'pip_active' ? 'PIP active — improvement plan in progress'
+                      : selectedFlag.status === 'conversation_done' ? 'Conversation confirmed'
+                      : selectedFlag.status === 'extended' ? 'PIP extended'
+                      : 'Under HR review'}
+                  </div>
+                  {selectedFlag.hr_confirmed_at && (
+                    <div style={{ fontSize: '12px', color: 'var(--k-text-secondary)', marginTop: '4px' }}>
+                      HR conversation confirmed. No further action required at this stage.
+                    </div>
+                  )}
                 </div>
               )}
 

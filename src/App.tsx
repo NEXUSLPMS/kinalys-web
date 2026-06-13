@@ -28,6 +28,7 @@ import SixSigmaReport from './pages/SixSigmaReport'
 import DemoSwitcher from './components/DemoSwitcher'
 import HrAdminManagement from './pages/HrAdminManagement'
 import HrFlagsInbox from './pages/HrFlagsInbox'
+import ClosedFlagsHistory from './pages/ClosedFlagsHistory'
 import HrDeparturesInbox from './pages/HrDeparturesInbox'
 import PredictiveAnalysis from './pages/PredictiveAnalysis'
 import Recommendations from './pages/Recommendations'
@@ -282,6 +283,7 @@ function Dashboard() {
               {canSee('users') && <div className={`k-nav-item ${activeNav === 'users' ? 'active' : ''}`} onClick={() => setActiveNav('users')}>User Management</div>}
               {canSee('kpi') && <div className={`k-nav-item ${activeNav === 'kpi' ? 'active' : ''}`} onClick={() => setActiveNav('kpi')}>KPI Templates</div>}
               {canSee('hrflags') && <div className={`k-nav-item ${activeNav === 'hrflags' ? 'active' : ''}`} onClick={() => setActiveNav('hrflags')}>Flags Inbox</div>}
+              {canSee('hrflags') && <div className={`k-nav-item ${activeNav === 'flaghistory' ? 'active' : ''}`} onClick={() => setActiveNav('flaghistory')}>Flag History</div>}
               {canSee('departures') && <div className={`k-nav-item ${activeNav === 'departures' ? 'active' : ''}`} onClick={() => setActiveNav('departures')}>Departures Inbox</div>}
                </>}
           </div>
@@ -378,7 +380,9 @@ function Dashboard() {
           ) : activeNav === 'predictive' ? (
           <PredictiveAnalysis onNavigate={(target) => setActiveNav(target)} />
           ) : activeNav === 'hrflags' ? (
-          <HrFlagsInbox />
+          <HrFlagsInbox onNavigate={setActiveNav} />
+          ) : activeNav === 'flaghistory' ? (
+            <ClosedFlagsHistory />
           ) : activeNav === 'departures' ? (
           <HrDeparturesInbox />
           ) : activeNav === 'recommendations' ? (

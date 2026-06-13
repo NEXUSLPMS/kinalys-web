@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { getKbCategories, getKbArticles, getKbArticle, markArticleHelpful, seedKbArticles } from '../api/client'
 
 interface Category {

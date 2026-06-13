@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { getMyScorecard, getReviewCycles, apiClient } from '../api/client'
 
 interface Message {

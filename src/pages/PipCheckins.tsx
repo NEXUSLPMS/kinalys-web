@@ -96,12 +96,37 @@ export default function PipCheckins() {
     return diff
   }
 
+  // Backfill planning (decision 62: Ending Soon = past PIP midpoint, proportional to duration)
+  function pipDurationDays(p: any): number | null {
+    if (!p.pip_start_date || !p.pip_end_date) return null
+    const d = (new Date(p.pip_end_date).getTime() - new Date(p.pip_start_date).getTime()) / (1000 * 60 * 60 * 24)
+    return d > 0 ? d : null
+  }
+  function isOverduePip(p: any): boolean {
+    return !!p.pip_end_date && daysRemaining(p.pip_end_date) < 0
+  }
+  function isEndingSoonPip(p: any): boolean {
+    if (!p.pip_end_date) return false
+    const rem = daysRemaining(p.pip_end_date)
+    if (rem < 0) return false
+    const dur = pipDurationDays(p)
+    if (dur === null) return false
+    return rem <= dur * 0.5
+  }
+
   function statusBadge(status: string) {
     const s = CHECKIN_STATUSES.find(x => x.value === status)
     return s || { label: status, color: 'var(--k-text-muted)', bg: 'var(--k-bg-page)' }
   }
 
   if (loading) return <div className="k-page"><div style={{ color: 'var(--k-text-muted)', fontSize: '14px', padding: '40px 0' }}>Loading active PIPs...</div></div>
+
+  // Planning aggregates over this manager's own active PIPs
+  const pOverdue = pips.filter(isOverduePip).length
+  const pEndingSoon = pips.filter(isEndingSoonPip).length
+  const pAtRiskEndDates = pips.filter(p => isOverduePip(p) || isEndingSoonPip(p)).map(p => p.pip_end_date).filter(Boolean).sort()
+  const pFallbackEndDates = pips.map(p => p.pip_end_date).filter(Boolean).sort()
+  const pNextAtRisk = pAtRiskEndDates[0] || pFallbackEndDates[0] || null
 
   return (
     <div className="k-page" style={{ display: 'flex', gap: '0', position: 'relative' }}>
@@ -112,9 +137,42 @@ export default function PipCheckins() {
           <div className="k-page-sub">Active Performance Improvement Plans &middot; {pips.length} active PIP{pips.length !== 1 ? 's' : ''}</div>
         </div>
 
+        {pips.length > 0 && (
+          <div className="k-card" style={{ padding: '14px 18px', marginBottom: '16px', borderLeft: '4px solid var(--k-warning-text)', borderRadius: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
+              <div style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '1px', color: 'var(--k-text-muted)' }}>
+                BACKFILL PLANNING<span style={{ fontWeight: 600 }}> &middot; YOUR TEAM</span>
+              </div>
+              <div style={{ display: 'flex', gap: '28px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '10px', color: 'var(--k-text-muted)' }}>Active</div>
+                  <div style={{ fontSize: '22px', fontWeight: 800, fontFamily: 'var(--k-font-display)', color: 'var(--k-text-primary)' }}>{pips.length}</div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '10px', color: 'var(--k-text-muted)' }}>Ending soon</div>
+                  <div style={{ fontSize: '22px', fontWeight: 800, fontFamily: 'var(--k-font-display)', color: 'var(--k-warning-text)' }}>{pEndingSoon}</div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '10px', color: 'var(--k-text-muted)' }}>Overdue</div>
+                  <div style={{ fontSize: '22px', fontWeight: 800, fontFamily: 'var(--k-font-display)', color: 'var(--k-danger-text)' }}>{pOverdue}</div>
+                </div>
+                <div style={{ textAlign: 'right', minWidth: '120px' }}>
+                  <div style={{ fontSize: '10px', color: 'var(--k-text-muted)' }}>Next seat at risk</div>
+                  <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--k-text-primary)' }}>
+                    {pNextAtRisk ? new Date(pNextAtRisk).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '\u2014'}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div style={{ fontSize: '10px', color: 'var(--k-text-muted)', marginTop: '8px' }}>
+              Ending soon = past the PIP midpoint. Start backfill planning early in case a plan does not complete successfully.
+            </div>
+          </div>
+        )}
+
         {pips.length === 0 && (
           <div className="k-card" style={{ padding: '40px', textAlign: 'center' }}>
-            <div style={{ fontSize: '32px', marginBottom: '12px' }}>✅</div>
+            <div style={{ fontSize: '32px', marginBottom: '12px' }}>{'\u2705'}</div>
             <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--k-text-primary)', marginBottom: '6px' }}>No active PIPs</div>
             <div style={{ fontSize: '13px', color: 'var(--k-text-muted)' }}>All your team members are performing well.</div>
           </div>
@@ -232,8 +290,8 @@ export default function PipCheckins() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '12px' }}>
                 {[
                   { value: 'successful', label: 'Successful', sub: 'Employee has met improvement targets', color: 'var(--k-success-text)', bg: 'var(--k-success-bg)' },
-                  { value: 'extended', label: 'Extended', sub: 'More time needed — extend the PIP period', color: 'var(--k-warning-text)', bg: 'var(--k-warning-bg)' },
-                  { value: 'unsuccessful', label: 'Unsuccessful', sub: 'Targets not met — escalate to HR for release decision', color: 'var(--k-danger-text)', bg: 'var(--k-danger-bg)' },
+                  { value: 'extended', label: 'Extended', sub: 'More time needed \u2014 extend the PIP period', color: 'var(--k-warning-text)', bg: 'var(--k-warning-bg)' },
+                  { value: 'unsuccessful', label: 'Unsuccessful', sub: 'Targets not met \u2014 escalate to HR for release decision', color: 'var(--k-danger-text)', bg: 'var(--k-danger-bg)' },
                 ].map(o => (
                   <button key={o.value} onClick={() => setCloseOutcome(o.value)}
                     style={{ padding: '10px 12px', borderRadius: 'var(--k-radius-md)', border: `1px solid ${closeOutcome === o.value ? o.color : 'var(--k-border-default)'}`, background: closeOutcome === o.value ? o.bg : 'var(--k-bg-input)', cursor: 'pointer', fontFamily: 'var(--k-font-sans)', textAlign: 'left' }}>

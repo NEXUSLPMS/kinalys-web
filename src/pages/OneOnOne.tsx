@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { getOneOnOneSessions, createOneOnOneSession, getSessionEntries, saveSessionEntry, signOffSession, getOneOnOneTeam, getReviewCycles } from '../api/client'
 
 const SECTIONS = [

@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { getLmsCertifications, getLmsStats } from '../api/client'
 
 export default function Certifications() {

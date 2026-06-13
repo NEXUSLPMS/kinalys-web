@@ -19,7 +19,8 @@ interface Employee {
   role: string
   department_name: string
   kpis: KPI[]
-  sigma_score: number
+  sigma_score: number | null
+  avg_dpmo: number | null
   avg_score: number
   green_count: number
   amber_count: number
@@ -65,13 +66,16 @@ export default function SixSigmaReport() {
     }
   }
 
-  function sigmaColor(sigma: number) {
+  // sigma may be null (no DPMO data -> no sigma). Null renders neutral.
+  function sigmaColor(sigma: number | null) {
+    if (sigma === null || sigma === undefined) return 'var(--k-text-muted)'
     if (sigma >= 4.0) return 'var(--k-success-text)'
     if (sigma >= 3.0) return 'var(--k-warning-text)'
     return 'var(--k-danger-text)'
   }
 
-  function sigmaBg(sigma: number) {
+  function sigmaBg(sigma: number | null) {
+    if (sigma === null || sigma === undefined) return 'var(--k-bg-page)'
     if (sigma >= 4.0) return 'var(--k-success-bg)'
     if (sigma >= 3.0) return 'var(--k-warning-bg)'
     return 'var(--k-danger-bg)'
@@ -97,9 +101,10 @@ export default function SixSigmaReport() {
     return 'var(--k-danger-bg)'
   }
 
+  // Filters operate on sigma; null sigma (no DPMO) is excluded from both AT and BELOW.
   const filtered = filter === 'ALL' ? employees
-    : filter === 'AT' ? employees.filter(e => e.sigma_score >= 4.0)
-    : employees.filter(e => e.sigma_score < 4.0)
+    : filter === 'AT' ? employees.filter(e => e.sigma_score !== null && e.sigma_score >= 4.0)
+    : employees.filter(e => e.sigma_score !== null && e.sigma_score < 4.0)
 
   if (loading) return (
     <div className="k-page">
@@ -119,7 +124,7 @@ export default function SixSigmaReport() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
         <div>
           <div className="k-page-title">Six Sigma Report</div>
-          <div className="k-page-sub">{cycle?.name || 'Current Cycle'} · Sigma Level · DPMO · Process Yield</div>
+          <div className="k-page-sub">{cycle?.name || 'Current Cycle'} &middot; Sigma Level &middot; DPMO &middot; Process Yield</div>
         </div>
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
           <span style={{ fontSize: '12px', color: 'var(--k-text-muted)', fontWeight: 600 }}>FILTER:</span>
@@ -133,21 +138,6 @@ export default function SixSigmaReport() {
             </button>
           ))}
         </div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
       </div>
       {/* Export buttons */}
       <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
@@ -171,7 +161,7 @@ export default function SixSigmaReport() {
           <div className="k-card" style={{ textAlign: 'center', padding: '20px' }}>
             <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--k-text-muted)', letterSpacing: '1px', marginBottom: '8px' }}>AVG SIGMA LEVEL</div>
             <div style={{ fontSize: '40px', fontWeight: 800, color: sigmaColor(summary.avg_sigma), fontFamily: 'var(--k-font-display)', lineHeight: 1 }}>{summary.avg_sigma}σ</div>
-            <div style={{ fontSize: '12px', color: 'var(--k-text-muted)', marginTop: '6px' }}>{sigmaLabel(summary.avg_sigma)}</div>
+            <div style={{ fontSize: '12px', color: 'var(--k-text-muted)', marginTop: '6px' }}>{sigmaLabel(summary.avg_sigma)} &middot; from DPMO</div>
           </div>
           <div className="k-card" style={{ textAlign: 'center', padding: '20px' }}>
             <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--k-text-muted)', letterSpacing: '1px', marginBottom: '8px' }}>AVG PROCESS SCORE</div>
@@ -208,7 +198,7 @@ export default function SixSigmaReport() {
             </div>
           ))}
           <div style={{ display: 'flex', alignItems: 'center', marginLeft: '8px', fontSize: '12px', color: 'var(--k-text-muted)', fontStyle: 'italic' }}>
-            Industry target: ≥4σ · World class: 6σ
+            Industry target: ≥4σ &middot; World class: 6σ
           </div>
         </div>
       </div>
@@ -217,7 +207,7 @@ export default function SixSigmaReport() {
       <div className="k-card">
         <div className="k-card-header">
           <div className="k-card-title">Employee Six Sigma Breakdown</div>
-          <span style={{ fontSize: '12px', color: 'var(--k-text-muted)' }}>{filtered.length} employees · click row to expand KPIs</span>
+          <span style={{ fontSize: '12px', color: 'var(--k-text-muted)' }}>{filtered.length} employees &middot; click row to expand KPIs</span>
         </div>
         <div>
           {/* Table header */}
@@ -241,13 +231,16 @@ export default function SixSigmaReport() {
                   {emp.full_name}
                 </div>
                 <div style={{ fontSize: '12px', color: 'var(--k-text-secondary)', display: 'flex', alignItems: 'center' }}>{emp.department_name || '—'}</div>
-                <div style={{ textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '2px' }}>
                   <span style={{ background: sigmaBg(emp.sigma_score), color: sigmaColor(emp.sigma_score), padding: '3px 12px', borderRadius: '20px', fontSize: '14px', fontWeight: 800, fontFamily: 'var(--k-font-display)' }}>
-                    {emp.sigma_score}σ
+                    {emp.sigma_score === null || emp.sigma_score === undefined ? '—' : `${emp.sigma_score}σ`}
                   </span>
+                  {emp.avg_dpmo !== null && emp.avg_dpmo !== undefined && (
+                    <span style={{ fontSize: '10px', color: 'var(--k-text-muted)' }}>{emp.avg_dpmo.toLocaleString()} DPMO</span>
+                  )}
                 </div>
                 <div style={{ textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <span style={{ fontSize: '15px', fontWeight: 800, color: sigmaColor(emp.sigma_score), fontFamily: 'var(--k-font-display)' }}>{emp.avg_score}%</span>
+                  <span style={{ fontSize: '15px', fontWeight: 800, color: 'var(--k-text-primary)', fontFamily: 'var(--k-font-display)' }}>{emp.avg_score}%</span>
                 </div>
                 <div style={{ textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', color: 'var(--k-text-secondary)' }}>
                   {emp.kpis.length}

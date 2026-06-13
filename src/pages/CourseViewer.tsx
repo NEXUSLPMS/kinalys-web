@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { getCourseSections, completeCourseSection } from '../api/client'
 
 interface Section {

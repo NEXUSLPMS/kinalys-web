@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { getCopcScorecard, getCopcTeam, getReviewCycles } from '../api/client'
 
 const TIER_CONFIG = {

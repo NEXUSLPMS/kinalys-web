@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { getTeamScorecards, getReviewCycles, getUserScorecard } from '../api/client'
 import StatRing from '../components/StatRing'
 

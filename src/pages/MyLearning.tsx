@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { getMyLearning, getLmsStats, updateCourseProgress } from '../api/client'
 import CourseViewer from './CourseViewer'
 

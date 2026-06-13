@@ -4,18 +4,19 @@ export const DEMO_PERSONAS = [
   { user_id: '69797e41-29ba-4c0a-83e7-e6e849c9cc1a', name: 'Neha Joshi', role: 'Org Admin', roleKey: 'super_admin', emoji: '🔐', description: 'Org Admin · Full platform control', dept: 'Leadership & Strategy' },
   { user_id: 'dc16d342-a608-4966-8d0a-2f383bffeba2', name: 'Sanmeet Sahni', role: 'HR Admin', roleKey: 'hr_admin', emoji: '⚙️', description: 'HR Admin · Platform configuration', dept: 'Leadership & Strategy' },
   { user_id: '1de83431-8c7e-4dcc-811c-0b294da67665', name: 'Deepa Nair', role: 'Chief Experience Officer', roleKey: 'executive', emoji: '👔', description: 'CXO · Org-wide exec dashboard · OKR owner', dept: 'Leadership & Strategy' },
-  { user_id: '6269c1af-b768-40f8-a463-0930b7c6c0c2', name: 'Vikram Singh', role: 'VP Operations', roleKey: 'leadership', emoji: '📊', description: 'VP · IT · Six Sigma OKR owner', dept: 'Information Technology' },
+  { user_id: '6269c1af-b768-40f8-a463-0930b7c6c0c2', name: 'Vikram Singh', role: 'VP Operations', roleKey: 'leadership', emoji: '📊', description: 'VP · IT · Six Sigma OKR owner · top of cohort', dept: 'Information Technology' },
   { user_id: '5501f29a-aa47-4895-b876-e1ac9f844ccc', name: 'Rajesh Kumar', role: 'Operations Manager', roleKey: 'manager', emoji: '👥', description: 'Manager · Customer Ops · COPC team', dept: 'Customer Operations' },
-  { user_id: 'cbc7594d-acd6-4771-9243-fdfabd7101ee', name: 'Suresh Nair', role: 'IT Manager', roleKey: 'manager', emoji: '💻', description: 'Manager · IT · Six Sigma team', dept: 'Information Technology' },
+  { user_id: 'cbc7594d-acd6-4771-9243-fdfabd7101ee', name: 'Suresh Nair', role: 'IT Manager', roleKey: 'manager', emoji: '💻', description: 'Manager · IT · Six Sigma · strong performer', dept: 'Information Technology' },
   { user_id: '7b9cede9-af6a-4e23-a860-c372d4b7175e', name: 'Kavya Reddy', role: 'Sales Manager', roleKey: 'manager', emoji: '💼', description: 'Manager · Sales · BSC team', dept: 'Sales & Business Development' },
-  { user_id: '96b41561-902b-4be0-be96-f1386e9d12aa', name: 'Arjun Menon', role: 'Team Lead', roleKey: 'team_lead', emoji: '🎯', description: 'Team Lead · Customer Ops · COPC', dept: 'Customer Operations' },
-  { user_id: 'a2443fd5-bb36-454a-a829-d4a1d2aaaf00', name: 'Priya Sharma', role: 'Agent — Excellent', roleKey: 'individual_contributor', emoji: '🌟', description: 'Top performer · All green · COPC Excellent', dept: 'Customer Operations' },
-  { user_id: '5a89cd93-91d5-4d40-98ff-bc9ad165142f', name: 'Mariam Al Hashimi', role: 'Agent — Needs Coaching', roleKey: 'individual_contributor', emoji: '🔴', description: 'At-risk · Breach alerts · COPC Unsatisfactory', dept: 'Customer Operations' },
-  { user_id: 'ee811f7a-d0ed-4641-ad67-34dbad4d5d41', name: 'Rahul Mehta', role: 'Developer — Excellent', roleKey: 'individual_contributor', emoji: '⭐', description: 'Top IT performer · 4σ · DPMO champion', dept: 'Information Technology' },
-  { user_id: '6a1dada9-59ff-478d-986a-aa6b8bba6e54', name: 'Pooja Iyer', role: 'HR Executive', roleKey: 'individual_contributor', emoji: '👩‍💼', description: 'HR · BSC · Strong performer', dept: 'Human Resources' },
-  { user_id: '712c9b7d-1df1-4854-918b-2795f00988a4', name: 'Aryan Kapoor', role: 'Sales Executive', roleKey: 'individual_contributor', emoji: '📈', description: 'Sales · BSC · Improving Q2', dept: 'Sales & Business Development' },
-  { user_id: '16fad8c6-c8f1-4a03-a510-0fadf129e2eb', name: 'Khalid Al Neyadi', role: 'QA Analyst', roleKey: 'individual_contributor', emoji: '🔬', description: 'QA · Six Sigma · 4σ strong performer', dept: 'Quality Assurance' },
-  { user_id: '6627071b-799b-468a-b3cd-5f14659ce2e4', name: 'Mohammed Al Rashid', role: 'Finance Analyst', roleKey: 'individual_contributor', emoji: '📊', description: 'Finance · BSC · Strong performer', dept: 'Finance & Accounting' },
+  { user_id: '96b41561-902b-4be0-be96-f1386e9d12aa', name: 'Arjun Menon', role: 'Team Lead', roleKey: 'team_lead', emoji: '🎯', description: 'Team Lead · Customer Ops · COPC · strong performer', dept: 'Customer Operations' },
+  { user_id: 'a2443fd5-bb36-454a-a829-d4a1d2aaaf00', name: 'Priya Sharma', role: 'Agent', roleKey: 'individual_contributor', emoji: '🌟', description: 'Customer Ops · COPC · solid performer', dept: 'Customer Operations' },
+  { user_id: '5a89cd93-91d5-4d40-98ff-bc9ad165142f', name: 'Mariam Al Hashimi', role: 'Agent — Needs Coaching', roleKey: 'individual_contributor', emoji: '🔴', description: 'At-risk · solid overall masks a red KPI · COPC', dept: 'Customer Operations' },
+  { user_id: '93d72504-7837-48e7-9eba-4d6fdf55e735', name: 'Rajan Pillai', role: 'Agent — Slipping', roleKey: 'individual_contributor', emoji: '⚠️', description: 'Declining trend · PIP candidate · COPC', dept: 'Customer Operations' },
+  { user_id: 'ee811f7a-d0ed-4641-ad67-34dbad4d5d41', name: 'Rahul Mehta', role: 'Developer', roleKey: 'individual_contributor', emoji: '⭐', description: 'IT · Six Sigma · solid performer', dept: 'Information Technology' },
+  { user_id: '6a1dada9-59ff-478d-986a-aa6b8bba6e54', name: 'Pooja Iyer', role: 'HR Executive', roleKey: 'individual_contributor', emoji: '🧑‍💼', description: 'HR · BSC · solid performer', dept: 'Human Resources' },
+  { user_id: '712c9b7d-1df1-4854-918b-2795f00988a4', name: 'Aryan Kapoor', role: 'Sales Executive', roleKey: 'individual_contributor', emoji: '📈', description: 'Sales · BSC · strong performer', dept: 'Sales & Business Development' },
+  { user_id: '16fad8c6-c8f1-4a03-a510-0fadf129e2eb', name: 'Khalid Al Neyadi', role: 'QA Analyst', roleKey: 'individual_contributor', emoji: '🔬', description: 'QA · Six Sigma · solid performer', dept: 'Quality Assurance' },
+  { user_id: '6627071b-799b-468a-b3cd-5f14659ce2e4', name: 'Mohammed Al Rashid', role: 'Finance Analyst', roleKey: 'individual_contributor', emoji: '📊', description: 'Finance · BSC · solid performer', dept: 'Finance & Accounting' },
 ]
 
 const DEMO_KEY = 'kinalys_demo_user_id'
@@ -52,7 +53,7 @@ export default function DemoSwitcher() {
   ]
 
   return (
-    <div style={{ position: 'fixed', bottom: '24px', right: '24px', zIndex: 9999 }}>
+    <div style={{ position: 'fixed', top: '80px', right: '24px', zIndex: 9999 }}>
       <button
         onClick={() => setOpen(!open)}
         style={{
@@ -74,7 +75,7 @@ export default function DemoSwitcher() {
 
       {open && (
         <div style={{
-          position: 'absolute', bottom: '56px', right: 0,
+          position: 'absolute', top: '56px', right: 0,
           background: 'var(--k-bg-card)', borderRadius: 'var(--k-radius-lg)',
           border: '1px solid var(--k-border-default)',
           boxShadow: '0 8px 40px rgba(0,0,0,0.2)',

@@ -578,6 +578,26 @@ export async function getPendingFlags() {
   return response.data
 }
 
+export async function getFlagCounts() {
+  const response = await apiClient.get('/flags/counts')
+  return response.data
+}
+
+export async function getClosedFlags() {
+  const response = await apiClient.get('/flags/closed')
+  return response.data
+}
+
+export async function getFlagsReport(params?: { type?: string[]; outcome?: string[]; name?: string }): Promise<string> {
+  const qs = new URLSearchParams()
+  if (params?.type && params.type.length > 0) qs.set('type', params.type.join(','))
+  if (params?.outcome && params.outcome.length > 0) qs.set('outcome', params.outcome.join(','))
+  if (params?.name && params.name.trim()) qs.set('name', params.name.trim())
+  const query = qs.toString()
+  const response = await apiClient.get(`/flags/report${query ? '?' + query : ''}`, { responseType: 'text' })
+  return response.data
+}
+
 export async function confirmFlagConversation(flagId: string, hrComment: string) {
   const response = await apiClient.put(`/flags/${flagId}/confirm`, { hr_comment: hrComment })
   return response.data

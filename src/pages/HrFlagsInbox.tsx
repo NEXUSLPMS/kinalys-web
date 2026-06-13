@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from 'react'
-import { getPendingFlags, confirmFlagConversation, delegateFlag, getHrExecutives, confirmPipClosure } from '../api/client'
+import { getPendingFlags, getFlagCounts, confirmFlagConversation, delegateFlag, getHrExecutives, confirmPipClosure } from '../api/client'
 
 function isGenuineComment(text: string): boolean {
   const t = text.trim()
@@ -22,9 +21,58 @@ function isGenuineComment(text: string): boolean {
   return true
 }
 
+// Tile status groupings - single source per number (rule 30/31: one definition, no drift)
+const PENDING_HR_STATUSES = ['pending_hr', 'pending_hr_closure']
+const PENDING_EMP_STATUSES = ['pending_employee_ack']
+const ACTIVE_PIP_STATUSES = ['pip_active']
+const PROCESSED_STATUSES = ['hr_reviewing', 'extended']
+const TOTAL_PENDING_STATUSES = [...PENDING_HR_STATUSES, ...PENDING_EMP_STATUSES]
+const TERMINAL_STATUSES = ['completed_successful', 'completed_unsuccessful', 'closed', 'withdrawn', 'completed']
 
-export default function HrFlagsInbox() {
+type TileKey = 'total_pending' | 'pending_hr' | 'pending_employee' | 'processed' | 'active_pip' | 'pip' | 'release'
+
+function matchesTile(f: any, tile: TileKey | null): boolean {
+  switch (tile) {
+    case null: return true
+    case 'total_pending': return TOTAL_PENDING_STATUSES.includes(f.status)
+    case 'pending_hr': return PENDING_HR_STATUSES.includes(f.status)
+    case 'pending_employee': return PENDING_EMP_STATUSES.includes(f.status)
+    case 'processed': return PROCESSED_STATUSES.includes(f.status)
+    case 'active_pip': return ACTIVE_PIP_STATUSES.includes(f.status)
+    case 'pip': return f.flag_type === 'pip'
+    case 'release': return f.flag_type === 'release' && f.status !== 'conversation_done'
+    default: return true
+  }
+}
+
+// Backfill-planning helpers (decision 62: Ending Soon = past midpoint, proportional to PIP duration)
+function daysRemaining(endDate: string): number {
+  const end = new Date(endDate)
+  const today = new Date()
+  return Math.ceil((end.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+}
+function pipDurationDays(f: any): number | null {
+  if (!f.pip_start_date || !f.pip_end_date) return null
+  const start = new Date(f.pip_start_date).getTime()
+  const end = new Date(f.pip_end_date).getTime()
+  const d = (end - start) / (1000 * 60 * 60 * 24)
+  return d > 0 ? d : null
+}
+function isOverduePip(f: any): boolean {
+  return !!f.pip_end_date && daysRemaining(f.pip_end_date) < 0
+}
+function isEndingSoonPip(f: any): boolean {
+  if (!f.pip_end_date) return false
+  const rem = daysRemaining(f.pip_end_date)
+  if (rem < 0) return false
+  const dur = pipDurationDays(f)
+  if (dur === null) return false
+  return rem <= dur * 0.5
+}
+
+export default function HrFlagsInbox({ onNavigate }: { onNavigate?: (nav: string) => void }) {
   const [data, setData] = useState<any>(null)
+  const [counts, setCounts] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [selectedFlag, setSelectedFlag] = useState<any>(null)
@@ -38,7 +86,7 @@ export default function HrFlagsInbox() {
   const [successMsg, setSuccessMsg] = useState('')
   const [actionError, setActionError] = useState('')
   const [closureNotes, setClosureNotes] = useState('')
-  const [filterType, setFilterType] = useState<'ALL' | 'pip' | 'release'>('ALL')
+  const [activeTile, setActiveTile] = useState<TileKey | null>(null)
 
   useEffect(() => { load() }, [])
 
@@ -46,9 +94,10 @@ export default function HrFlagsInbox() {
     setLoading(true)
     setSuccessMsg('')
     try {
-      const [flagsResult, execResult] = await Promise.allSettled([getPendingFlags(), getHrExecutives()])
+      const [flagsResult, execResult, countsResult] = await Promise.allSettled([getPendingFlags(), getHrExecutives(), getFlagCounts()])
       if (flagsResult.status === 'fulfilled') setData(flagsResult.value)
       if (execResult.status === 'fulfilled') setHrExecutives(execResult.value.executives || [])
+      if (countsResult.status === 'fulfilled') setCounts(countsResult.value)
     } catch (err: any) {
       setError('Failed to load flags inbox.')
     } finally {
@@ -110,7 +159,7 @@ export default function HrFlagsInbox() {
     }
   }
 
-  // Default due date — 3 business days from today
+  // Default due date - 3 business days from today
   function getDefaultDueDate() {
     const d = new Date()
     let added = 0
@@ -121,22 +170,57 @@ export default function HrFlagsInbox() {
     return d.toISOString().split('T')[0]
   }
 
-  const filtered = !data ? [] : data.flags.filter((f: any) =>
-    filterType === 'ALL' || f.flag_type === filterType
-  )
+  const allFlags: any[] = data?.flags || []
+  const filtered = allFlags.filter((f: any) => matchesTile(f, activeTile))
 
-  const pipCount = data?.flags?.filter((f: any) => f.flag_type === 'pip').length || 0
-  const releaseCount = data?.flags?.filter((f: any) => f.flag_type === 'release').length || 0
-  const totalPending = data?.total || 0
+  // Active-tile counts - off the loaded list (== filtered length when clicked, can't drift)
+  const cTotalPending = allFlags.filter((f: any) => TOTAL_PENDING_STATUSES.includes(f.status)).length
+  const cPendingHr = allFlags.filter((f: any) => PENDING_HR_STATUSES.includes(f.status)).length
+  const cPendingEmp = allFlags.filter((f: any) => PENDING_EMP_STATUSES.includes(f.status)).length
+  const cProcessed = allFlags.filter((f: any) => PROCESSED_STATUSES.includes(f.status)).length
+  const cActivePip = allFlags.filter((f: any) => ACTIVE_PIP_STATUSES.includes(f.status)).length
+  const cPip = allFlags.filter((f: any) => f.flag_type === 'pip').length
+  const cRelease = allFlags.filter((f: any) => f.flag_type === 'release' && f.status !== 'conversation_done').length
+
+  // Backfill planning (tenant-wide, over active PIPs only)
+  const activePips = allFlags.filter((f: any) => ACTIVE_PIP_STATUSES.includes(f.status))
+  const cPipOverdue = activePips.filter(isOverduePip).length
+  const cPipEndingSoon = activePips.filter(isEndingSoonPip).length
+  const atRiskEndDates = activePips
+    .filter((f: any) => isOverduePip(f) || isEndingSoonPip(f))
+    .map((f: any) => f.pip_end_date)
+    .filter(Boolean)
+    .sort()
+  const fallbackEndDates = activePips.map((f: any) => f.pip_end_date).filter(Boolean).sort()
+  const nextAtRisk = atRiskEndDates[0] || fallbackEndDates[0] || null
+
+  // Closed counts - from /flags/counts breakdown (terminal statuses the inbox feed omits)
+  const breakdown: any[] = counts?.breakdown || []
+  const cPipClosed = breakdown.filter(b => b.flag_type === 'pip' && TERMINAL_STATUSES.includes(b.status)).reduce((s, b) => s + b.count, 0)
+  const cReleaseClosed = breakdown.filter(b => b.flag_type === 'release' && (TERMINAL_STATUSES.includes(b.status) || b.status === 'conversation_done')).reduce((s, b) => s + b.count, 0)
+
+  function toggleTile(t: TileKey) {
+    setActiveTile(prev => prev === t ? null : t)
+  }
 
   if (loading) return <div className="k-page"><div style={{ color: 'var(--k-text-muted)', fontSize: '14px', padding: '40px 0' }}>Loading flags inbox...</div></div>
   if (error) return <div className="k-page"><div style={{ background: 'var(--k-danger-bg)', border: '1px solid var(--k-danger-border)', borderRadius: 'var(--k-radius-md)', padding: '12px 16px', fontSize: '13px', color: 'var(--k-danger-text)' }}>{error}</div></div>
+
+  const activeTiles: { key: TileKey; label: string; sub?: string; count: number; accent: string; accentBg: string }[] = [
+    { key: 'total_pending', label: 'TOTAL PENDING', sub: 'At HR or Employee', count: cTotalPending, accent: 'var(--k-brand-primary)', accentBg: 'var(--k-bg-card)' },
+    { key: 'pending_hr', label: 'PENDING (HR)', sub: 'Awaiting HR action', count: cPendingHr, accent: 'var(--k-brand-primary)', accentBg: 'var(--k-bg-card)' },
+    { key: 'pending_employee', label: 'PENDING (EMPLOYEE)', sub: 'Awaiting acknowledgement', count: cPendingEmp, accent: 'var(--k-brand-primary)', accentBg: 'var(--k-bg-card)' },
+    { key: 'active_pip', label: 'ACTIVE PIPs', sub: 'Improvement plans live', count: cActivePip, accent: 'var(--k-warning-text)', accentBg: 'var(--k-warning-bg)' },
+    { key: 'processed', label: 'PROCESSED', sub: 'Reviewing / extended', count: cProcessed, accent: 'var(--k-text-secondary)', accentBg: 'var(--k-bg-card)' },
+    { key: 'pip', label: 'PIP FLAGS', sub: 'All PIP, any status', count: cPip, accent: 'var(--k-warning-text)', accentBg: 'var(--k-warning-bg)' },
+    { key: 'release', label: 'RELEASE FLAGS', sub: 'All release, any status', count: cRelease, accent: 'var(--k-danger-text)', accentBg: 'var(--k-danger-bg)' },
+  ]
 
   return (
     <div className="k-page">
       <div style={{ marginBottom: '24px' }}>
         <div className="k-page-title">HR Flags Inbox</div>
-        <div className="k-page-sub">Employee flags submitted by managers for HR review · All notes are mandatory and audit logged</div>
+        <div className="k-page-sub">Employee flags submitted by managers for HR review &middot; All notes are mandatory and audit logged</div>
       </div>
 
       {successMsg && (
@@ -145,43 +229,93 @@ export default function HrFlagsInbox() {
         </div>
       )}
 
-      {/* Summary */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '24px' }}>
-        <div className="k-card" style={{ padding: '20px', textAlign: 'center' }}>
-          <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--k-text-muted)', letterSpacing: '1px', marginBottom: '8px' }}>TOTAL PENDING</div>
-          <div style={{ fontSize: '40px', fontWeight: 800, color: totalPending > 0 ? 'var(--k-brand-primary)' : 'var(--k-text-muted)', fontFamily: 'var(--k-font-display)' }}>{totalPending}</div>
+      {/* Summary tiles &mdash; 7 active (click to filter) + 2 closed (read-only counts) */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '12px' }}>
+        {activeTiles.map(t => {
+          const isActive = activeTile === t.key
+          return (
+            <div key={t.key} onClick={() => toggleTile(t.key)}
+              className="k-card"
+              style={{ padding: '16px', textAlign: 'center', cursor: 'pointer',
+                background: isActive ? t.accent : t.accentBg,
+                border: isActive ? '1px solid transparent' : '1px solid var(--k-border-default)',
+                transition: 'background 0.12s' }}>
+              <div style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '1px', marginBottom: '6px',
+                color: isActive ? 'white' : t.accent }}>{t.label}</div>
+              <div style={{ fontSize: '34px', fontWeight: 800, fontFamily: 'var(--k-font-display)',
+                color: isActive ? 'white' : t.accent }}>{t.count}</div>
+              {t.sub && <div style={{ fontSize: '11px', marginTop: '2px', color: isActive ? 'rgba(255,255,255,0.85)' : 'var(--k-text-muted)' }}>{t.sub}</div>}
+            </div>
+          )
+        })}
+      </div>
+
+      {/* PIP backfill planning band &mdash; tenant-wide. Ending Soon = past PIP midpoint (decision 62). */}
+      <div className="k-card" style={{ padding: '14px 18px', marginBottom: '12px', borderLeft: '4px solid var(--k-warning-text)', borderRadius: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
+          <div style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '1px', color: 'var(--k-text-muted)' }}>
+            PIP BACKFILL PLANNING<span style={{ color: 'var(--k-text-muted)', fontWeight: 600 }}> &middot; TENANT-WIDE</span>
+          </div>
+          <div style={{ display: 'flex', gap: '28px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '10px', color: 'var(--k-text-muted)' }}>Active</div>
+              <div style={{ fontSize: '22px', fontWeight: 800, fontFamily: 'var(--k-font-display)', color: 'var(--k-text-primary)' }}>{cActivePip}</div>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '10px', color: 'var(--k-text-muted)' }}>Ending soon</div>
+              <div style={{ fontSize: '22px', fontWeight: 800, fontFamily: 'var(--k-font-display)', color: 'var(--k-warning-text)' }}>{cPipEndingSoon}</div>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '10px', color: 'var(--k-text-muted)' }}>Overdue</div>
+              <div style={{ fontSize: '22px', fontWeight: 800, fontFamily: 'var(--k-font-display)', color: 'var(--k-danger-text)' }}>{cPipOverdue}</div>
+            </div>
+            <div style={{ textAlign: 'right', minWidth: '120px' }}>
+              <div style={{ fontSize: '10px', color: 'var(--k-text-muted)' }}>Next seat at risk</div>
+              <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--k-text-primary)' }}>
+                {nextAtRisk ? new Date(nextAtRisk).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '\u2014'}
+              </div>
+            </div>
+          </div>
         </div>
-        <div className="k-card" style={{ padding: '20px', textAlign: 'center', background: pipCount > 0 ? 'var(--k-warning-bg)' : 'var(--k-bg-card)' }}>
-          <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--k-warning-text)', letterSpacing: '1px', marginBottom: '8px' }}>PIP FLAGS</div>
-          <div style={{ fontSize: '40px', fontWeight: 800, color: 'var(--k-warning-text)', fontFamily: 'var(--k-font-display)' }}>{pipCount}</div>
-          <div style={{ fontSize: '12px', color: 'var(--k-warning-text)', marginTop: '4px' }}>Performance Improvement</div>
-        </div>
-        <div className="k-card" style={{ padding: '20px', textAlign: 'center', background: releaseCount > 0 ? 'var(--k-danger-bg)' : 'var(--k-bg-card)' }}>
-          <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--k-danger-text)', letterSpacing: '1px', marginBottom: '8px' }}>RELEASE FLAGS</div>
-          <div style={{ fontSize: '40px', fontWeight: 800, color: 'var(--k-danger-text)', fontFamily: 'var(--k-font-display)' }}>{releaseCount}</div>
-          <div style={{ fontSize: '12px', color: 'var(--k-danger-text)', marginTop: '4px' }}>Sensitive — Confidential</div>
+        <div style={{ fontSize: '10px', color: 'var(--k-text-muted)', marginTop: '8px' }}>
+          Ending soon = past the PIP midpoint. Plan backfills early in case a plan does not complete successfully.
         </div>
       </div>
 
-      {/* Filter */}
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
-        {(['ALL', 'pip', 'release'] as const).map(f => (
-          <button key={f} onClick={() => setFilterType(f)}
-            style={{ padding: '5px 14px', borderRadius: 'var(--k-radius-md)', border: '1px solid', fontSize: '12px', fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--k-font-sans)',
-              background: filterType === f ? 'var(--k-brand-primary)' : 'var(--k-bg-page)',
-              color: filterType === f ? 'white' : 'var(--k-text-muted)',
-              borderColor: filterType === f ? 'transparent' : 'var(--k-border-default)' }}>
-            {f === 'ALL' ? 'All Flags' : f === 'pip' ? 'PIP Only' : 'Release Only'}
-          </button>
-        ))}
+      {/* Closed counts &mdash; read-only (history drill-in is a separate surface) */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '20px' }}>
+        <div className="k-card" onClick={() => onNavigate?.('flaghistory')} style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', opacity: 0.85, cursor: 'pointer' }}>
+          <div>
+            <div style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '1px', color: 'var(--k-text-muted)' }}>PIP CLOSED</div>
+            <div style={{ fontSize: '10px', color: 'var(--k-text-muted)', marginTop: '2px' }}>Completed / withdrawn</div>
+          </div>
+          <div style={{ fontSize: '26px', fontWeight: 800, fontFamily: 'var(--k-font-display)', color: 'var(--k-text-secondary)' }}>{cPipClosed}</div>
+        </div>
+        <div className="k-card" onClick={() => onNavigate?.('flaghistory')} style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', opacity: 0.85, cursor: 'pointer' }}>
+          <div>
+            <div style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '1px', color: 'var(--k-text-muted)' }}>RELEASE CLOSED</div>
+            <div style={{ fontSize: '10px', color: 'var(--k-text-muted)', marginTop: '2px' }}>Completed / withdrawn</div>
+          </div>
+          <div style={{ fontSize: '26px', fontWeight: 800, fontFamily: 'var(--k-font-display)', color: 'var(--k-text-secondary)' }}>{cReleaseClosed}</div>
+        </div>
       </div>
+
+      {activeTile && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+          <span style={{ fontSize: '12px', color: 'var(--k-text-muted)' }}>Filtered: {filtered.length} flag{filtered.length === 1 ? '' : 's'}</span>
+          <button onClick={() => setActiveTile(null)}
+            style={{ padding: '4px 12px', borderRadius: 'var(--k-radius-md)', border: '1px solid var(--k-border-default)', fontSize: '11px', fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--k-font-sans)', background: 'var(--k-bg-page)', color: 'var(--k-text-muted)' }}>
+            Clear filter
+          </button>
+        </div>
+      )}
 
       <div style={{ display: 'flex', gap: '16px' }}>
         {/* Flags list */}
         <div style={{ flex: 1 }}>
           {filtered.length === 0 && (
             <div className="k-card" style={{ padding: '40px', textAlign: 'center', color: 'var(--k-text-muted)', fontSize: '13px' }}>
-              {totalPending === 0 ? 'No pending flags. All flags have been reviewed.' : 'No flags match this filter.'}
+              {allFlags.length === 0 ? 'No active flags. All flags have been reviewed.' : 'No flags match this filter.'}
             </div>
           )}
           {filtered.map((flag: any) => {
@@ -197,7 +331,7 @@ export default function HrFlagsInbox() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
                   <div>
                     <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--k-text-primary)' }}>{flag.employee_name}</div>
-                    <div style={{ fontSize: '12px', color: 'var(--k-text-muted)' }}>{flag.department_name} · Flagged by {flag.flagged_by_name}</div>
+                    <div style={{ fontSize: '12px', color: 'var(--k-text-muted)' }}>{flag.department_name} &middot; Flagged by {flag.flagged_by_name}</div>
                   </div>
                   <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
                     <span style={{ fontSize: '11px', fontWeight: 700, padding: '3px 10px', borderRadius: '20px',
@@ -217,9 +351,9 @@ export default function HrFlagsInbox() {
                 {flag.performance_snapshot && Object.keys(flag.performance_snapshot).length > 0 && (
                   <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
                     {[
-                      { label: 'Current Score', value: flag.performance_snapshot.current_score ? `${flag.performance_snapshot.current_score}%` : '—' },
-                      { label: 'Q3 Projection', value: flag.performance_snapshot.predicted_score ? `${flag.performance_snapshot.predicted_score}%` : '—' },
-                      { label: 'Trend', value: flag.performance_snapshot.trend_direction || '—' },
+                      { label: 'Current Score', value: flag.performance_snapshot.current_score ? `${flag.performance_snapshot.current_score}%` : '\u2014' },
+                      { label: 'Q3 Projection', value: flag.performance_snapshot.predicted_score ? `${flag.performance_snapshot.predicted_score}%` : '\u2014' },
+                      { label: 'Trend', value: flag.performance_snapshot.trend_direction || '\u2014' },
                     ].map(stat => (
                       <div key={stat.label} style={{ textAlign: 'center', flex: 1, padding: '6px', background: 'var(--k-bg-page)', borderRadius: 'var(--k-radius-md)' }}>
                         <div style={{ fontSize: '10px', color: 'var(--k-text-muted)' }}>{stat.label}</div>
@@ -239,7 +373,7 @@ export default function HrFlagsInbox() {
             <div className="k-card" style={{ padding: '20px', borderTop: `4px solid ${selectedFlag.flag_type === 'pip' ? 'var(--k-warning-text)' : 'var(--k-danger-text)'}` }}>
               <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--k-text-primary)', marginBottom: '2px' }}>{selectedFlag.employee_name}</div>
               <div style={{ fontSize: '12px', color: 'var(--k-text-muted)', marginBottom: '16px' }}>
-                {selectedFlag.flag_type === 'pip' ? 'PIP Flag' : 'Release Flag'} · by {selectedFlag.flagged_by_name}
+                {selectedFlag.flag_type === 'pip' ? 'PIP Flag' : 'Release Flag'} &middot; by {selectedFlag.flagged_by_name}
               </div>
 
               {selectedFlag.flag_type === 'release' && (
@@ -254,17 +388,17 @@ export default function HrFlagsInbox() {
                 </div>
               )}
 
-              {/* PIP Form Data — show what manager submitted */}
+              {/* PIP Form Data - show what manager submitted */}
               {selectedFlag.flag_type === 'pip' && selectedFlag.pip_form_data && (
                 <div style={{ background: 'var(--k-bg-page)', border: '1px solid var(--k-border-default)', borderRadius: 'var(--k-radius-lg)', padding: '14px', marginBottom: '12px' }}>
-                  <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--k-text-muted)', letterSpacing: '1px', marginBottom: '10px' }}>PIP DETAILS — SUBMITTED BY MANAGER</div>
+                  <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--k-text-muted)', letterSpacing: '1px', marginBottom: '10px' }}>PIP DETAILS &mdash; SUBMITTED BY MANAGER</div>
 
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '10px' }}>
                     <div style={{ background: 'var(--k-bg-card)', borderRadius: 'var(--k-radius-md)', padding: '8px 10px' }}>
                       <div style={{ fontSize: '10px', color: 'var(--k-text-muted)', marginBottom: '2px' }}>Duration</div>
                       <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--k-text-primary)' }}>
                         {selectedFlag.pip_form_data.duration_days ? `${selectedFlag.pip_form_data.duration_days} days` : '-'}
-                        {selectedFlag.pip_start_date ? ` · ${new Date(selectedFlag.pip_start_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })} to ${new Date(selectedFlag.pip_end_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}` : ''}
+                        {selectedFlag.pip_start_date ? ` \u00b7 ${new Date(selectedFlag.pip_start_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })} to ${new Date(selectedFlag.pip_end_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}` : ''}
                       </div>
                     </div>
                     <div style={{ background: 'var(--k-bg-card)', borderRadius: 'var(--k-radius-md)', padding: '8px 10px' }}>
@@ -380,7 +514,7 @@ export default function HrFlagsInbox() {
                   <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--k-text-muted)', marginBottom: '6px' }}>LIFECYCLE STATUS</div>
                   <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--k-text-primary)', marginBottom: '4px' }}>
                     {selectedFlag.status === 'pending_employee_ack' ? 'Awaiting employee acknowledgement'
-                      : selectedFlag.status === 'pip_active' ? 'PIP active — improvement plan in progress'
+                      : selectedFlag.status === 'pip_active' ? 'PIP active \u2014 improvement plan in progress'
                       : selectedFlag.status === 'conversation_done' ? 'Conversation confirmed'
                       : selectedFlag.status === 'extended' ? 'PIP extended'
                       : 'Under HR review'}
@@ -401,14 +535,14 @@ export default function HrFlagsInbox() {
                     <button onClick={() => setAction(null)} style={{ background: 'none', border: 'none', fontSize: '13px', cursor: 'pointer', color: 'var(--k-text-muted)' }}>Back</button>
                   </div>
                   <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--k-text-muted)', marginBottom: '4px' }}>
-                    HR NOTES — MANDATORY
+                    HR NOTES &mdash; MANDATORY
                   </div>
                   <textarea value={hrComment} onChange={e => setHrComment(e.target.value)}
                     placeholder="Document the conversation outcome, agreed actions, improvement targets, and next review date..."
                     rows={5}
                     style={{ width: '100%', fontSize: '12px', padding: '8px', borderRadius: 'var(--k-radius-md)', border: '1px solid var(--k-border-input)', background: 'var(--k-bg-input)', color: 'var(--k-text-primary)', fontFamily: 'var(--k-font-sans)', resize: 'vertical', boxSizing: 'border-box' }} />
                   <div style={{ fontSize: '10px', color: hrComment.trim().length < 20 ? 'var(--k-danger-text)' : 'var(--k-success-text)', marginTop: '2px', marginBottom: '10px' }}>
-                    {isGenuineComment(hrComment) ? 'Notes look good' : `${hrComment.trim().split(/\s+/).filter((w: string) => w.length > 0).length} words — need at least 4 meaningful words`}{hrComment.trim().length}/20 minimum characters
+                    {isGenuineComment(hrComment) ? 'Notes look good' : `${hrComment.trim().split(/\s+/).filter((w: string) => w.length > 0).length} words &mdash; need at least 4 meaningful words`}{hrComment.trim().length}/20 minimum characters
                   </div>
                   {actionError && <div style={{ fontSize: '12px', color: 'var(--k-danger-text)', marginBottom: '8px' }}>{actionError}</div>}
                   <div style={{ display: 'flex', gap: '8px' }}>
@@ -416,7 +550,7 @@ export default function HrFlagsInbox() {
                       style={{ flex: 2, padding: '9px', background: selectedFlag.flag_type === 'pip' ? 'var(--k-warning-text)' : 'var(--k-danger-text)', border: 'none', borderRadius: 'var(--k-radius-md)', fontSize: '12px', fontWeight: 700, cursor: processing || !isGenuineComment(hrComment) ? 'not-allowed' : 'pointer', fontFamily: 'var(--k-font-sans)', color: 'white', opacity: processing || !isGenuineComment(hrComment) ? 0.6 : 1 }}>
                       {processing ? 'Confirming...' : 'Confirm Conversation Done'}
                     </button>
-                    
+
                   </div>
                 </div>
               )}
@@ -433,14 +567,14 @@ export default function HrFlagsInbox() {
                   <select value={delegateTo} onChange={e => setDelegateTo(e.target.value)}
                     style={{ width: '100%', fontSize: '12px', padding: '8px', borderRadius: 'var(--k-radius-md)', border: '1px solid var(--k-border-input)', background: 'var(--k-bg-input)', color: 'var(--k-text-primary)', fontFamily: 'var(--k-font-sans)', marginBottom: '10px', cursor: 'pointer' }}>
                     <option value="">Select HR Executive...</option>
-                    {hrExecutives.map(e => <option key={e.id} value={e.id}>{e.full_name} — {e.role?.replace('_', ' ')}</option>)}
+                    {hrExecutives.map(e => <option key={e.id} value={e.id}>{e.full_name} &mdash; {e.role?.replace('_', ' ')}</option>)}
                   </select>
 
                   <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--k-text-muted)', marginBottom: '4px' }}>DUE DATE (TAT)</div>
                   <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} min={new Date().toISOString().split('T')[0]}
                     style={{ width: '100%', fontSize: '12px', padding: '8px', borderRadius: 'var(--k-radius-md)', border: '1px solid var(--k-border-input)', background: 'var(--k-bg-input)', color: 'var(--k-text-primary)', fontFamily: 'var(--k-font-sans)', marginBottom: '10px', boxSizing: 'border-box' }} />
 
-                  <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--k-text-muted)', marginBottom: '4px' }}>DELEGATION NOTES — MANDATORY</div>
+                  <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--k-text-muted)', marginBottom: '4px' }}>DELEGATION NOTES &mdash; MANDATORY</div>
                   <textarea value={delegationNotes} onChange={e => setDelegationNotes(e.target.value)}
                     placeholder="Why are you delegating this? What specific actions should the HR Executive take? What outcome are you expecting?"
                     rows={4}

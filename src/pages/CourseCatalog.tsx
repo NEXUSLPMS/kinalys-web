@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { getLmsCourses, enrollCourse } from '../api/client'
 
 const DIFFICULTY_CONFIG: Record<string, { color: string; bg: string }> = {

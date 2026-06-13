@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { getSixSigmaData, saveSixSigmaData } from '../api/client'
 
 // DPMO to Sigma level conversion table

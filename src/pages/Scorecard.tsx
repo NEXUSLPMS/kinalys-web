@@ -10,6 +10,7 @@ interface KpiAssignment {
   source: string
   weight_pct: number
   metric_type: string
+  unit: string | null
   target_value: number | null
   actual_value: number | null
   score: number | null
@@ -57,6 +58,23 @@ const RAG_CONFIG: Record<string, { color: string; bg: string; label: string }> =
   green: { color: 'var(--k-success-text)', bg: 'var(--k-success-bg)', label: '🟢' },
   amber: { color: 'var(--k-warning-text)', bg: 'var(--k-warning-bg)', label: '🟡' },
   red:   { color: 'var(--k-danger-text)',  bg: 'var(--k-danger-bg)',  label: '🔴' },
+}
+
+// Format a KPI value by measurement type (natural units). Currency in Indian lakh/crore.
+function fmtKpiValue(v: number | null | undefined, metricType: string | null): string {
+  if (v === null || v === undefined) return '\u2014'
+  const n = Number(v)
+  switch ((metricType || '').toLowerCase()) {
+    case 'currency':
+      if (n >= 10000000) return `\u20B9${(n / 10000000).toFixed(2)}Cr`
+      if (n >= 100000)   return `\u20B9${(n / 100000).toFixed(2)}L`
+      if (n >= 1000)     return `\u20B9${(n / 1000).toFixed(0)}K`
+      return `\u20B9${n.toFixed(0)}`
+    case 'count':      return `${Math.round(n)}`
+    case 'ratio':      return n.toFixed(2)
+    case 'percentage': return `${n.toFixed(n % 1 === 0 ? 0 : 1)}%`
+    default:           return `${n}`
+  }
 }
 
 export default function Scorecard({ onNavigate }: { onNavigate?: () => void }) {
@@ -200,10 +218,10 @@ async function submitProposal() {
 
   // Recalculate overall score from current KPI state
   const totalWeight = liveKpis.reduce((sum: number, k: any) => sum + Number(k.weight_pct), 0)
-  const calculatedScore = totalWeight > 0 && liveKpis.some((k: any) => k.actual_value !== null)
+  const calculatedScore = totalWeight > 0 && liveKpis.some((k: any) => k.score !== null)
     ? liveKpis.reduce((sum: number, k: any) => {
-        if (k.actual_value !== null && k.target_value > 0) {
-          return sum + (Math.min(100, (k.actual_value / k.target_value) * 100) * Number(k.weight_pct))
+        if (k.score !== null) {
+          return sum + (Number(k.score) * Number(k.weight_pct))
         }
         return sum
       }, 0) / totalWeight
@@ -327,8 +345,8 @@ async function submitProposal() {
                   {liveKpis.map((kpi: KpiAssignment) => {
                     const rag = kpi.rag_status ? RAG_CONFIG[kpi.rag_status] : null
                     const source = SOURCE_LABELS[kpi.source]
-                    const progressPct = kpi.target_value && kpi.actual_value !== null
-                      ? Math.min(100, (kpi.actual_value / kpi.target_value) * 100)
+                    const progressPct = kpi.score !== null
+                      ? Math.min(100, Number(kpi.score))
                       : 0
                     return (
                       <div key={kpi.id} style={{ padding: '16px', borderBottom: '1px solid var(--k-border-default)' }}>
@@ -341,8 +359,8 @@ async function submitProposal() {
                             </div>
                             {kpi.description && <div style={{ fontSize: '12px', color: 'var(--k-text-muted)', marginBottom: '4px' }}>{kpi.description}</div>}
                             <div style={{ fontSize: '11px', color: 'var(--k-text-muted)' }}>
-                              Weight: {kpi.weight_pct}% · Target: {kpi.target_value ?? '—'} · Score: {kpi.score !== null ? `${Number(kpi.score).toFixed(1)}%` : '—'}
-                            </div>
+                              Weight: {kpi.weight_pct}% · Target: {fmtKpiValue(kpi.target_value, kpi.metric_type)}{ kpi.unit ? ` ${kpi.unit}` : '' } · Score: {kpi.score !== null ? `${Number(kpi.score).toFixed(1)}%` : '\u2014'}  
+                              </div>
                           </div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
                             {editingActual === kpi.id ? (
@@ -363,9 +381,9 @@ async function submitProposal() {
                               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                 <div style={{ textAlign: 'center' }}>
                                   <div style={{ fontSize: '18px', fontWeight: 800, color: rag ? rag.color : 'var(--k-text-muted)' }}>
-                                    {kpi.actual_value ?? '—'}
+                                    {fmtKpiValue(kpi.actual_value, kpi.metric_type)}
                                   </div>
-                                  <div style={{ fontSize: '10px', color: 'var(--k-text-muted)' }}>of {kpi.target_value ?? '—'}</div>
+                                  <div style={{ fontSize: '10px', color: 'var(--k-text-muted)' }}>of {fmtKpiValue(kpi.target_value, kpi.metric_type)}</div>
                                 </div>
                                 <button
                                   onClick={() => { setEditingActual(kpi.id); setActualValue(kpi.actual_value?.toString() || '') }}

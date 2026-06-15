@@ -53,7 +53,7 @@ export default function DemoSwitcher() {
   ]
 
   return (
-    <div style={{ position: 'fixed', top: '80px', right: '24px', zIndex: 9999 }}>
+    <div style={{ position: 'fixed', top: '8px', left: '50%', transform: 'translateX(-50%)', zIndex: 9999 }}>
       <button
         onClick={() => setOpen(!open)}
         style={{
@@ -75,7 +75,7 @@ export default function DemoSwitcher() {
 
       {open && (
         <div style={{
-          position: 'absolute', top: '56px', right: 0,
+          position: 'absolute', top: '56px', left: '50%', transform: 'translateX(-50%)',
           background: 'var(--k-bg-card)', borderRadius: 'var(--k-radius-lg)',
           border: '1px solid var(--k-border-default)',
           boxShadow: '0 8px 40px rgba(0,0,0,0.2)',

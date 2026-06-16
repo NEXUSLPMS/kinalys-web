@@ -79,21 +79,21 @@ export default function ExecDashboard() {
   function getScoreColor(score: number | null) {
     if (score === null) return 'var(--k-text-muted)'
     if (score >= 90) return 'var(--k-success-text)'
-    if (score >= 80) return 'var(--k-warning-text)'
+    if (score >= 75) return 'var(--k-warning-text)'
     return 'var(--k-danger-text)'
   }
 
   function getScoreBand(score: number | null) {
     if (score === null) return 'Not Scored'
     if (score >= 90) return 'High Performance'
-    if (score >= 80) return 'Medium Performance'
+    if (score >= 75) return 'Medium Performance'
     return 'Needs Improvement'
   }
 
   function getBandKey(score: number | null) {
     if (score === null) return 'not_scored'
     if (score >= 90) return 'high'
-    if (score >= 80) return 'medium'
+    if (score >= 75) return 'medium'
     return 'needs_improvement'
   }
 
@@ -144,8 +144,8 @@ export default function ExecDashboard() {
     ? Math.round(scoredMembers.reduce((s: number, m: any) => s + Number(m.calculated_score), 0) / scoredMembers.length * 10) / 10
     : null
   const highPerf = filtered.filter((m: any) => m.calculated_score !== null && m.calculated_score >= 90).length
-  const medPerf = filtered.filter((m: any) => m.calculated_score !== null && m.calculated_score >= 80 && m.calculated_score < 90).length
-  const needsImprovement = filtered.filter((m: any) => m.calculated_score !== null && m.calculated_score < 80).length
+  const medPerf = filtered.filter((m: any) => m.calculated_score !== null && m.calculated_score >= 75 && m.calculated_score < 90).length
+  const needsImprovement = filtered.filter((m: any) => m.calculated_score !== null && m.calculated_score < 75).length
   const notScored = filtered.filter((m: any) => m.calculated_score === null).length
   const totalGreen = team.reduce((sum, m) => sum + Number(m.green_kpis || 0), 0)
   const totalAmber = team.reduce((sum, m) => sum + Number(m.amber_kpis || 0), 0)
@@ -363,7 +363,7 @@ export default function ExecDashboard() {
             <div>
               <div className="k-stat-label">Needs Improvement</div>
               <div className="k-stat-value">{needsImprovement}</div>
-              <div className="k-stat-trend">Score below 80%</div>
+              <div className="k-stat-trend">Score below 75%</div>
             </div>
             <StatRing value={filtered.length > 0 ? Math.round((needsImprovement / filtered.length) * 100) : 0} color="var(--k-danger-text)" />
           </div>
@@ -407,8 +407,8 @@ export default function ExecDashboard() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {[
                 { label: 'High Performance (≥90%)', count: highPerf, color: 'var(--k-success-text)', band: 'high' },
-                { label: 'Medium Performance (80–89%)', count: medPerf, color: 'var(--k-warning-text)', band: 'medium' },
-                { label: 'Needs Improvement (<80%)', count: needsImprovement, color: 'var(--k-danger-text)', band: 'needs_improvement' },
+                { label: 'Medium Performance (75–89%)', count: medPerf, color: 'var(--k-warning-text)', band: 'medium' },
+                { label: 'Needs Improvement (<75%)', count: needsImprovement, color: 'var(--k-danger-text)', band: 'needs_improvement' },
                 { label: 'Not Yet Scored', count: notScored, color: 'var(--k-text-muted)', band: 'not_scored' },
               ].map(band => (
                 <div key={band.label} onClick={() => setFilterBand(filterBand === band.band ? 'all' : band.band)} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
@@ -470,8 +470,8 @@ export default function ExecDashboard() {
             <select value={filterBand} onChange={e => setFilterBand(e.target.value)} style={{ fontSize: '13px', padding: '7px 12px', borderRadius: 'var(--k-radius-md)', border: `1px solid ${filterBand !== 'all' ? 'var(--k-brand-primary)' : 'var(--k-border-input)'}`, background: filterBand !== 'all' ? 'var(--k-brand-faint)' : 'var(--k-bg-input)', color: 'var(--k-text-primary)', fontFamily: 'var(--k-font-sans)', cursor: 'pointer' }}>
               <option value="all">All Performance Bands</option>
               <option value="high">High Performance (≥90%)</option>
-              <option value="medium">Medium Performance (80–89%)</option>
-              <option value="needs_improvement">Needs Improvement (&lt;80%)</option>
+              <option value="medium">Medium Performance (75–89%)</option>
+              <option value="needs_improvement">Needs Improvement (&lt;75%)</option>
               <option value="not_scored">Not Yet Scored</option>
             </select>
             <select value={filterRag} onChange={e => setFilterRag(e.target.value)} style={{ fontSize: '13px', padding: '7px 12px', borderRadius: 'var(--k-radius-md)', border: `1px solid ${filterRag !== 'all' ? 'var(--k-brand-primary)' : 'var(--k-border-input)'}`, background: filterRag !== 'all' ? 'var(--k-brand-faint)' : 'var(--k-bg-input)', color: 'var(--k-text-primary)', fontFamily: 'var(--k-font-sans)', cursor: 'pointer' }}>
@@ -522,8 +522,8 @@ export default function ExecDashboard() {
                     </td>
                     <td style={{ padding: '10px 12px' }}>
                       <span style={{ fontSize: '11px', fontWeight: 700,
-                        color: member.calculated_score >= 90 ? 'var(--k-success-text)' : member.calculated_score >= 80 ? 'var(--k-warning-text)' : member.calculated_score !== null ? 'var(--k-danger-text)' : 'var(--k-text-muted)',
-                        background: member.calculated_score >= 90 ? 'var(--k-success-bg)' : member.calculated_score >= 80 ? 'var(--k-warning-bg)' : member.calculated_score !== null ? 'var(--k-danger-bg)' : 'var(--k-bg-page)',
+                        color: member.calculated_score >= 90 ? 'var(--k-success-text)' : member.calculated_score >= 75 ? 'var(--k-warning-text)' : member.calculated_score !== null ? 'var(--k-danger-text)' : 'var(--k-text-muted)',
+                        background: member.calculated_score >= 90 ? 'var(--k-success-bg)' : member.calculated_score >= 75 ? 'var(--k-warning-bg)' : member.calculated_score !== null ? 'var(--k-danger-bg)' : 'var(--k-bg-page)',
                         padding: '2px 8px', borderRadius: '10px'
                       }}>
                         {getScoreBand(member.calculated_score)}

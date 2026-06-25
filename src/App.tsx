@@ -113,8 +113,15 @@ function Dashboard() {
   useEffect(() => {
     async function loadData() {
       try {
+        // Phase 1 (W-003): acquire the Auth0 token and attach it to the API client
+        // BEFORE any data call is dispatched. setAuthToken is synchronous (it sets
+        // apiClient.defaults.headers.Authorization), so awaiting the token fetch then
+        // calling it guarantees the bearer header is in place before Phase 2 fires.
         const token = await getAccessTokenSilently({ authorizationParams: { audience: 'https://api.kinalys.io' } })
-        setAuthToken(token)   // W-003: token was fetched but never attached to the API client
+        setAuthToken(token)
+
+        // Phase 2: only now dispatch the parallel data calls — every one carries the
+        // bearer header set in Phase 1.
         const [statusData, profileData, deptData, statsData, talentData, alertsData, pipData, privacyData] = await Promise.allSettled([getStatus(), getMyProfile(), getDepartments(), getDashboardStats(), getMyTalentPosition(), getMyAlerts(), getMyPip(), getPrivacyStatus()])
         if (profileData.status === 'fulfilled') setProfile(profileData.value.user)
         if (deptData.status === 'fulfilled') setDepartments(deptData.value.departments || [])

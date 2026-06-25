@@ -114,6 +114,7 @@ function Dashboard() {
     async function loadData() {
       try {
         const token = await getAccessTokenSilently({ authorizationParams: { audience: 'https://api.kinalys.io' } })
+        setAuthToken(token)   // W-003: token was fetched but never attached to the API client
         const [statusData, profileData, deptData, statsData, talentData, alertsData, pipData, privacyData] = await Promise.allSettled([getStatus(), getMyProfile(), getDepartments(), getDashboardStats(), getMyTalentPosition(), getMyAlerts(), getMyPip(), getPrivacyStatus()])
         if (profileData.status === 'fulfilled') setProfile(profileData.value.user)
         if (deptData.status === 'fulfilled') setDepartments(deptData.value.departments || [])

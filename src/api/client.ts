@@ -28,6 +28,27 @@ export function clearAuthToken() {
   delete apiClient.defaults.headers.common['Authorization']
 }
 
+// A4c / D87: read-only view-as. The session id is attached as X-View-As on the
+// client defaults; the server validates it (active, unexpired, owned by the
+// verified viewer) and resolves the caller as the target read-only.
+export function setViewAsHeader(sessionId: string) {
+  apiClient.defaults.headers.common['X-View-As'] = sessionId
+}
+
+export function clearViewAsHeader() {
+  delete apiClient.defaults.headers.common['X-View-As']
+}
+
+export async function startViewAs(targetUserId: string) {
+  const response = await apiClient.post('/auth/view-as', { target_user_id: targetUserId })
+  return response.data
+}
+
+export async function endViewAs() {
+  const response = await apiClient.post('/auth/view-as/end')
+  return response.data
+}
+
 // â”€â”€ API functions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export async function getMyProfile() {

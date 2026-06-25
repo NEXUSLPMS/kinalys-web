@@ -1,5 +1,6 @@
 import { useAuth0 } from '@auth0/auth0-react'
 import { useEffect, useState } from 'react'
+import { ViewAsProvider, useViewAs } from './contexts/ViewAs'
 import { setAuthToken, getMyProfile, getStatus, getDepartments, getDashboardStats, getMyAlerts, markAlertRead, markAllAlertsRead, getMyTalentPosition, triggerDemoBreach, getMyPip, acknowledgePip, getPrivacyStatus } from './api/client'
 import { PrivacyAcknowledgementModal } from './components/PrivacyAcknowledgementModal'
 import Organisation from './pages/Organisation'
@@ -82,6 +83,7 @@ function LoginPage() {
 
 function Dashboard() {
   const { user, logout, getAccessTokenSilently } = useAuth0()
+  const { isViewAs, targetName, nonce: viewAsNonce, exit: exitViewAs } = useViewAs()
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [status, setStatus] = useState<ApiStatus | null>(null)
   const [departments, setDepartments] = useState<any[]>([])
@@ -143,7 +145,8 @@ function Dashboard() {
       }
     }
     loadData()
-  }, [getAccessTokenSilently])
+    // viewAsNonce bumps on enter/exit so data refetches as the target (or self).
+  }, [getAccessTokenSilently, viewAsNonce])
 
   if (loading) {
     return (
@@ -207,6 +210,16 @@ function Dashboard() {
 
   return (
     <div className="k-shell">
+
+      {/* A4c / D87: persistent read-only view-as banner */}
+      {isViewAs && (
+        <div style={{ background: '#92400e', color: '#fff', padding: '8px 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px', fontSize: '13px', fontWeight: 700, position: 'sticky', top: 0, zIndex: 1000 }}>
+          <span>Viewing as <strong>{targetName || 'another user'}</strong> &middot; read-only</span>
+          <button className="k-btn k-btn-secondary" style={{ fontSize: '12px', padding: '4px 12px' }} onClick={() => { exitViewAs() }}>
+            Exit view-as
+          </button>
+        </div>
+      )}
 
       {/* Topbar */}
       <div className="k-topbar">
@@ -791,5 +804,9 @@ export default function App() {
       </div>
     )
   }
-  return isAuthenticated ? <Dashboard /> : <LoginPage />
+  return isAuthenticated ? (
+    <ViewAsProvider>
+      <Dashboard />
+    </ViewAsProvider>
+  ) : <LoginPage />
 }

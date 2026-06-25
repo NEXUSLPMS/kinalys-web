@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { getManagedUsers, updateManagedUser, getDepartments, getDesignations, softDeleteUser, suggestBriefsForUser } from '../api/client'
+import { useViewAs } from '../contexts/ViewAs'
 import { MarkAsDepartedModal } from '../components/MarkAsDepartedModal'
 import { BriefViewerModal } from '../components/BriefViewerModal'
 
@@ -43,6 +44,7 @@ const STATUS_COLORS: Record<string, { color: string; bg: string }> = {
 }
 
 export default function UserManagement() {
+  const { isViewAs, enter: enterViewAsCtx } = useViewAs()
   const [users, setUsers] = useState<ManagedUser[]>([])
   const [departments, setDepartments] = useState<any[]>([])
   const [designations, setDesignations] = useState<any[]>([])
@@ -127,6 +129,14 @@ export default function UserManagement() {
     if (users.length > 0) loadSuggestions()
     return () => { cancelled = true }
   }, [users])
+
+  async function enterViewAs(user: ManagedUser) {
+    try {
+      await enterViewAsCtx(user.id, user.full_name)
+    } catch (err: any) {
+      setError(err?.response?.data?.message || err.message || 'Could not start view-as.')
+    }
+  }
 
   function openEdit(user: ManagedUser) {
     setSelectedUser(user)
@@ -353,19 +363,35 @@ export default function UserManagement() {
                     </td>
                     <td style={{ padding: '10px 12px' }}>
                       <div style={{ display: 'flex', gap: '6px' }}>
-                        <button
-                          onClick={() => openEdit(user)}
-                          style={{ fontSize: '11px', padding: '4px 10px', borderRadius: 'var(--k-radius-md)', border: '1px solid var(--k-border-default)', background: 'var(--k-bg-surface)', color: 'var(--k-text-secondary)', cursor: 'pointer', fontFamily: 'var(--k-font-sans)' }}
-                        >
-                          ✏️ Edit
-                        </button>
-                        <button
-                          onClick={() => setSelectedForRemoval(user)}
-                          title={user.employment_status === 'departed' ? 'Already departed — finalise removal' : 'Mark as Departed'}
-                          style={{ fontSize: '11px', padding: '4px 10px', borderRadius: 'var(--k-radius-md)', border: '1px solid var(--k-danger-text)', background: 'var(--k-bg-surface)', color: 'var(--k-danger-text)', cursor: 'pointer', fontFamily: 'var(--k-font-sans)' }}
-                        >
-                          🗙 Remove
-                        </button>
+                        {/* A4c / D87: View As is a read action — open the picked user's
+                            views read-only. Hidden while already in a view-as session. */}
+                        {!isViewAs && (
+                          <button
+                            onClick={() => enterViewAs(user)}
+                            title={'View this user as read-only'}
+                            style={{ fontSize: '11px', padding: '4px 10px', borderRadius: 'var(--k-radius-md)', border: '1px solid var(--k-border-default)', background: 'var(--k-bg-surface)', color: 'var(--k-text-secondary)', cursor: 'pointer', fontFamily: 'var(--k-font-sans)' }}
+                          >
+                            View as
+                          </button>
+                        )}
+                        {/* Write actions are hidden in view-as (read-only) mode. */}
+                        {!isViewAs && (
+                          <>
+                            <button
+                              onClick={() => openEdit(user)}
+                              style={{ fontSize: '11px', padding: '4px 10px', borderRadius: 'var(--k-radius-md)', border: '1px solid var(--k-border-default)', background: 'var(--k-bg-surface)', color: 'var(--k-text-secondary)', cursor: 'pointer', fontFamily: 'var(--k-font-sans)' }}
+                            >
+                              ✏️ Edit
+                            </button>
+                            <button
+                              onClick={() => setSelectedForRemoval(user)}
+                              title={user.employment_status === 'departed' ? 'Already departed — finalise removal' : 'Mark as Departed'}
+                              style={{ fontSize: '11px', padding: '4px 10px', borderRadius: 'var(--k-radius-md)', border: '1px solid var(--k-danger-text)', background: 'var(--k-bg-surface)', color: 'var(--k-danger-text)', cursor: 'pointer', fontFamily: 'var(--k-font-sans)' }}
+                            >
+                              🗙 Remove
+                            </button>
+                          </>
+                        )}
                       </div>
                     </td>
                   </tr>

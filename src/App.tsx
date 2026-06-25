@@ -25,7 +25,6 @@ import CompetencyFramework from './pages/CompetencyFramework'
 import PKTEngine from './pages/PKTEngine'
 import COPCReport from './pages/COPCReport'
 import SixSigmaReport from './pages/SixSigmaReport'
-import DemoSwitcher from './components/DemoSwitcher'
 import HrAdminManagement from './pages/HrAdminManagement'
 import HrFlagsInbox from './pages/HrFlagsInbox'
 import ClosedFlagsHistory from './pages/ClosedFlagsHistory'
@@ -779,8 +778,6 @@ function Dashboard() {
           </div>
         )}
       </div>
-
-      <DemoSwitcher />
     </div>
   )
 }

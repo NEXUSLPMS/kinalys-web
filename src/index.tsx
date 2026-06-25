@@ -14,7 +14,7 @@ root.render(
   <React.StrictMode>
     <Auth0Provider
       domain="dev-zb6uoyfyk6iqoje2.us.auth0.com"
-      clientId="2stbY7BtSqe2ml7Df5Kb6ciPTD7sot8J"
+      clientId="fEN2zDxKe33gZWfF056qdlxEtDy9iYi1"
       authorizationParams={{
         redirect_uri: window.location.origin,
         audience: 'https://api.kinalys.io',

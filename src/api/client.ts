@@ -14,16 +14,12 @@ export const apiClient = axios.create({
   },
 })
 
-// Attach the Auth0 token to every request automatically
+// Auth: the Auth0 bearer token is attached via setAuthToken (below), which sets
+// it on apiClient.defaults — applied to every request automatically. The former
+// demo-mode request interceptor that read kinalys_demo_user_id from localStorage
+// and sent an X-Demo-User-Id header has been removed (A4 / W-002): it overrode the
+// real-auth path. No request interceptor is needed.
 
-// Demo mode interceptor — sends override user id as header
-apiClient.interceptors.request.use((config) => {
-  const demoUserId = localStorage.getItem('kinalys_demo_user_id')
-  if (demoUserId) {
-    config.headers['X-Demo-User-Id'] = demoUserId
-  }
-  return config
-})
 export function setAuthToken(token: string) {
   apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`
 }

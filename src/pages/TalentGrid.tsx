@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { getTalentAssessments, setTalentPotential, seedDemoScorecards } from '../api/client'
+import { getTalentAssessments, setTalentPotential } from '../api/client'
 
 interface Employee {
   id: string
@@ -61,7 +61,6 @@ function isEligibleForGrid(score: number | null): boolean {
 export default function TalentGrid() {
   const [employees, setEmployees] = useState<Employee[]>([])
   const [loading, setLoading] = useState(true)
-  const [seeding, setSeeding] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null)
   const [view, setView] = useState<'grid' | 'list'>('grid')
@@ -83,18 +82,6 @@ export default function TalentGrid() {
       setError(err.message)
     } finally {
       setLoading(false)
-    }
-  }
-
-  async function seedDemo() {
-    setSeeding(true)
-    try {
-      await seedDemoScorecards()
-      await loadAssessments()
-    } catch (err: any) {
-      setError(err.message)
-    } finally {
-      setSeeding(false)
     }
   }
 
@@ -159,7 +146,6 @@ export default function TalentGrid() {
   const needsImprovement = employees.filter(e => e.final_score !== null && e.final_score < 80)
   const noScore = employees.filter(e => e.final_score === null)
   const assessed = eligibleEmployees.filter(e => e.potential_rating !== null).length
-  const hasScores = employees.some(e => e.final_score !== null)
 
   if (loading) return (
     <div className="k-page">
@@ -180,11 +166,6 @@ export default function TalentGrid() {
           <div style={{ display: 'flex', gap: '8px' }}>
             <button className={`k-btn ${view === 'grid' ? 'k-btn-primary' : 'k-btn-secondary'}`} onClick={() => setView('grid')} style={{ fontSize: '12px' }}>⊞ Grid</button>
             <button className={`k-btn ${view === 'list' ? 'k-btn-primary' : 'k-btn-secondary'}`} onClick={() => setView('list')} style={{ fontSize: '12px' }}>≡ List</button>
-            {!hasScores && (
-              <button className="k-btn k-btn-secondary" onClick={seedDemo} disabled={seeding} style={{ fontSize: '12px' }}>
-                {seeding ? '⏳ Seeding...' : '🌱 Seed Demo Scores'}
-              </button>
-            )}
           </div>
         </div>
 

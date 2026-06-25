@@ -1,0 +1,166 @@
+{
+  "schema_note": "AUTHORITATIVE QUEUE for the kinalys-web (frontend) audit. First session = session_001. Findings in THIS repo use the W- prefix (operator instruction). RESUME RULE: future sessions read THIS file, find the first in_progress (else first pending) task, and continue from its resume_point. Sibling repo kinalys-platform is audited separately and is NOT in this queue or touched in these sessions.",
+  "last_updated": "2026-06-22T00:00:00Z",
+  "repositories": [
+    { "name": "kinalys-web", "path": "." }
+  ],
+  "notes_global": "READ-ONLY audit (Pass A) of the React/TS frontend. Writes confined to audit/. Repo scope = kinalys-web ONLY; do NOT reach into kinalys-platform (API). Backend dimensions (D1 auth-core, D2 SQLi, D3 transactions, D6 schema) are N/A here except where the FRONTEND participates (client-side token storage, X-Demo-User-Id, secrets-in-bundle, XSS/dangerouslySetInnerHTML, AI-content sinks). The three docs/ checklists (security-audit.md, performance-audit.md, ui-audit.md) are a SOURCE OF CHECKS mined read-only -- NEVER run as their auto-fix loop (no Edit/commit/vibecoder branches). ui-audit.md (100 items) -> D7; performance-audit.md frontend subset (items ~1-46 + client network/caching) -> D9; security-audit.md frontend-applicable items (token storage, DOM/stored XSS, CSP, unsafe-HTML, secrets-in-bundle, SRI, deps) -> D1/D2. Findings prefixed W-.",
+  "tasks": [
+    {
+      "task_id": "task_001",
+      "repo": "kinalys-web",
+      "dimension": "PHASE0",
+      "scope": "Frontend demo-scaffolding inventory across src/ (DemoSwitcher + DEMO_PERSONAS, X-Demo-User-Id axios interceptor, demo/seed API wrappers + their UI triggers, hardcoded persona UUIDs)",
+      "type": "demo-scaffolding inventory (read-only, NOT findings)",
+      "status": "completed",
+      "intended_model": "Sonnet 4.6",
+      "findings_ref": "audit/DEMO_SCAFFOLDING_INVENTORY.md",
+      "resume_point": "COMPLETE -- audit/DEMO_SCAFFOLDING_INVENTORY.md written. Inventoried: DemoSwitcher.tsx (DEMO_PERSONAS 17 UUIDs + localStorage helpers + switcher UI, mounted ungated at App.tsx:775), client.ts:19-26 X-Demo-User-Id interceptor, demo/seed wrappers (seedDemoScorecards/triggerDemoBreach DEMO-ONLY; seedKbArticles/fixLmsEmojis borderline), demo UI surfaces (App.tsx:458-480 Fire Breach Alert card, TalentGrid seed button, KnowledgeBase seed button). KEY: repo-wide grep for process.env/NODE_ENV/DEMO_MODE = ZERO hits -> nothing is env-gated (this is the task_003 S2 finding). No hardcoded tenant/cycle IDs in frontend (only 17 persona UUIDs). STOPPED for operator review before Phase 1.",
+      "notes": "Ran on Opus 4.8 (over-powered for a mechanical inventory, permitted). Phase-1 carries surfaced (recorded in inventory §carries): @anthropic-ai/sdk in frontend package.json -> task_002 (secret-in-bundle/IF-007); API_URL+Auth0 audience hardcoded + mojibake debt -> task_011; xlsx@0.18.5/jspdf/react-scripts -> task_013; window.location.reload + state-based nav -> task_004."
+    },
+    {
+      "task_id": "task_002",
+      "repo": "kinalys-web",
+      "dimension": "D1/D2",
+      "scope": "Frontend security: client-side token storage (Auth0 token handling, localStorage), the X-Demo-User-Id header path as a SHIPPED risk, secrets in the client bundle (@anthropic-ai/sdk in frontend package.json -- is the AI key bundled?), XSS via dangerouslySetInnerHTML / unsafe HTML render, AI-generated-content sinks, clipboard/XSS (IF-007)",
+      "type": "frontend security (OWASP-mapped) -- security-audit.md items 19/46/47/49/68/98",
+      "status": "completed",
+      "intended_model": "Opus 4.8 High",
+      "findings_ref": "audit/qa_findings_task_002.md",
+      "resume_point": "COMPLETE (ran on Opus 4.8 High, correct tier). 1 finding W-001 (S2 stored XSS): KnowledgeBase.tsx renderMarkdown (lines 30-42) is a hand-rolled regex markdown converter that NEVER escapes < > & in the source, injected via dangerouslySetInnerHTML at line 271; no DOMPurify anywhere; KB visible to all roles -> stored XSS blast radius. OWASP A03. STRONG PASS: (item 19) Auth0 token in-memory default, NOT in localStorage (only theme + demo-id stored); (item 68) @anthropic-ai/sdk in package.json but imported NOWHERE in src -> no AI key in bundle, IF-007 key-leak NOT realized (unused dep -> task_013); (IF-007 clipboard/XSS) AI content in AICoaching/Recommendations/BriefViewerModal rendered as escaped text, no raw-HTML sink; dangerouslySetInnerHTML occurs EXACTLY ONCE app-wide, no innerHTML/document.write/eval.",
+      "notes": "DONE. The @anthropic-ai/sdk red flag resolved as PASS (unused, no client-side key). W-001 is the single raw-HTML sink. Carries: unused @anthropic-ai/sdk -> task_013; setAuthToken(token) invocation co-location -> task_004 (functional); X-Demo-User-Id shipped risk -> task_003. Running totals through task_002: S1:0 S2:1 S3:0 S4:0 = 1 finding."
+    },
+    {
+      "task_id": "task_003",
+      "repo": "kinalys-web",
+      "dimension": "ARCH",
+      "scope": "DEMO_MODE/NODE_ENV separation gap (frontend) -- single architectural finding pointing to DEMO_SCAFFOLDING_INVENTORY.md",
+      "type": "architecture / demo-vs-prod boundary",
+      "status": "completed",
+      "intended_model": "Opus 4.7",
+      "findings_ref": "audit/qa_findings_task_003.md",
+      "resume_point": "COMPLETE (ran on Opus 4.8, over-powered/permitted for a single non-security-critical ARCH finding). ONE finding W-002 (S2, OWASP A05) as mandated: frontend demo scaffolding not gated behind DEMO_MODE/NODE_ENV -- repo-wide grep for process.env/NODE_ENV/DEMO_MODE = ZERO hits, nothing env-aware; DemoSwitcher mount (App.tsx:775) + X-Demo-User-Id interceptor (client.ts:19-26) + Fire-Breach-Alert card (App.tsx:458-480) + seed buttons all ship in any build. Frontend analog of platform F-066. No per-artifact demo findings raised. Fix: single REACT_APP_DEMO_MODE flag gating all demo surfaces + prod never attaches the header.",
+      "notes": "DONE. Points at DEMO_SCAFFOLDING_INVENTORY.md as the separation spec. Running totals through task_003: S1:0 S2:2 S3:0 S4:0 = 2 findings."
+    },
+    {
+      "task_id": "task_004",
+      "repo": "kinalys-web",
+      "dimension": "D7",
+      "scope": "Frontend architecture & correctness: component architecture, state management, state-based navigation (App.tsx activeNav switch -- no router), window.location.href/reload usage (per stack facts this IS a finding), prop/type validation (any-typed props, 'as any'), missing loading/error states, unhandled promise rejections in handlers",
+      "type": "frontend logic/architecture (D7)",
+      "status": "completed",
+      "intended_model": "Opus 4.7",
+      "findings_ref": "audit/qa_findings_task_004.md",
+      "resume_point": "COMPLETE (ran on Opus 4.8, over-powered/permitted). 4 findings W-003..W-006. HEADLINE W-003 (S2): setAuthToken() defined (client.ts:27) + imported (App.tsx:3) but NEVER called -> Auth0 token from getAccessTokenSilently (App.tsx:116) is never attached to the axios Authorization header; real non-demo API calls fail closed (401); app works only via X-Demo-User-Id (pairs W-002). W-004 S3: hardcoded RAG bands (>=90/>=80/...) in 36 places across 10 files -> Decision 82 violation (configurable bands) + one-source-per-number. W-005 S3: pervasive `any` (246x/38 files) incl. whole API layer -> TS safety defeated. W-006 S4: window.location.reload() for data refresh (CourseCatalog.tsx:64) + state-based-nav no-deep-linking (intentional, noted). PASS: Promise.allSettled parallel load (App.tsx:117); window.location.href-for-nav anti-pattern ABSENT; some API fns properly typed.",
+      "notes": "DONE. Carries: alert()/inline error UX -> task_006; eager import of 31 pages (no code-split) -> task_009; fixLmsEmojis maintenance button -> W-002. Running totals through task_004: S1:0 S2:3 S3:2 S4:1 = 6 findings."
+    },
+    {
+      "task_id": "task_005",
+      "repo": "kinalys-web",
+      "dimension": "D7",
+      "scope": "UI checklist (docs/ui-audit.md) batch 1 -- items ~1-33: layout/responsive, spacing/grid, typography, design-system/visual consistency, color/contrast tokens",
+      "type": "UI checklist harvest (read-only, record findings/N-A only)",
+      "status": "completed",
+      "intended_model": "Sonnet 4.6",
+      "findings_ref": "audit/qa_findings_task_005.md",
+      "resume_point": "COMPLETE (ran on Sonnet 4.6, correct tier). 4 findings W-007..W-010. W-007 S4: design token bypass -- hardcoded hex colors (#EF4444/#FFFBEB/#B45309) and raw px spacing in App.tsx inline styles bypass --k-* system; privacy modal section references 4 undefined CSS vars (--k-font-body/--k-border-faint/--k-red/--k-red-faint) that silently fall back. W-008 S3: no mobile nav -- .k-sidebar display:none at <=768px with zero replacement (no hamburger/drawer); all 28+ nav items unreachable on phone/tablet. W-009 S3: muted text contrast failure -- --k-text-muted (#94A3B8 on white) ~2.4:1, fails WCAG AA 4.5:1; affects sidebar-label/stat-label/page-sub/stat-trend (11-12px); fix = darken to #64748B. W-010 S4: Google Fonts via CSS @import (render-blocking, no preconnect/preload in index.html); display=swap present (FOIT OK). PASS items: token system well-structured, shadow/radius/spacing scales defined, responsive grid collapses correctly, overflow-x controlled, sticky header via grid, number formatting (.toFixed/.toLocaleString) adequate, text casing consistent. N/A: fluid typography, line-length constraints, container queries (not applicable to data-dense SaaS). Carries: button focus-visible/active/disabled gaps + emoji-icon aria + heading semantics + touch targets + static page title -> task_008; empty states + UX feedback patterns -> task_006; bundle/code-split -> task_009/013.",
+      "notes": "DONE. Running totals through task_005: S1:0 S2:3 S3:4 S4:3 S5:0 = 10 findings."
+    },
+    {
+      "task_id": "task_006",
+      "repo": "kinalys-web",
+      "dimension": "D7",
+      "scope": "UI checklist (docs/ui-audit.md) batch 2 -- items ~34-66: forms/inputs (validation feedback, labels), feedback/system-states (loading/empty/error/success), motion/micro-interactions, buttons/disabled/pending states",
+      "type": "UI checklist harvest (read-only, record findings/N-A only)",
+      "status": "completed",
+      "intended_model": "Sonnet 4.6",
+      "findings_ref": "audit/qa_findings_task_006.md",
+      "resume_point": "COMPLETE (ran on Sonnet 4.6, correct tier). 4 findings W-011..W-014. W-011 S3: no error boundaries -- zero componentDidCatch/ErrorBoundary in src/; any component throw produces blank view; combined with W-005 pervasive-any, blast radius is meaningful. W-012 S4: 4x alert() for UX feedback (App.tsx:471/473/579, KnowledgeBase.tsx:119) + 3x silent console.error-only failures (AICoaching/OKR/BalancedScorecard) with no user-visible message; no toast/notification system. W-013 S4: no loading skeletons anywhere -- all loading states are plain text ('Loading departures...'); BriefViewerModal is the one exception; abrupt content swap with no crossfade. W-014 S4: form validation on-submit only (SupportTickets validateForm() called in submitTicket()); errors shown at top-of-form not per-field; no real-time character counter on 300-char minimum; no required-field markers; isGenuineComment()-gated buttons give no hint. STRONG PASS: disabled-while-pending pattern consistent across ~20 components; ImportUsers 4-step wizard with visual step indicator; SupportTickets/ImportUsers use setError() inline (good); animation token system + reduced-motion media query PASS; micro-interactions consistent (hover/shadow/brightness). N/A: page transitions (state-based nav), drag-drop, mobile gestures, form autosave, password fields, input masking, undo system. Items 34-43 (perf) -> task_009; items 44-56 (a11y) -> task_008.",
+      "notes": "DONE. Running totals through task_006: S1:0 S2:3 S3:5 S4:6 S5:0 = 14 findings."
+    },
+    {
+      "task_id": "task_007",
+      "repo": "kinalys-web",
+      "dimension": "D7",
+      "scope": "UI checklist (docs/ui-audit.md) batch 3 -- items ~67-83: navigation/information-architecture, data display/tables, density, empty/overflow handling, pagination UI",
+      "type": "UI checklist harvest (read-only, record findings/N-A + IA judgment)",
+      "status": "completed",
+      "intended_model": "Opus 4.7",
+      "findings_ref": "audit/qa_findings_task_007.md",
+      "resume_point": "COMPLETE (ran on Sonnet 4.6 -- under-powered vs intended Opus 4.7; findings are structural/mechanical so Sonnet 4.6 was adequate). 2 findings W-015..W-016. W-015 S4: no column sorting on any data table -- all <th> elements are static with no onClick/sort state; 7 major tables affected (UserManagement, ExecDashboard, Scorecard, HrFlagsInbox, ClosedFlagsHistory, COPCScorecard, HrDeparturesInbox); ExecDashboard.tsx:129 sorts by calculated_score DESC in code (fixed, no toggle, no sort indicator). W-016 S4: no pagination on any list view -- all pages render complete unbounded API result set (no limit/offset/page_size in any API call); UserManagement partially mitigated by server-side filtered search (debounced 300ms); cross-ref backend F-064. STRONG PASS: sidebar nav 5-6 collapsible sections + role-gated canSee() + active state via .k-nav-item.active (left-border + bg highlight); ExecDashboard has excellent multi-filter (search + dept + designation + band + RAG + pending + active-filter-count badge + clearFilters()); UserManagement has debounced server-side 4-filter search; ClosedFlagsHistory has client-side multi-select type+outcome+name search; ClosedFlagsHistory CSV export + HTML Print Report (respects filters). N/A: breadcrumbs (one-level-deep state nav), command palette, keyboard shortcuts, back/forward (intentional router-less architecture W-006), bulk selection. aria-current missing on active nav items -> carry task_008.",
+      "notes": "DONE. Running totals through task_007: S1:0 S2:3 S3:5 S4:8 S5:0 = 16 findings."
+    },
+    {
+      "task_id": "task_008",
+      "repo": "kinalys-web",
+      "dimension": "D7",
+      "scope": "UI checklist (docs/ui-audit.md) batch 4 -- items ~84-100: accessibility & inclusivity (keyboard nav, focus management, ARIA, semantic HTML, alt text, contrast, screen-reader, reduced-motion). Ties to IF-010 (voice/TTS) + IF-004 (theming)",
+      "type": "UI checklist harvest (read-only, a11y judgment)",
+      "status": "completed",
+      "intended_model": "Opus 4.7",
+      "findings_ref": "audit/qa_findings_task_008.md",
+      "resume_point": "COMPLETE (ran on Opus 4.8 -- operator /model opus; correct/higher tier for a11y judgment). Scope = ui-audit.md items 44-56 a11y + task_005 carries. 4 findings W-017..W-020. W-017 S3: navigation keyboard-inaccessible -- all ~28 sidebar nav items + collapsible section headers are clickable <div>s with no role/tabIndex/onKeyDown (App.tsx:302-303,310,314-317,323); keyboard users cannot reach/activate nav; no address-bar fallback (state-based nav W-006); no skip-to-content link; in-page <button>s remain operable (partial mitigation); WCAG 2.1.1. W-018 S3: no semantic landmarks (shell is all divs -- zero <main>/<nav>/<header>), broken heading hierarchy (only ONE real <h1> app-wide at App.tsx:72; every page title is div.k-page-title kinalys.css:798; only other h-tags are inside the KnowledgeBase XSS markdown string W-001), static <title>React App</title> never updated; lang=en passes; WCAG 1.3.1/2.4.2/2.4.6. W-019 S4: modals not accessible -- no focus trap/focus-on-open/restore/Escape/inert background; PrivacyAcknowledgementModal has good ARIA (role=dialog/aria-modal/autoFocus/role=alert) BUT aria-labelledby='privacy-title' references a non-existent id (dangling label); MarkAsDeparted/BriefViewer/Edit-employee overlays lack dialog semantics entirely; WCAG 2.4.3/4.1.2. W-020 S4: no visible keyboard focus indicator (only .k-input:focus; ZERO :focus-visible rules kinalys.css:980-985) + emoji-as-icon without aria-hidden/label (🔔/✖/⚙️/✏️/🗙); StatRing SVG correctly aria-hidden; color-only status mostly OK (text labels accompany); WCAG 2.4.7. STRONG PASS: prefers-reduced-motion (item 51); inline-edit Enter/Escape onKeyDown (Scorecard:375, BSC:258/292, AICoaching:291); StatRing aria-hidden; PrivacyModal is the most a11y-aware component. PARTIAL: form labels are styled divs not <label htmlFor> (item 48 -> bundle w/ W-018); aria-live for inline messages (item 52 -> ties W-012). Carries: aria-current on active nav (task_007) + <label> association + touch targets -> remediation phase.",
+      "notes": "DONE. Running totals through task_008: S1:0 S2:3 S3:7 S4:10 S5:0 = 20 findings."
+    },
+    {
+      "task_id": "task_009",
+      "repo": "kinalys-web",
+      "dimension": "D9",
+      "scope": "Performance checklist (docs/performance-audit.md) FRONTEND subset -- items 1-46: rendering/re-render control, memoization, list virtualization, bundle size/code-splitting, images/fonts/media, perceived-perf/loading UX",
+      "type": "performance checklist harvest (read-only, record findings/N-A only)",
+      "status": "completed",
+      "intended_model": "Sonnet 4.6",
+      "findings_ref": "audit/qa_findings_task_009.md",
+      "resume_point": "COMPLETE (ran on Sonnet 4.6, correct tier). 2 findings W-021..W-022. W-021 S3: no code-splitting -- all 31 pages statically imported in App.tsx:5-36 (no React.lazy/Suspense); compounded by xlsx@0.18.5 + jspdf@4.2.1 in initial bundle via: App.tsx -> COPCReport.tsx:3 + SixSigmaReport.tsx:3 -> utils/reportExport.ts:1-3 (jspdf+xlsx); also App.tsx -> KpiTemplates.tsx:2 (xlsx); ~420KB gzipped of PDF/spreadsheet libs shipped to ALL users including employees who never visit report pages; lucide-react + @anthropic-ai/sdk are zero-imported in src (tree-shaken). W-022 S4: no re-render isolation -- App.tsx has 15+ co-located useState vars (alerts/unreadCount/showAlerts/dashboardStats/profile/activeNav/hasPip/...); any state update (notification badge, dropdown) re-renders active page; zero React.memo/useMemo anywhere; useCallback in UserManagement+HrDeparturesInbox only. PASS: debounce (UserManagement 300ms useCallback timer); parallelization (Promise.allSettled in UserManagement/loadMeta); no third-party scripts; no content images. Notable: .env has REACT_APP_DEMO_MODE=true but ZERO src files read process.env (additional W-002 evidence); GENERATE_SOURCEMAP not disabled -> task_013.",
+      "notes": "DONE. Running totals through task_009: S1:0 S2:3 S3:8 S4:11 S5:0 = 22 findings."
+    },
+    {
+      "task_id": "task_010",
+      "repo": "kinalys-web",
+      "dimension": "D9",
+      "scope": "Performance checklist (docs/performance-audit.md) CLIENT network/caching subset -- items ~47-68 client-side: request parallelization/waterfalls, request dedup, client cache (stale-while-revalidate), prefetch, payload trimming on the client side",
+      "type": "performance checklist harvest (read-only, record findings/N-A only)",
+      "status": "completed",
+      "intended_model": "Opus 4.7",
+      "findings_ref": "audit/qa_findings_task_010.md",
+      "resume_point": "COMPLETE (ran on Opus 4.8 -- operator /model opus; correct/higher tier). 2 findings W-023..W-024. W-023 S3: no client cache/dedup -- no react-query/swr/hand-rolled cache; localStorage holds only theme+demo-id (never API data); state-based nav (W-006) remounts each page so every navigation refetches cold (no stale-while-revalidate); slow-changing reference data refetched per-page (getDepartments in App.tsx:117 AND UserManagement.tsx:89); amplifies W-016. W-024 S4: no request cancellation -- zero AbortController/axios-cancel; useEffect fetches setState without mounted-check; two races (rapid-nav stale-land + debounced-search-without-cancel can overwrite newer with older results); UserManagement debounces (300ms) but doesn't cancel in-flight. STRONG PASS: App.tsx:117 fires 8 dashboard calls in parallel via Promise.allSettled then maps independently (no waterfall, fault-isolated); page-level Promise.allSettled (UserManagement.tsx:89); the one sequential await (getAccessTokenSilently THEN batch, App.tsx:116-117) is unavoidable. PARTIAL: payload trimming -- client requests full unbounded lists (W-016) but UserManagement passes server-side filter params (partial). N/A: optimistic UI, prefetch-on-intent (premature pre-lazy), server-side caching (backend). Re-confirmed (not re-raised): setAuthToken never called = W-003; hardcoded API_URL client.ts:8 + Auth0 audience App.tsx:116 + mojibake client.ts:3-6 -> task_011. RECOMMENDATION: react-query adoption fixes W-023+W-024 together + enables prefetch.",
+      "notes": "DONE. Running totals through task_010: S1:0 S2:3 S3:9 S4:12 S5:0 = 24 findings."
+    },
+    {
+      "task_id": "task_011",
+      "repo": "kinalys-web",
+      "dimension": "D5/D6",
+      "scope": "Frontend PRD/TRD compliance + config/DevOps + encoding debt: feature coverage vs PRD (31 pages mapped to PRD modules), Decision 82 (hardcoded performance bands must be configurable), hardcoded API_URL/Auth0 audience (should be env), encoding/mojibake debt (client.ts box-drawing chars), state-based-nav vs documented intent",
+      "type": "PRD/TRD compliance + config (D5/D6)",
+      "status": "completed",
+      "intended_model": "Sonnet 4.6",
+      "findings_ref": "audit/qa_findings_task_011.md",
+      "resume_point": "COMPLETE (ran on Sonnet 4.6, correct tier). 2 findings W-025..W-026. W-025 S3: hardcoded config in source -- API_URL='http://localhost:3000' (client.ts:8) and Auth0 audience 'https://api.kinalys.io' (App.tsx:116) are string literals, not REACT_APP_* env vars; .env exists with REACT_APP_DEMO_MODE=true but no API_URL or AUDIENCE var; production build points at localhost = API layer broken outside dev; fix = REACT_APP_API_URL + REACT_APP_AUTH0_AUDIENCE env vars + .env.production + .env.example, bundle with W-002 DEMO_MODE separation sprint. W-026 S4: mojibake in client.ts:3,6,35 -- U+2500 box-drawing chars stored as Latin-1 â€œâ"€â€ sequences; comments-only, no runtime effect; fix = find-replace + .editorconfig utf-8. PRD coverage matrix: N/A -- docs/ folder in kinalys-web is EMPTY (no PRD/TRD copies present); cannot assess without reaching into kinalys-platform (out of scope); 31 pages appear to cover all major PRD modules by inspection of App.tsx imports + canSee() matrix. Decision 82 -> already W-004 (cross-ref only). REACT_APP_DEMO_MODE set-but-not-read -> additional W-002 evidence (not re-raised). State-based nav vs TRD intent -> no TRD copy available to verify; design is intentional per CLAUDE.md.",
+      "notes": "DONE. Running totals through task_011: S1:0 S2:3 S3:10 S4:13 S5:0 = 26 findings."
+    },
+    {
+      "task_id": "task_012",
+      "repo": "kinalys-web",
+      "dimension": "PRIVACY/IF",
+      "scope": "Frontend-checkable investor feedback: IF-008 (BriefViewerModal -- does the brief UI render PIP/behavioral data?), IF-001/003 (acknowledgement UI: PrivacyAcknowledgementModal, PIP-ack flow in App.tsx:560-591, 1-on-1 sign-off UI), IF-012 (KPI mid-cycle update UI), IF-007 clipboard/XSS on AI-generated content (AICoaching, Recommendations, BriefViewerModal)",
+      "type": "privacy & audit-trail (investor feedback) -- frontend surfaces",
+      "status": "completed",
+      "intended_model": "Opus 4.8 High",
+      "findings_ref": "audit/qa_findings_task_012.md",
+      "resume_point": "COMPLETE (ran on Opus 4.8 High, correct tier). 2 findings W-027..W-028. W-027 S3 (IF-008 frontend): BriefViewerModal renders only structured handover fields (executive_summary/knowledge_areas/key_relationships/open_threads/onboarding_focus + provenance) -- NO labelled PIP/flag section, all escaped (IF-007 XSS PASS); BUT renders AI prose verbatim with no client-side redaction so disciplinary content from backend F-056 can bleed through executive_summary/open_threads; component comment frames audience as 'successor's manager' (BriefViewerModal.tsx:11) but realized gating is HR/exec-only (HrDeparturesInbox canSee('departures')=super_admin/hr_admin/executive; UserManagement canSee('users')=super_admin/hr_admin) -> leak NOT currently realized (HR-gated) but latent if audience widens before F-056; fix = backend F-056 primary + frontend confidentiality banner + don't wire to non-HR audience until F-056. W-028 S4 (IF-001/003): ack/sign-off flows capture boolean but never surface evidentiary receipt -- PIP-ack asserts 'timestamped and cannot be undone' (App.tsx:588) with no visible timestamp/version (acknowledgePip sends only id+response), 1-on-1 digital sign-off shows only Done/Pending badges (OneOnOne.tsx:283-284) no signer/time/version, privacy-ack captures version (best of three) but no post-ack receipt; fix = render receipts + PIP version + replace PIP-ack alert() (W-012). PASS: IF-007 (all AI content escaped React children, no dangerouslySetInnerHTML); BriefViewerModal cancelled-flag request lifecycle (positive exception to W-024); AI provenance/disclaimer footer; OneOnOne mandatory-section validation before sign-off (strong governance). Cross-ref not-re-raised: F-056 (root cause), W-012 (PIP-ack alert), W-019 (modal a11y), W-024 (cancellation), W-001 (sole XSS sink).",
+      "notes": "DONE. Running totals through task_012: S1:0 S2:3 S3:11 S4:14 S5:0 = 28 findings. Key nuance: frontend does NOT realize the IF-008 wrong-audience leak (brief is HR-gated, not line-manager-visible); the risk is latent + depends on backend F-056."
+    },
+    {
+      "task_id": "task_013",
+      "repo": "kinalys-web",
+      "dimension": "D2/D9",
+      "scope": "Frontend dependency & build security: xlsx@0.18.5 (same abandoned/CVE package as platform F-075, here parsing imported files client-side), jspdf/jspdf-autotable, react-scripts@5 (CRA -- dev-server/source-map/transitive CVEs), CRA production source-map exposure, lockfile pinning, unused deps",
+      "type": "dependency CVE audit + build config (D2/D9) -- security-audit.md items 96-98",
+      "status": "completed",
+      "intended_model": "Opus 4.8 High",
+      "findings_ref": "audit/qa_findings_task_013.md",
+      "resume_point": "COMPLETE (ran on Opus 4.8 High, correct tier). FINAL kinalys-web task. 2 findings W-029..W-030. W-029 S3: xlsx@0.18.5 (lock:17668) ships CVE-2023-30533 prototype-pollution + CVE-2024-22363 ReDoS, both UNPATCHABLE via npm (SheetJS left npm after 0.18.5; fixes CDN-only); exploitable parse path XLSX.read() on user-uploaded .xlsx (KpiTemplates.tsx:2 KPI import, ImportUsers bulk import); gated to hr_admin (mitigation); same class as platform F-075 distinct client-side instance; fix=SheetJS CDN 0.20.3+ or exceljs. W-030 S4: build hygiene cluster -- (1) react-scripts 5.0.1/CRA EOL (lock:14161; transitive vulns mostly dev-time, nth-check 2.1.1 + postcss 8.5.10 already patched); (2) GENERATE_SOURCEMAP not set false -> prod ships source maps; (3) unused @anthropic-ai/sdk + lucide-react (tree-shaken but dead surface); (4) .env committed (.gitignore:16-19 ignores only .env.local variants); fix=CRA->Vite + GENERATE_SOURCEMAP=false + uninstall unused + gitignore .env. PASS: lockfile pinned w/ integrity hashes (item 97); SRI N/A (no external scripts, item 98); jspdf@4.2.1/jspdf-autotable@5.0.7 no advisory; no secrets in bundle (task_002). Cross-ref: xlsx<->F-075; CRA->Vite unblocks W-021+W-025; .env<->W-025+W-002.",
+      "notes": "DONE. Running totals through task_013: S1:0 S2:3 S3:12 S4:15 S5:0 = 30 findings. *** kinalys-web Pass A (read-only) COMPLETE -- all 13 tasks done. Next: operator review -> Pass B or platform-repo audit. Cross-repo: W-002<->F-066, W-027<->F-056, W-029<->F-075. ***"
+    }
+  ]
+}

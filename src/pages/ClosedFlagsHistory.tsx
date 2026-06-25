@@ -136,7 +136,7 @@ export default function ClosedFlagsHistory() {
     setOutcomeFilter(prev => prev.includes(o) ? prev.filter(x => x !== o) : [...prev, o])
   }
 
-  // Print Report: fetch the HTML via axios (demo header travels) then open as a blob tab.
+  // Print Report: fetch the HTML via axios (bearer token travels) then open as a blob tab.
   // Passes the CURRENT filter state so the report matches the screen (rule 33). No filters -> full audit set.
   async function handlePrintReport() {
     if (printing) return

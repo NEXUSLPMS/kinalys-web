@@ -28,7 +28,17 @@ interface FullArticle extends Article {
 }
 
 function renderMarkdown(text: string): string {
-  return text
+  // W-001: escape ALL HTML in the source FIRST. The transforms below only emit a
+  // fixed set of safe tags (h1-3 / strong / div / span / br) from markdown SYNTAX
+  // — never href or event-handler attributes from user input — so once raw markup
+  // is escaped, nothing user-supplied can reach innerHTML as live HTML. A source
+  // containing <script>alert(1)</script> renders as inert text.
+  const safe = text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+  return safe
     .replace(/^### (.+)$/gm, '<h3 style="font-size:15px;font-weight:700;margin:16px 0 8px;color:var(--k-text-primary)">$1</h3>')
     .replace(/^## (.+)$/gm, '<h2 style="font-size:17px;font-weight:700;margin:20px 0 10px;color:var(--k-text-primary)">$1</h2>')
     .replace(/^# (.+)$/gm, '<h1 style="font-size:20px;font-weight:800;margin:0 0 16px;color:var(--k-text-primary)">$1</h1>')

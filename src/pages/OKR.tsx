@@ -4,6 +4,8 @@ import {
   deleteOkrObjective, getKeyResults, createKeyResult, updateKeyResult,
   getOkrSummary, getDepartments
 } from '../api/client'
+import DestructiveConfirmModal from '../components/DestructiveConfirmModal'
+import { useToast } from '../contexts/ToastContext'
 
 interface Objective {
   id: string
@@ -80,6 +82,9 @@ export default function OKR() {
   const [filterTier, setFilterTier] = useState<string>('all')
   const [newObjective, setNewObjective] = useState({ tier: 'company', title: '', description: '', department_id: '' })
   const [newKR, setNewKR] = useState({ title: '', current_value: 0, target_value: 100, tier: 'department', own_weight_pct: 70, dependency_weight_pct: 30 })
+  const [pendingDelete, setPendingDelete] = useState<Objective | null>(null)
+  const [deleting, setDeleting] = useState(false)
+  const toast = useToast()
 
   useEffect(() => {
     loadAll()
@@ -162,12 +167,18 @@ export default function OKR() {
     }
   }
 
-  async function deleteObjective(id: string) {
+  async function confirmDeleteObjective() {
+    if (!pendingDelete) return
+    setDeleting(true)
     try {
-      await deleteOkrObjective(id)
-      setObjectives(prev => prev.filter(o => o.id !== id))
+      await deleteOkrObjective(pendingDelete.id)
+      setObjectives(prev => prev.filter(o => o.id !== pendingDelete.id))
+      toast.success('Objective deleted')
+      setPendingDelete(null)
     } catch (err: any) {
-      setError(err.response?.data?.message || err.message)
+      toast.error(err.response?.data?.message || err.message || 'Failed to delete objective')
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -181,6 +192,16 @@ export default function OKR() {
 
   return (
     <div style={{ height: '100%', overflowY: 'auto' }}>
+      {pendingDelete && (
+        <DestructiveConfirmModal
+          title="Delete objective?"
+          message={`This will permanently delete "${pendingDelete.title}" and its key results. This cannot be undone.`}
+          confirmLabel="Delete objective"
+          busy={deleting}
+          onConfirm={confirmDeleteObjective}
+          onCancel={() => { if (!deleting) setPendingDelete(null) }}
+        />
+      )}
       <div className="k-page">
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
@@ -294,7 +315,7 @@ export default function OKR() {
                         <div style={{ height: '100%', width: `${objective.avg_progress}%`, background: objective.avg_progress >= 70 ? 'var(--k-success-solid)' : objective.avg_progress >= 40 ? '#F59E0B' : 'var(--k-danger-solid)', borderRadius: '3px', transition: 'width 0.3s' }}/>
                       </div>
                     </div>
-                    <button onClick={e => { e.stopPropagation(); deleteObjective(objective.id) }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', color: 'var(--k-text-muted)', padding: '4px', flexShrink: 0 }} title="Delete objective">✕</button>
+                    <button onClick={e => { e.stopPropagation(); setPendingDelete(objective) }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', color: 'var(--k-text-muted)', padding: '4px', flexShrink: 0 }} title="Delete objective" aria-label={`Delete objective ${objective.title}`}>✕</button>
                     <div style={{ fontSize: '18px', color: 'var(--k-text-muted)', flexShrink: 0 }}>{isExpanded ? '▲' : '▼'}</div>
                   </div>
 

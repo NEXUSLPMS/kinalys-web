@@ -5,6 +5,8 @@ import {
   deleteKpiTemplate, applyKpiTemplates, getDepartments,
   getDesignations, getReviewCycles
 } from '../api/client'
+import DestructiveConfirmModal from '../components/DestructiveConfirmModal'
+import { useToast } from '../contexts/ToastContext'
 
 // B7-web-xlsx: xlsx/SheetJS -> exceljs (SheetJS CVEs). TRD §13 formula guard.
 function sanitizeCell(value: any): any {
@@ -63,7 +65,10 @@ export default function KpiTemplates() {
   const [showDesignationPicker, setShowDesignationPicker] = useState(false)
   const [bulkData, setBulkData] = useState<any[]>([])
   const [bulkUploading, setBulkUploading] = useState(false)
+  const [pendingDelete, setPendingDelete] = useState<KpiTemplate | null>(null)
+  const [deleting, setDeleting] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const toast = useToast()
 
   const [form, setForm] = useState({
     name: '',
@@ -161,12 +166,18 @@ export default function KpiTemplates() {
     }
   }
 
-  async function deleteTemplate(id: string) {
+  async function confirmDeleteTemplate() {
+    if (!pendingDelete) return
+    setDeleting(true)
     try {
-      await deleteKpiTemplate(id)
-      setTemplates(prev => prev.filter(t => t.id !== id))
+      await deleteKpiTemplate(pendingDelete.id)
+      setTemplates(prev => prev.filter(t => t.id !== pendingDelete.id))
+      toast.success('KPI template deleted')
+      setPendingDelete(null)
     } catch (err: any) {
-      setError(err.message)
+      toast.error(err.response?.data?.message || err.message || 'Failed to delete template')
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -282,6 +293,16 @@ export default function KpiTemplates() {
 
   return (
     <div style={{ height: '100%', overflowY: 'auto' }}>
+      {pendingDelete && (
+        <DestructiveConfirmModal
+          title="Delete KPI template?"
+          message={`This will permanently delete the template "${pendingDelete.name}". Existing assignments are unaffected. This cannot be undone.`}
+          confirmLabel="Delete template"
+          busy={deleting}
+          onConfirm={confirmDeleteTemplate}
+          onCancel={() => { if (!deleting) setPendingDelete(null) }}
+        />
+      )}
       <div className="k-page">
 
         {/* Header */}
@@ -478,7 +499,7 @@ export default function KpiTemplates() {
                           ) : (
                             <div style={{ display: 'flex', gap: '6px' }}>
                               <button onClick={() => openEdit(t)} style={{ fontSize: '11px', padding: '4px 10px', borderRadius: 'var(--k-radius-md)', border: '1px solid var(--k-border-default)', background: 'var(--k-bg-surface)', color: 'var(--k-text-secondary)', cursor: 'pointer', fontFamily: 'var(--k-font-sans)' }}>✏️</button>
-                              <button onClick={() => deleteTemplate(t.id)} style={{ fontSize: '11px', padding: '4px 10px', borderRadius: 'var(--k-radius-md)', border: '1px solid var(--k-danger-border)', background: 'var(--k-danger-bg)', color: 'var(--k-danger-text)', cursor: 'pointer', fontFamily: 'var(--k-font-sans)' }}>✕</button>
+                              <button onClick={() => setPendingDelete(t)} aria-label={`Delete template ${t.name}`} style={{ fontSize: '11px', padding: '4px 10px', borderRadius: 'var(--k-radius-md)', border: '1px solid var(--k-danger-border)', background: 'var(--k-danger-bg)', color: 'var(--k-danger-text)', cursor: 'pointer', fontFamily: 'var(--k-font-sans)' }}>✕</button>
                             </div>
                           )}
                         </td>

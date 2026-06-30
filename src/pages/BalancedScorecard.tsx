@@ -3,6 +3,8 @@ import {
   getBscPerspectives, updateBscPerspective,
   getBscMetrics, createBscMetric, deleteBscMetric
 } from '../api/client'
+import DestructiveConfirmModal from '../components/DestructiveConfirmModal'
+import { useToast } from '../contexts/ToastContext'
 
 interface Perspective {
   id: string
@@ -56,6 +58,9 @@ export default function BalancedScorecard() {
   const [newMetric, setNewMetric] = useState({ name: '', weight_pct: 25, target_value: '', metric_type: 'numeric' })
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [pendingDelete, setPendingDelete] = useState<{ perspectiveId: string; metric: Metric } | null>(null)
+  const [deleting, setDeleting] = useState(false)
+  const toast = useToast()
 
   useEffect(() => {
     loadPerspectives()
@@ -154,18 +159,25 @@ export default function BalancedScorecard() {
     }
   }
 
-  async function removeMetric(perspectiveId: string, metricId: string) {
+  async function confirmRemoveMetric() {
+    if (!pendingDelete) return
+    const { perspectiveId, metric } = pendingDelete
+    setDeleting(true)
     try {
-      await deleteBscMetric(metricId)
+      await deleteBscMetric(metric.id)
       setMetrics(prev => ({
         ...prev,
-        [perspectiveId]: prev[perspectiveId].filter(m => m.id !== metricId)
+        [perspectiveId]: prev[perspectiveId].filter(m => m.id !== metric.id)
       }))
       setPerspectives(prev => prev.map(p =>
         p.id === perspectiveId ? { ...p, metric_count: p.metric_count - 1 } : p
       ))
+      toast.success('Metric removed')
+      setPendingDelete(null)
     } catch (err: any) {
-      setError(err.message)
+      toast.error(err.response?.data?.message || err.message || 'Failed to remove metric')
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -180,6 +192,16 @@ export default function BalancedScorecard() {
 
   return (
     <div style={{ height: '100%', overflowY: 'auto' }}>
+      {pendingDelete && (
+        <DestructiveConfirmModal
+          title="Remove metric?"
+          message={`This will permanently remove "${pendingDelete.metric.name}" from this perspective. This cannot be undone.`}
+          confirmLabel="Remove metric"
+          busy={deleting}
+          onConfirm={confirmRemoveMetric}
+          onCancel={() => { if (!deleting) setPendingDelete(null) }}
+        />
+      )}
       <div className="k-page">
 
         {/* Header */}
@@ -343,9 +365,10 @@ export default function BalancedScorecard() {
                               </div>
                             </div>
                             <button
-                              onClick={() => removeMetric(perspective.id, metric.id)}
+                              onClick={() => setPendingDelete({ perspectiveId: perspective.id, metric })}
                               style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', color: 'var(--k-danger-text)', padding: '4px' }}
                               title="Remove metric"
+                              aria-label={`Remove metric ${metric.name}`}
                             >✕</button>
                           </div>
                         ))}

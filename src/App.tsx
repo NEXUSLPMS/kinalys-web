@@ -34,6 +34,7 @@ import PredictiveAnalysis from './pages/PredictiveAnalysis'
 import Recommendations from './pages/Recommendations'
 import StatRing from './components/StatRing'
 import PipCheckins from './pages/PipCheckins'
+import ErrorBoundary from './components/ErrorBoundary'
 
 
 
@@ -349,6 +350,10 @@ function Dashboard() {
 
       {/* Main content */}
       <div className="k-main">
+        {/* Per-page error boundary: a render crash in one page shows a fallback
+            without taking down the topbar/sidebar shell. Keyed by activeNav so
+            navigating to another page resets the boundary. */}
+        <ErrorBoundary label={activeNav} resetKey={activeNav}>
         {activeNav === 'settings' ? (
           <AccountSettings onBack={() => setActiveNav('home')} />
         ) : activeNav === 'org' ? (
@@ -766,6 +771,7 @@ function Dashboard() {
 
           </div>
         )}
+        </ErrorBoundary>
       </div>
     </div>
   )
@@ -780,9 +786,13 @@ export default function App() {
       </div>
     )
   }
-  return isAuthenticated ? (
-    <ViewAsProvider>
-      <Dashboard />
-    </ViewAsProvider>
-  ) : <LoginPage />
+  return (
+    <ErrorBoundary>
+      {isAuthenticated ? (
+        <ViewAsProvider>
+          <Dashboard />
+        </ViewAsProvider>
+      ) : <LoginPage />}
+    </ErrorBoundary>
+  )
 }

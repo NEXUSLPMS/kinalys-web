@@ -1,7 +1,7 @@
 import { useAuth0 } from '@auth0/auth0-react'
 import { useEffect, useState } from 'react'
 import { ViewAsProvider, useViewAs } from './contexts/ViewAs'
-import { setAuthToken, getMyProfile, getStatus, getDepartments, getDashboardStats, getMyAlerts, markAlertRead, markAllAlertsRead, getMyTalentPosition, triggerDemoBreach, getMyPip, acknowledgePip, getPrivacyStatus } from './api/client'
+import { setAuthToken, getMyProfile, getStatus, getDepartments, getDashboardStats, getMyAlerts, markAlertRead, markAllAlertsRead, getMyTalentPosition, getMyPip, acknowledgePip, getPrivacyStatus } from './api/client'
 import { PrivacyAcknowledgementModal } from './components/PrivacyAcknowledgementModal'
 import Organisation from './pages/Organisation'
 import AccountSettings from './pages/AccountSettings'
@@ -473,30 +473,6 @@ function Dashboard() {
             <div style={{ marginBottom: '24px' }}>
               <div className="k-page-title" style={{ whiteSpace: 'normal', wordBreak: 'break-word' }}>Welcome back, {profile?.fullName || user?.name || 'there'} 👋</div>
               <div className="k-page-sub">{profile?.role === 'super_admin' ? 'Org Admin' : profile?.role === 'hr_admin' ? 'HR Admin' : profile?.role === 'executive' ? 'Executive' : profile?.role === 'leadership' ? 'Leadership' : profile?.role === 'manager' ? 'Manager' : profile?.role === 'team_lead' ? 'Team Lead' : 'Employee'} · {profile?.tenant?.name || 'Your workspace'} · {profile?.designation || 'Kinalys Platform'}</div>
-            </div>
-
-            {/* DEMO BREACH TRIGGER */}
-            <div style={{ marginBottom: '16px', padding: '12px 16px', background: 'var(--k-warning-bg)', border: '1px solid var(--k-warning-border)', borderRadius: 'var(--k-radius-md)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
-              <div>
-                <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--k-warning-text)' }}>🎯 Demo Mode — Breach Alert Trigger</div>
-                <div style={{ fontSize: '11px', color: 'var(--k-warning-text)', opacity: 0.8 }}>Drops a live KPI to amber and fires the notification bell in real time</div>
-              </div>
-              <button
-                onClick={async () => {
-                  try {
-                    const result = await triggerDemoBreach()
-                    const freshAlerts = await getMyAlerts()
-                    setAlerts(freshAlerts.alerts || [])
-                    setUnreadCount(freshAlerts.unread_count || 0)
-                    alert(`✅ ${result.message}`)
-                  } catch (err: any) {
-                    alert('Error: ' + (err.response?.data?.error || err.message))
-                  }
-                }}
-                style={{ background: 'var(--k-warning-solid)', color: 'white', border: 'none', borderRadius: 'var(--k-radius-md)', padding: '8px 16px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--k-font-sans)' }}
-              >
-                🔔 Fire Breach Alert
-              </button>
             </div>
 
 {myPip && (

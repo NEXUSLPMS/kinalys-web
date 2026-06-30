@@ -486,11 +486,6 @@ export async function markAllAlertsRead() {
   return response.data
 }
 
-export async function triggerDemoBreach() {
-  const response = await apiClient.post('/scorecard/demo-breach')
-  return response.data
-}
-
 export async function getPktQuestions() {
   const response = await apiClient.get('/pkt/questions')
   return response.data

@@ -13,11 +13,11 @@ const root = ReactDOM.createRoot(
 root.render(
   <React.StrictMode>
     <Auth0Provider
-      domain="dev-zb6uoyfyk6iqoje2.us.auth0.com"
-      clientId="fEN2zDxKe33gZWfF056qdlxEtDy9iYi1"
+      domain={process.env.REACT_APP_AUTH0_DOMAIN!}
+      clientId={process.env.REACT_APP_AUTH0_CLIENT_ID!}
       authorizationParams={{
         redirect_uri: window.location.origin,
-        audience: 'https://api.kinalys.io',
+        audience: process.env.REACT_APP_AUTH0_AUDIENCE!,
       }}
     >
       <KinalysThemeProvider defaultTheme="light">

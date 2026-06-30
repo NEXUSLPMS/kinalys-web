@@ -5,7 +5,10 @@ import axios from 'axios'
 // Connects the React frontend to the Fastify backend
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-const API_URL = 'http://localhost:3000'
+// W-025: environment-driven. Literal kept only as a local-dev fallback so the
+// app still runs with no .env. Auth0 values (index.tsx) deliberately have NO
+// fallback — a wrong default there fails silently and confusingly.
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000'
 
 export const apiClient = axios.create({
   baseURL: API_URL,

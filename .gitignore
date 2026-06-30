@@ -13,6 +13,10 @@
 
 # misc
 .DS_Store
+# W-025: .env holds per-environment config (API URL + Auth0 SPA values). Not
+# committed — copy .env.example to .env and fill in. .env.example is the
+# tracked template.
+.env
 .env.local
 .env.development.local
 .env.test.local

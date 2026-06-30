@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { getKbCategories, getKbArticles, getKbArticle, markArticleHelpful, seedKbArticles } from '../api/client'
+import { getKbCategories, getKbArticles, getKbArticle, markArticleHelpful } from '../api/client'
 
 interface Category {
   id: string
@@ -61,7 +61,6 @@ export default function KnowledgeBase() {
   const [articleLoading, setArticleLoading] = useState(false)
   const [helpfulSent, setHelpfulSent] = useState(false)
   const [allArticles, setAllArticles] = useState<Article[]>([])
-  const [seeding, setSeeding] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [error, setError] = useState<string | null>(null)
 
@@ -122,19 +121,6 @@ export default function KnowledgeBase() {
     setHelpfulSent(true)
   }
 
-  async function seed() {
-    setSeeding(true)
-    try {
-      const result = await seedKbArticles()
-      alert(result.message)
-      if (selectedCategory) await selectCategory(selectedCategory)
-    } catch (err: any) {
-      setError(err.message)
-    } finally {
-      setSeeding(false)
-    }
-  }
-
   if (loading) return (
     <div className="k-page">
       <div style={{ fontSize: '14px', color: 'var(--k-text-muted)' }}>Loading Knowledge Base...</div>
@@ -149,9 +135,6 @@ export default function KnowledgeBase() {
             <div className="k-page-title">📖 Knowledge Base</div>
             <div className="k-page-sub">Guides, how-tos, and methodology references</div>
           </div>
-          <button className="k-btn k-btn-secondary" onClick={seed} disabled={seeding} style={{ fontSize: '12px' }}>
-            {seeding ? '⏳ Seeding...' : '🌱 Seed Articles'}
-          </button>
         </div>
         <input
           placeholder="🔍 Search articles..."

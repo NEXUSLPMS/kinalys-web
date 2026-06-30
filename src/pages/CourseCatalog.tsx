@@ -61,7 +61,6 @@ export default function CourseCatalog() {
             <div className="k-page-title">Course Catalog</div>
             <div className="k-page-sub">{courses.length} courses available · Completing courses adds hours to your scorecard</div>
           </div>
-          <button onClick={async () => { const mod = await import('../api/client'); await (mod as any).fixLmsEmojis(); window.location.reload() }} style={{ fontSize: '12px', padding: '6px 12px', borderRadius: 'var(--k-radius-md)', border: '1px solid var(--k-border-default)', background: 'var(--k-bg-surface)', color: 'var(--k-text-muted)', cursor: 'pointer', fontFamily: 'var(--k-font-sans)' }}>Fix Emojis</button>
         </div>
 
         {error && (

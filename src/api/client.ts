@@ -188,11 +188,6 @@ export async function setTalentPotential(userId: string, data: Record<string, an
   const response = await apiClient.post(`/talent/assessments/${userId}`, data)
   return response.data
 }
-
-export async function seedDemoScorecards() {
-  const response = await apiClient.post('/talent/seed-demo')
-  return response.data
-}
 export async function getManagedUsers(filters?: {
   search?: string
   department_id?: string
@@ -277,11 +272,6 @@ export async function getKbArticle(slug: string) {
 
 export async function markArticleHelpful(slug: string, helpful: boolean) {
   const response = await apiClient.post(`/kb/articles/${slug}/helpful`, { helpful })
-  return response.data
-}
-
-export async function seedKbArticles() {
-  const response = await apiClient.post('/kb/seed')
   return response.data
 }
 
@@ -405,11 +395,6 @@ export async function getLmsCertifications() {
 
 export async function getLmsStats() {
   const response = await apiClient.get('/lms/stats')
-  return response.data
-}
-
-export async function fixLmsEmojis() {
-  const response = await apiClient.post('/lms/fix-emojis')
   return response.data
 }
 

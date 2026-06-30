@@ -35,6 +35,7 @@ import Recommendations from './pages/Recommendations'
 import StatRing from './components/StatRing'
 import PipCheckins from './pages/PipCheckins'
 import ErrorBoundary from './components/ErrorBoundary'
+import { ToastProvider, useToast } from './contexts/ToastContext'
 
 
 
@@ -85,6 +86,7 @@ function LoginPage() {
 function Dashboard() {
   const { user, logout, getAccessTokenSilently } = useAuth0()
   const { isViewAs, targetName, nonce: viewAsNonce, exit: exitViewAs } = useViewAs()
+  const toast = useToast()
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [status, setStatus] = useState<ApiStatus | null>(null)
   const [departments, setDepartments] = useState<any[]>([])
@@ -577,7 +579,7 @@ function Dashboard() {
                                 setPipAckSuccess(true)
                                 setMyPip({ ...myPip, status: 'pip_active' })
                               } catch (err: any) {
-                                alert(err.response?.data?.message || 'Failed to acknowledge PIP.')
+                                toast.error(err.response?.data?.message || 'Failed to acknowledge PIP.')
                               } finally {
                                 setPipAckLoading(false)
                               }
@@ -788,11 +790,13 @@ export default function App() {
   }
   return (
     <ErrorBoundary>
-      {isAuthenticated ? (
-        <ViewAsProvider>
-          <Dashboard />
-        </ViewAsProvider>
-      ) : <LoginPage />}
+      <ToastProvider>
+        {isAuthenticated ? (
+          <ViewAsProvider>
+            <Dashboard />
+          </ViewAsProvider>
+        ) : <LoginPage />}
+      </ToastProvider>
     </ErrorBoundary>
   )
 }

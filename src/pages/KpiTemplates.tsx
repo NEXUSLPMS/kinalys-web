@@ -131,11 +131,24 @@ export default function KpiTemplates() {
   }
 
   function validateForm(): string | null {
+    // QA / KPI-MANDATORY: every field on the form is required.
     if (!form.name.trim()) return 'KPI Name is required'
+    if (!form.description.trim()) return 'Description is required'
     if (form.designation_ids.length === 0) return 'At least one designation must be selected'
     if (!form.department_id) return 'Department is required'
+    if (!form.metric_type) return 'Metric Type is required'
+    if (form.weight_pct === null || form.weight_pct === undefined || Number.isNaN(form.weight_pct)) return 'Weight % is required'
+    if (String(form.target_value).trim() === '') return 'Target Value is required'
+    if (String(form.rag_green_threshold).trim() === '') return 'RAG Green Threshold is required'
+    if (String(form.rag_amber_threshold).trim() === '') return 'RAG Amber Threshold is required'
     return null
   }
+
+  // QA / KPI-MANDATORY: recomputed every render so the Create button re-disables
+  // the moment any previously-filled field is cleared (not a one-time mount check).
+  // metric_type defaults to a real value ('numeric'), weight_pct to 25 — both
+  // count as filled by default; clearing weight_pct yields NaN and re-disables.
+  const isFormComplete = validateForm() === null
 
   async function saveTemplate() {
     const validationError = validateForm()
@@ -527,7 +540,7 @@ export default function KpiTemplates() {
                 </div>
 
                 <div>
-                  <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--k-text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>Description</div>
+                  <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--k-text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>Description *</div>
                   <textarea value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} placeholder="What does this KPI measure?" rows={2} style={{ width: '100%', fontSize: '13px', padding: '8px 12px', borderRadius: 'var(--k-radius-md)', border: '1px solid var(--k-border-input)', background: 'var(--k-bg-input)', color: 'var(--k-text-primary)', fontFamily: 'var(--k-font-sans)', resize: 'vertical' }} />
                 </div>
 
@@ -595,28 +608,28 @@ export default function KpiTemplates() {
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
                   <div>
-                    <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--k-text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>Metric Type</div>
+                    <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--k-text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>Metric Type *</div>
                     <select value={form.metric_type} onChange={e => setForm(p => ({ ...p, metric_type: e.target.value }))} style={{ width: '100%', fontSize: '13px', padding: '8px 12px', borderRadius: 'var(--k-radius-md)', border: '1px solid var(--k-border-input)', background: 'var(--k-bg-input)', color: 'var(--k-text-primary)', fontFamily: 'var(--k-font-sans)', cursor: 'pointer' }}>
                       {METRIC_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
                     </select>
                   </div>
                   <div>
-                    <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--k-text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>Weight %</div>
+                    <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--k-text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>Weight % *</div>
                     <input type="number" value={form.weight_pct} onChange={e => setForm(p => ({ ...p, weight_pct: parseFloat(e.target.value) }))} style={{ width: '100%', fontSize: '13px', padding: '8px 12px', borderRadius: 'var(--k-radius-md)', border: '1px solid var(--k-border-input)', background: 'var(--k-bg-input)', color: 'var(--k-text-primary)', fontFamily: 'var(--k-font-sans)' }} />
                   </div>
                   <div>
-                    <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--k-text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>Target Value</div>
-                    <input type="number" value={form.target_value} onChange={e => setForm(p => ({ ...p, target_value: e.target.value }))} placeholder="Optional" style={{ width: '100%', fontSize: '13px', padding: '8px 12px', borderRadius: 'var(--k-radius-md)', border: '1px solid var(--k-border-input)', background: 'var(--k-bg-input)', color: 'var(--k-text-primary)', fontFamily: 'var(--k-font-sans)' }} />
+                    <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--k-text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>Target Value *</div>
+                    <input type="number" value={form.target_value} onChange={e => setForm(p => ({ ...p, target_value: e.target.value }))} placeholder="e.g. 90" style={{ width: '100%', fontSize: '13px', padding: '8px 12px', borderRadius: 'var(--k-radius-md)', border: '1px solid var(--k-border-input)', background: 'var(--k-bg-input)', color: 'var(--k-text-primary)', fontFamily: 'var(--k-font-sans)' }} />
                   </div>
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                   <div>
-                    <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--k-success-text)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>RAG Green Threshold</div>
+                    <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--k-success-text)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>RAG Green Threshold *</div>
                     <input type="number" value={form.rag_green_threshold} onChange={e => setForm(p => ({ ...p, rag_green_threshold: e.target.value }))} placeholder="e.g. 90" style={{ width: '100%', fontSize: '13px', padding: '8px 12px', borderRadius: 'var(--k-radius-md)', border: '1px solid var(--k-success-border)', background: 'var(--k-bg-input)', color: 'var(--k-text-primary)', fontFamily: 'var(--k-font-sans)' }} />
                   </div>
                   <div>
-                    <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--k-warning-text)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>RAG Amber Threshold</div>
+                    <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--k-warning-text)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>RAG Amber Threshold *</div>
                     <input type="number" value={form.rag_amber_threshold} onChange={e => setForm(p => ({ ...p, rag_amber_threshold: e.target.value }))} placeholder="e.g. 75" style={{ width: '100%', fontSize: '13px', padding: '8px 12px', borderRadius: 'var(--k-radius-md)', border: '1px solid var(--k-warning-border)', background: 'var(--k-bg-input)', color: 'var(--k-text-primary)', fontFamily: 'var(--k-font-sans)' }} />
                   </div>
                 </div>
@@ -633,7 +646,7 @@ export default function KpiTemplates() {
               </div>
 
               <div style={{ display: 'flex', gap: '10px', marginTop: '24px' }}>
-                <button className="k-btn k-btn-primary" onClick={saveTemplate} disabled={saving} style={{ flex: 1, justifyContent: 'center' }}>
+                <button className="k-btn k-btn-primary" onClick={saveTemplate} disabled={saving || !isFormComplete} style={{ flex: 1, justifyContent: 'center', opacity: (saving || !isFormComplete) ? 0.6 : 1, cursor: (saving || !isFormComplete) ? 'not-allowed' : 'pointer' }}>
                   {saving ? '⏳ Saving...' : editingTemplate ? '✓ Update Template' : '+ Create Template'}
                 </button>
                 <button className="k-btn k-btn-secondary" onClick={() => { setShowForm(false); setEditingTemplate(null); setShowDesignationPicker(false) }} style={{ flex: 1, justifyContent: 'center' }}>Cancel</button>

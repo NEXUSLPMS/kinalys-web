@@ -1,10 +1,27 @@
 import { useState, useEffect, useRef } from 'react'
-import * as XLSX from 'xlsx'
+import ExcelJS from 'exceljs'
 import {
   getKpiTemplates, createKpiTemplate, updateKpiTemplate,
   deleteKpiTemplate, applyKpiTemplates, getDepartments,
   getDesignations, getReviewCycles
 } from '../api/client'
+
+// B7-web-xlsx: xlsx/SheetJS -> exceljs (SheetJS CVEs). TRD §13 formula guard.
+function sanitizeCell(value: any): any {
+  if (typeof value === 'string' && /^[=+\-@]/.test(value)) return `\t${value}`
+  return value
+}
+// Normalise exceljs cell values (rich text / hyperlink / formula objects) to text.
+function cellText(v: any): any {
+  if (v === null || v === undefined) return v
+  if (typeof v === 'object') {
+    if (typeof v.text === 'string') return v.text
+    if ('result' in v) return v.result
+    if (Array.isArray(v.richText)) return v.richText.map((t: any) => t.text).join('')
+    return String(v)
+  }
+  return v
+}
 
 interface KpiTemplate {
   id: string
@@ -167,43 +184,64 @@ export default function KpiTemplates() {
     }
   }
 
-  function downloadTemplate() {
-    const wb = XLSX.utils.book_new()
+  async function downloadTemplate() {
     const headers = ['KPI Name', 'Description', 'Designation', 'Department', 'Metric Type', 'Weight %', 'Target Value', 'RAG Green Threshold', 'RAG Amber Threshold', 'Is Mandatory (Yes/No)']
     const example = [
       'Average Handle Time', 'Average time to resolve a customer call', 'Customer Service Agent', 'Customer Operations', 'numeric', 25, 180, 150, 180, 'Yes'
     ]
-    const ws = XLSX.utils.aoa_to_sheet([headers, example])
-    ws['!cols'] = headers.map(() => ({ wch: 22 }))
-    XLSX.utils.book_append_sheet(wb, ws, 'KPI Templates')
-    XLSX.writeFile(wb, 'kpi_templates_upload.xlsx')
+    const wb = new ExcelJS.Workbook()
+    const ws = wb.addWorksheet('KPI Templates')
+    ;[headers, example].forEach(r => ws.addRow(r.map(sanitizeCell)))
+    headers.forEach((_, i) => { ws.getColumn(i + 1).width = 22 })
+    const buffer = await wb.xlsx.writeBuffer()
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'kpi_templates_upload.xlsx'
+    a.click()
+    URL.revokeObjectURL(url)
   }
 
   function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
     const reader = new FileReader()
-    reader.onload = (evt) => {
-      const wb = XLSX.read(evt.target?.result, { type: 'binary' })
-      const ws = wb.Sheets[wb.SheetNames[0]]
-      const rows = XLSX.utils.sheet_to_json(ws, { header: 1 }) as any[][]
-      if (rows.length < 2) { setError('No data rows found in the file'); return }
-      const dataRows = rows.slice(1).filter(r => r[0])
-      const parsed = dataRows.map(r => ({
-        name: r[0]?.toString() || '',
-        description: r[1]?.toString() || '',
-        designation_name: r[2]?.toString() || '',
-        department_name: r[3]?.toString() || '',
-        metric_type: r[4]?.toString() || 'numeric',
-        weight_pct: parseFloat(r[5]) || 25,
-        target_value: r[6] ? parseFloat(r[6]) : null,
-        rag_green_threshold: r[7] ? parseFloat(r[7]) : null,
-        rag_amber_threshold: r[8] ? parseFloat(r[8]) : null,
-        is_mandatory: r[9]?.toString().toLowerCase() !== 'no',
-      }))
-      setBulkData(parsed)
+    reader.onload = async (evt) => {
+      try {
+        const wb = new ExcelJS.Workbook()
+        await wb.xlsx.load(evt.target?.result as ArrayBuffer)
+        const ws = wb.worksheets[0]
+        if (!ws) { setError('No sheet found in the file'); return }
+        // Build array-of-arrays (0-based per row) like the old sheet_to_json
+        // { header: 1 }. exceljs row.values is 1-based (index 0 unused).
+        const rows: any[][] = []
+        ws.eachRow({ includeEmpty: false }, (row) => {
+          const vals = row.values as any[]
+          const arr: any[] = []
+          for (let c = 1; c < vals.length; c++) arr.push(cellText(vals[c]))
+          rows.push(arr)
+        })
+        if (rows.length < 2) { setError('No data rows found in the file'); return }
+        const dataRows = rows.slice(1).filter(r => r[0])
+        const parsed = dataRows.map(r => ({
+          name: r[0]?.toString() || '',
+          description: r[1]?.toString() || '',
+          designation_name: r[2]?.toString() || '',
+          department_name: r[3]?.toString() || '',
+          metric_type: r[4]?.toString() || 'numeric',
+          weight_pct: parseFloat(r[5]) || 25,
+          target_value: r[6] ? parseFloat(r[6]) : null,
+          rag_green_threshold: r[7] ? parseFloat(r[7]) : null,
+          rag_amber_threshold: r[8] ? parseFloat(r[8]) : null,
+          is_mandatory: r[9]?.toString().toLowerCase() !== 'no',
+        }))
+        setBulkData(parsed)
+      } catch (err: any) {
+        setError('Could not read the spreadsheet: ' + (err?.message || String(err)))
+      }
     }
-    reader.readAsBinaryString(file)
+    reader.readAsArrayBuffer(file)
   }
 
   async function processBulkUpload() {

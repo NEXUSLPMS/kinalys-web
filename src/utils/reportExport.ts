@@ -1,6 +1,40 @@
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
-import * as XLSX from 'xlsx'
+import ExcelJS from 'exceljs'
+
+// B7-web-xlsx: xlsx/SheetJS replaced with exceljs (unpatchable prototype-
+// pollution + ReDoS CVEs). Mirrors the API-side B7 migration.
+
+// TRD §13 formula-injection guard: prefix any cell whose text begins with
+// = + - @ with a tab so a spreadsheet client treats it as text, not a formula.
+function sanitizeCell(value: any): any {
+  if (typeof value === 'string' && /^[=+\-@]/.test(value)) return `\t${value}`
+  return value
+}
+
+// Build an .xlsx from named sheets (each: rows + optional column widths),
+// then trigger a browser download. Cells are formula-guarded.
+async function downloadWorkbook(
+  filename: string,
+  sheets: Array<{ name: string; rows: any[][]; widths?: number[] }>
+) {
+  const wb = new ExcelJS.Workbook()
+  for (const s of sheets) {
+    const ws = wb.addWorksheet(s.name)
+    s.rows.forEach(r => ws.addRow(r.map(sanitizeCell)))
+    if (s.widths) s.widths.forEach((w, i) => { ws.getColumn(i + 1).width = w })
+  }
+  const buffer = await wb.xlsx.writeBuffer()
+  const blob = new Blob([buffer], {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  a.click()
+  URL.revokeObjectURL(url)
+}
 
 // ─── COPC PDF — Employee own scorecard ────────────────────────────────────────
 export function exportCOPCPDF(employee: any, cycle: string) {
@@ -132,9 +166,7 @@ export function exportCOPCPDF(employee: any, cycle: string) {
 }
 
 // ─── COPC XLSX — Leader full team export ──────────────────────────────────────
-export function exportCOPCXLSX(employees: any[], summary: any, cycle: string) {
-  const wb = XLSX.utils.book_new()
-
+export async function exportCOPCXLSX(employees: any[], summary: any, cycle: string) {
   // Summary sheet
   const summaryData = [
     ['KINALYS — COPC Performance Report', '', '', ''],
@@ -147,9 +179,6 @@ export function exportCOPCXLSX(employees: any[], summary: any, cycle: string) {
     ['Satisfactory (S)', summary.satisfactory, `${summary.satisfactory_pct}%`, ''],
     ['Unsatisfactory (U)', summary.unsatisfactory, `${summary.unsatisfactory_pct}%`, ''],
   ]
-  const summarySheet = XLSX.utils.aoa_to_sheet(summaryData)
-  summarySheet['!cols'] = [{ wch: 30 }, { wch: 15 }, { wch: 15 }, { wch: 15 }]
-  XLSX.utils.book_append_sheet(wb, summarySheet, 'Summary')
 
   // Detail sheet — one row per KPI per employee
   const headers = ['Employee', 'Department', 'COPC Index', 'Classification', 'KPI Name', 'Target', 'Actual', 'Score', 'COPC Class', 'RAG Status']
@@ -170,11 +199,11 @@ export function exportCOPCXLSX(employees: any[], summary: any, cycle: string) {
       ])
     })
   })
-  const detailSheet = XLSX.utils.aoa_to_sheet(rows)
-  detailSheet['!cols'] = [{ wch: 22 }, { wch: 22 }, { wch: 14 }, { wch: 16 }, { wch: 35 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 16 }, { wch: 12 }]
-  XLSX.utils.book_append_sheet(wb, detailSheet, 'KPI Detail')
 
-  XLSX.writeFile(wb, `COPC_Team_Report_${cycle.replace(/ /g, '_')}.xlsx`)
+  await downloadWorkbook(`COPC_Team_Report_${cycle.replace(/ /g, '_')}.xlsx`, [
+    { name: 'Summary', rows: summaryData, widths: [30, 15, 15, 15] },
+    { name: 'KPI Detail', rows, widths: [22, 22, 14, 16, 35, 10, 10, 10, 16, 12] },
+  ])
 }
 
 // ─── SIX SIGMA PDF — Employee own scorecard ───────────────────────────────────
@@ -309,9 +338,7 @@ export function exportSixSigmaPDF(employee: any, cycle: string) {
 }
 
 // ─── SIX SIGMA XLSX — Leader full team export ─────────────────────────────────
-export function exportSixSigmaXLSX(employees: any[], summary: any, cycle: string) {
-  const wb = XLSX.utils.book_new()
-
+export async function exportSixSigmaXLSX(employees: any[], summary: any, cycle: string) {
   // Summary sheet
   const summaryData = [
     ['KINALYS — Six Sigma Performance Report', '', '', ''],
@@ -324,9 +351,6 @@ export function exportSixSigmaXLSX(employees: any[], summary: any, cycle: string
     ['At Target (≥4σ)', summary.at_target, `${summary.at_target_pct}%`, ''],
     ['Below Target (<4σ)', summary.below_target, `${summary.below_target_pct}%`, ''],
   ]
-  const summarySheet = XLSX.utils.aoa_to_sheet(summaryData)
-  summarySheet['!cols'] = [{ wch: 30 }, { wch: 15 }, { wch: 15 }, { wch: 15 }]
-  XLSX.utils.book_append_sheet(wb, summarySheet, 'Summary')
 
   // Detail sheet
   const headers = ['Employee', 'Department', 'Sigma Level', 'Avg Score', 'KPI Name', 'Target', 'Actual', 'Score', 'RAG Status', 'Is DPMO']
@@ -347,9 +371,9 @@ export function exportSixSigmaXLSX(employees: any[], summary: any, cycle: string
       ])
     })
   })
-  const detailSheet = XLSX.utils.aoa_to_sheet(rows)
-  detailSheet['!cols'] = [{ wch: 22 }, { wch: 22 }, { wch: 14 }, { wch: 14 }, { wch: 35 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 12 }, { wch: 10 }]
-  XLSX.utils.book_append_sheet(wb, detailSheet, 'KPI Detail')
 
-  XLSX.writeFile(wb, `SixSigma_Team_Report_${cycle.replace(/ /g, '_')}.xlsx`)
+  await downloadWorkbook(`SixSigma_Team_Report_${cycle.replace(/ /g, '_')}.xlsx`, [
+    { name: 'Summary', rows: summaryData, widths: [30, 15, 15, 15] },
+    { name: 'KPI Detail', rows, widths: [22, 22, 14, 14, 35, 10, 10, 10, 12, 10] },
+  ])
 }

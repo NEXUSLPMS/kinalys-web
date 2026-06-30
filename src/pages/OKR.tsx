@@ -130,12 +130,15 @@ export default function OKR() {
   async function addObjective() {
     if (!newObjective.title.trim()) return
     try {
-      const data = await createOkrObjective({
-        ...newObjective,
+      const { department_id, ...rest } = newObjective
+      const payload: Record<string, any> = {
+        ...rest,
         year: selectedYear,
         quarter: selectedQuarter,
-        department_id: newObjective.department_id || null,
-      })
+      }
+      if (department_id) payload.department_id = department_id
+      console.log('OKR PAYLOAD (key omitted when empty):', JSON.stringify(payload))
+      const data = await createOkrObjective(payload)
       setObjectives(prev => [data.objective, ...prev])
       setShowAddObjective(false)
       setNewObjective({ tier: 'company', title: '', description: '', department_id: '' })
@@ -250,7 +253,20 @@ export default function OKR() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
               <div>
                 <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--k-text-muted)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '1px' }}>Tier</div>
-                <select value={newObjective.tier} onChange={e => setNewObjective(prev => ({ ...prev, tier: e.target.value }))} style={{ width: '100%', fontSize: '13px', padding: '8px 12px', borderRadius: 'var(--k-radius-md)', border: '1px solid var(--k-border-input)', background: 'var(--k-bg-input)', color: 'var(--k-text-primary)', fontFamily: 'var(--k-font-sans)' }}>
+                <select value={newObjective.tier} onChange={e => {
+                  const newTier = e.target.value
+                  // QA / OKR-NULL-FIX: clear department_id when switching to a tier
+                  // that has no department picker, so a stale UUID from a prior
+                  // Department selection cannot be carried forward into a Company/
+                  // Individual objective.
+                  setNewObjective(prev => ({
+                    ...prev,
+                    tier: newTier,
+                    department_id: (newTier === 'department' || newTier === 'departmental_operational')
+                      ? prev.department_id
+                      : '',
+                  }))
+                }} style={{ width: '100%', fontSize: '13px', padding: '8px 12px', borderRadius: 'var(--k-radius-md)', border: '1px solid var(--k-border-input)', background: 'var(--k-bg-input)', color: 'var(--k-text-primary)', fontFamily: 'var(--k-font-sans)' }}>
                   <option value="company">🏢 Company</option>
                   <option value="department">🏬 Department</option>
                   <option value="individual">👤 Individual</option>

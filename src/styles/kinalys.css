@@ -785,6 +785,31 @@ body {
   padding-left: calc(var(--k-space-3) - 2px);
 }
 
+/* C2b a11y: nav items and sidebar section labels are real <button>s (keyboard
+   reachable + native role) — reset the native button chrome so they look
+   identical to the previous <div>s. */
+button.k-nav-item {
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  border-left: 2px solid transparent;
+}
+button.k-sidebar-label {
+  width: 100%;
+  background: none;
+  border: none;
+  text-align: left;
+}
+
+/* C2b a11y: visible keyboard focus ring (brand colour). Only shows for
+   keyboard users (:focus-visible), so mouse clicks don't get an outline. */
+:focus-visible {
+  outline: 2px solid var(--k-brand-primary);
+  outline-offset: 2px;
+  border-radius: var(--k-radius-sm);
+}
+
 /* ── Main content ── */
 .k-main {
   overflow-y: auto;

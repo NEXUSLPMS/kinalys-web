@@ -83,6 +83,19 @@ function LoginPage() {
   )
 }
 
+// C2b a11y: human-readable page titles per nav key for document.title.
+const NAV_TITLES: Record<string, string> = {
+  home: 'Dashboard', settings: 'Account Settings', org: 'Organisation', import: 'Import Users',
+  bsc: 'Balanced Scorecard', scorecard: 'My Scorecard', oneonone: '1-on-1 Reviews', ai: 'AI Coaching',
+  okr: 'OKR Framework', talent: 'Talent Grid', users: 'User Management', learning: 'My Learning',
+  catalog: 'Course Catalog', certs: 'Certifications', exec: 'Exec Dashboard', kpi: 'KPI Templates',
+  kb: 'Knowledge Base', support: 'Support Tickets', copc: 'COPC Scorecard', sixsigma: 'Six Sigma Scorecard',
+  competency: 'Competency', pkt: 'PKT Engine', copcreport: 'COPC Report', sixsigmareport: 'Six Sigma Report',
+  hradmin: 'HR Admin Management', predictive: 'Predictive Analysis', hrflags: 'Flags Inbox',
+  flaghistory: 'Flag History', departures: 'Departures Inbox', recommendations: 'AI Recommendations',
+  pip_checkins: 'PIP Check-ins', auditlog: 'Audit Log', addons: 'Add-on Management', orgsetup: 'Organisation Setup',
+}
+
 function Dashboard() {
   const { user, logout, getAccessTokenSilently } = useAuth0()
   const { isViewAs, targetName, nonce: viewAsNonce, exit: exitViewAs } = useViewAs()
@@ -150,6 +163,13 @@ function Dashboard() {
     loadData()
     // viewAsNonce bumps on enter/exit so data refetches as the target (or self).
   }, [getAccessTokenSilently, viewAsNonce])
+
+  // C2b a11y: keep the browser tab title in sync with the active page so screen
+  // readers and tab-switchers announce where the user is (SPA has no router).
+  useEffect(() => {
+    const page = NAV_TITLES[activeNav] || 'Dashboard'
+    document.title = `${page} · Kinalys`
+  }, [activeNav])
 
   if (loading) {
     return (
@@ -225,133 +245,141 @@ function Dashboard() {
       )}
 
       {/* Topbar */}
-      <div className="k-topbar">
-        <div onClick={() => setActiveNav('home')} style={{ fontFamily: 'var(--k-font-display)', fontSize: '18px', fontWeight: '800', color: 'var(--k-text-topbar)', letterSpacing: '3px', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+      <header className="k-topbar">
+        <button type="button" onClick={() => setActiveNav('home')} aria-label="Go to dashboard home" style={{ background: 'none', border: 'none', fontFamily: 'var(--k-font-display)', fontSize: '18px', fontWeight: '800', color: 'var(--k-text-topbar)', letterSpacing: '3px', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
           KINALYS<span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--k-text-topbar)', display: 'inline-block' }}/>
-        </div>
+        </button>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           {profile?.tenant && <span style={{ fontSize: '12px', color: 'var(--k-text-topbar)', opacity: 0.7, background: 'rgba(255,255,255,0.1)', padding: '3px 12px', borderRadius: '20px' }}>{profile.tenant.name}</span>}
           <span style={{ fontSize: '12px', color: 'var(--k-text-topbar)', opacity: 0.7 }}>{user?.email}</span>
           <button className="k-btn k-btn-ghost" onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })} style={{ fontSize: '12px', padding: '6px 14px', color: 'var(--k-text-topbar)', borderColor: 'rgba(255,255,255,0.2)' }}>Sign out</button>
         </div>
-      </div>
+      </header>
 
       {/* Sidebar */}
-      <div className="k-sidebar">
+      <nav className="k-sidebar" aria-label="Main navigation">
 {/* Dashboard */}
         <div className="k-sidebar-section" style={{ marginBottom: '4px' }}>
-          <div className={`k-nav-item ${activeNav === 'home' ? 'active' : ''}`} onClick={() => setActiveNav('home')}>
+          <button type="button" className={`k-nav-item ${activeNav === 'home' ? 'active' : ''}`} onClick={() => setActiveNav('home')}>
             🏠 Dashboard
-          </div>
+          </button>
         </div>
 
         {/* Learning */}
         <div className="k-sidebar-section">
-          <div
+          <button
+            type="button"
             className="k-sidebar-label"
             onClick={() => toggleSection('learning')}
+            aria-expanded={!collapsedSections['learning']}
             style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', userSelect: 'none' }}
           >
             Learning <span style={{ fontSize: '10px' }}>{collapsedSections['learning'] ? '▶' : '▼'}</span>
-          </div>
+          </button>
           {!collapsedSections['learning'] && <>
-            {canSee('learning') && <div className={`k-nav-item ${activeNav === 'learning' ? 'active' : ''}`} onClick={() => setActiveNav('learning')}>My Learning</div>}
-            {canSee('catalog') && <div className={`k-nav-item ${activeNav === 'catalog' ? 'active' : ''}`} onClick={() => setActiveNav('catalog')}>Course Catalog</div>}
-            {canSee('certs') && <div className={`k-nav-item ${activeNav === 'certs' ? 'active' : ''}`} onClick={() => setActiveNav('certs')}>Certifications</div>}
+            {canSee('learning') && <button type="button" className={`k-nav-item ${activeNav === 'learning' ? 'active' : ''}`} onClick={() => setActiveNav('learning')}>My Learning</button>}
+            {canSee('catalog') && <button type="button" className={`k-nav-item ${activeNav === 'catalog' ? 'active' : ''}`} onClick={() => setActiveNav('catalog')}>Course Catalog</button>}
+            {canSee('certs') && <button type="button" className={`k-nav-item ${activeNav === 'certs' ? 'active' : ''}`} onClick={() => setActiveNav('certs')}>Certifications</button>}
                       </>}
         </div>
 
         {/* Performance */}
         <div className="k-sidebar-section" style={{ marginTop: '4px' }}>
-          <div
+          <button
+            type="button"
             className="k-sidebar-label"
             onClick={() => toggleSection('performance')}
+            aria-expanded={!collapsedSections['performance']}
             style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', userSelect: 'none' }}
           >
             Performance <span style={{ fontSize: '10px' }}>{collapsedSections['performance'] ? '▶' : '▼'}</span>
-          </div>
+          </button>
           {!collapsedSections['performance'] && <>
-            {canSee('predictive') && <div className={`k-nav-item ${activeNav === 'predictive' ? 'active' : ''}`} onClick={() => setActiveNav('predictive')}>Predictive Analysis</div>}
-            {canSee('pip_checkins') && <div className={`k-nav-item ${activeNav === 'pip_checkins' ? 'active' : ''}`} onClick={() => setActiveNav('pip_checkins')}>PIP Check-ins</div>}
-            {canSee('exec') && <div className={`k-nav-item ${activeNav === 'exec' ? 'active' : ''}`} onClick={() => setActiveNav('exec')}>Exec Dashboard</div>}
-            {canSee('scorecard') && <div className={`k-nav-item ${activeNav === 'scorecard' ? 'active' : ''}`} onClick={() => setActiveNav('scorecard')}>My Scorecard</div>}
-            {canSee('ai') && <div className={`k-nav-item ${activeNav === 'ai' ? 'active' : ''}`} onClick={() => setActiveNav('ai')}>AI Coaching</div>}
-            {canSee('recommendations') && <div className={`k-nav-item ${activeNav === 'recommendations' ? 'active' : ''}`} onClick={() => setActiveNav('recommendations')}>AI Recommendations</div>}
-            {canSee('copc') && <div className={`k-nav-item ${activeNav === 'copc' ? 'active' : ''}`} onClick={() => setActiveNav('copc')}>COPC Scorecard</div>}
-            {canSee('copcreport') && <div className={`k-nav-item ${activeNav === 'copcreport' ? 'active' : ''}`} onClick={() => setActiveNav('copcreport')}>COPC Report</div>}
-            {canSee('sixsigma') && <div className={`k-nav-item ${activeNav === 'sixsigma' ? 'active' : ''}`} onClick={() => setActiveNav('sixsigma')}>Six Sigma Scorecard</div>}
-            {canSee('sixsigmareport') && <div className={`k-nav-item ${activeNav === 'sixsigmareport' ? 'active' : ''}`} onClick={() => setActiveNav('sixsigmareport')}>Six Sigma Report</div>}
-            {canSee('oneonone') && <div className={`k-nav-item ${activeNav === 'oneonone' ? 'active' : ''}`} onClick={() => setActiveNav('oneonone')}>1-on-1 Reviews</div>}
-            {canSee('competency') && <div className={`k-nav-item ${activeNav === 'competency' ? 'active' : ''}`} onClick={() => setActiveNav('competency')}>Competency</div>}
-            {canSee('pkt') && <div className={`k-nav-item ${activeNav === 'pkt' ? 'active' : ''}`} onClick={() => setActiveNav('pkt')}>PKT Engine</div>}
+            {canSee('predictive') && <button type="button" className={`k-nav-item ${activeNav === 'predictive' ? 'active' : ''}`} onClick={() => setActiveNav('predictive')}>Predictive Analysis</button>}
+            {canSee('pip_checkins') && <button type="button" className={`k-nav-item ${activeNav === 'pip_checkins' ? 'active' : ''}`} onClick={() => setActiveNav('pip_checkins')}>PIP Check-ins</button>}
+            {canSee('exec') && <button type="button" className={`k-nav-item ${activeNav === 'exec' ? 'active' : ''}`} onClick={() => setActiveNav('exec')}>Exec Dashboard</button>}
+            {canSee('scorecard') && <button type="button" className={`k-nav-item ${activeNav === 'scorecard' ? 'active' : ''}`} onClick={() => setActiveNav('scorecard')}>My Scorecard</button>}
+            {canSee('ai') && <button type="button" className={`k-nav-item ${activeNav === 'ai' ? 'active' : ''}`} onClick={() => setActiveNav('ai')}>AI Coaching</button>}
+            {canSee('recommendations') && <button type="button" className={`k-nav-item ${activeNav === 'recommendations' ? 'active' : ''}`} onClick={() => setActiveNav('recommendations')}>AI Recommendations</button>}
+            {canSee('copc') && <button type="button" className={`k-nav-item ${activeNav === 'copc' ? 'active' : ''}`} onClick={() => setActiveNav('copc')}>COPC Scorecard</button>}
+            {canSee('copcreport') && <button type="button" className={`k-nav-item ${activeNav === 'copcreport' ? 'active' : ''}`} onClick={() => setActiveNav('copcreport')}>COPC Report</button>}
+            {canSee('sixsigma') && <button type="button" className={`k-nav-item ${activeNav === 'sixsigma' ? 'active' : ''}`} onClick={() => setActiveNav('sixsigma')}>Six Sigma Scorecard</button>}
+            {canSee('sixsigmareport') && <button type="button" className={`k-nav-item ${activeNav === 'sixsigmareport' ? 'active' : ''}`} onClick={() => setActiveNav('sixsigmareport')}>Six Sigma Report</button>}
+            {canSee('oneonone') && <button type="button" className={`k-nav-item ${activeNav === 'oneonone' ? 'active' : ''}`} onClick={() => setActiveNav('oneonone')}>1-on-1 Reviews</button>}
+            {canSee('competency') && <button type="button" className={`k-nav-item ${activeNav === 'competency' ? 'active' : ''}`} onClick={() => setActiveNav('competency')}>Competency</button>}
+            {canSee('pkt') && <button type="button" className={`k-nav-item ${activeNav === 'pkt' ? 'active' : ''}`} onClick={() => setActiveNav('pkt')}>PKT Engine</button>}
           </>}
         </div>
 
         {/* Management */}
         {isAdmin && (
           <div className="k-sidebar-section" style={{ marginTop: '4px' }}>
-            <div
+            <button
+              type="button"
               className="k-sidebar-label"
               onClick={() => toggleSection('management')}
+              aria-expanded={!collapsedSections['management']}
               style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', userSelect: 'none' }}
             >
               Management <span style={{ fontSize: '10px' }}>{collapsedSections['management'] ? '▶' : '▼'}</span>
-            </div>
+            </button>
             {!collapsedSections['management'] && <>
-              {canSee('org') && <div className={`k-nav-item ${activeNav === 'org' ? 'active' : ''}`} onClick={() => setActiveNav('org')}>Organisation</div>}
-              {canSee('import') && <div className={`k-nav-item ${activeNav === 'import' ? 'active' : ''}`} onClick={() => setActiveNav('import')}>Import Users</div>}
-              {canSee('bsc') && <div className={`k-nav-item ${activeNav === 'bsc' ? 'active' : ''}`} onClick={() => setActiveNav('bsc')}>Balanced Scorecard</div>}
-              {canSee('okr') && <div className={`k-nav-item ${activeNav === 'okr' ? 'active' : ''}`} onClick={() => setActiveNav('okr')}>OKR Framework</div>}
-              {canSee('talent') && <div className={`k-nav-item ${activeNav === 'talent' ? 'active' : ''}`} onClick={() => setActiveNav('talent')}>Talent Grid</div>}
-              {canSee('users') && <div className={`k-nav-item ${activeNav === 'users' ? 'active' : ''}`} onClick={() => setActiveNav('users')}>User Management</div>}
-              {canSee('kpi') && <div className={`k-nav-item ${activeNav === 'kpi' ? 'active' : ''}`} onClick={() => setActiveNav('kpi')}>KPI Templates</div>}
-              {canSee('hrflags') && <div className={`k-nav-item ${activeNav === 'hrflags' ? 'active' : ''}`} onClick={() => setActiveNav('hrflags')}>Flags Inbox</div>}
-              {canSee('hrflags') && <div className={`k-nav-item ${activeNav === 'flaghistory' ? 'active' : ''}`} onClick={() => setActiveNav('flaghistory')}>Flag History</div>}
-              {canSee('departures') && <div className={`k-nav-item ${activeNav === 'departures' ? 'active' : ''}`} onClick={() => setActiveNav('departures')}>Departures Inbox</div>}
+              {canSee('org') && <button type="button" className={`k-nav-item ${activeNav === 'org' ? 'active' : ''}`} onClick={() => setActiveNav('org')}>Organisation</button>}
+              {canSee('import') && <button type="button" className={`k-nav-item ${activeNav === 'import' ? 'active' : ''}`} onClick={() => setActiveNav('import')}>Import Users</button>}
+              {canSee('bsc') && <button type="button" className={`k-nav-item ${activeNav === 'bsc' ? 'active' : ''}`} onClick={() => setActiveNav('bsc')}>Balanced Scorecard</button>}
+              {canSee('okr') && <button type="button" className={`k-nav-item ${activeNav === 'okr' ? 'active' : ''}`} onClick={() => setActiveNav('okr')}>OKR Framework</button>}
+              {canSee('talent') && <button type="button" className={`k-nav-item ${activeNav === 'talent' ? 'active' : ''}`} onClick={() => setActiveNav('talent')}>Talent Grid</button>}
+              {canSee('users') && <button type="button" className={`k-nav-item ${activeNav === 'users' ? 'active' : ''}`} onClick={() => setActiveNav('users')}>User Management</button>}
+              {canSee('kpi') && <button type="button" className={`k-nav-item ${activeNav === 'kpi' ? 'active' : ''}`} onClick={() => setActiveNav('kpi')}>KPI Templates</button>}
+              {canSee('hrflags') && <button type="button" className={`k-nav-item ${activeNav === 'hrflags' ? 'active' : ''}`} onClick={() => setActiveNav('hrflags')}>Flags Inbox</button>}
+              {canSee('hrflags') && <button type="button" className={`k-nav-item ${activeNav === 'flaghistory' ? 'active' : ''}`} onClick={() => setActiveNav('flaghistory')}>Flag History</button>}
+              {canSee('departures') && <button type="button" className={`k-nav-item ${activeNav === 'departures' ? 'active' : ''}`} onClick={() => setActiveNav('departures')}>Departures Inbox</button>}
                </>}
           </div>
         )}
 
         {/* Help */}
         <div className="k-sidebar-section" style={{ marginTop: '4px' }}>
-          <div
+          <button
+            type="button"
             className="k-sidebar-label"
             onClick={() => toggleSection('help')}
+            aria-expanded={!collapsedSections['help']}
             style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', userSelect: 'none' }}
           >
             Help <span style={{ fontSize: '10px' }}>{collapsedSections['help'] ? '▶' : '▼'}</span>
-          </div>
+          </button>
           {!collapsedSections['help'] && <>
-            {canSee('kb') && <div className={`k-nav-item ${activeNav === 'kb' ? 'active' : ''}`} onClick={() => setActiveNav('kb')}>Knowledge Base</div>}
-            {canSee('support') && <div className={`k-nav-item ${activeNav === 'support' ? 'active' : ''}`} onClick={() => setActiveNav('support')}>Support Tickets</div>}
+            {canSee('kb') && <button type="button" className={`k-nav-item ${activeNav === 'kb' ? 'active' : ''}`} onClick={() => setActiveNav('kb')}>Knowledge Base</button>}
+            {canSee('support') && <button type="button" className={`k-nav-item ${activeNav === 'support' ? 'active' : ''}`} onClick={() => setActiveNav('support')}>Support Tickets</button>}
           </>}
         </div>
 
         {/* Platform - super_admin only */}
         {role === 'super_admin' && (
           <div className="k-sidebar-section" style={{ marginTop: '4px' }}>
-            <div className="k-sidebar-label" onClick={() => toggleSection('platform')} style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', userSelect: 'none' }}>
+            <button type="button" className="k-sidebar-label" onClick={() => toggleSection('platform')} aria-expanded={!collapsedSections['platform']} style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', userSelect: 'none' }}>
               Platform <span style={{ fontSize: '10px' }}>{collapsedSections['platform'] ? '▶' : '▼'}</span>
-            </div>
+            </button>
             {!collapsedSections['platform'] && <>
-              <div className={`k-nav-item ${activeNav === 'hradmin' ? 'active' : ''}`} onClick={() => setActiveNav('hradmin')}>HR Admin Management</div>
-              <div className={`k-nav-item ${activeNav === 'auditlog' ? 'active' : ''}`} onClick={() => setActiveNav('auditlog')}>Audit Log</div>
-              <div className={`k-nav-item ${activeNav === 'addons' ? 'active' : ''}`} onClick={() => setActiveNav('addons')}>Add-on Management</div>
-              <div className={`k-nav-item ${activeNav === 'orgsetup' ? 'active' : ''}`} onClick={() => setActiveNav('orgsetup')}>Organisation Setup</div>
+              <button type="button" className={`k-nav-item ${activeNav === 'hradmin' ? 'active' : ''}`} onClick={() => setActiveNav('hradmin')}>HR Admin Management</button>
+              <button type="button" className={`k-nav-item ${activeNav === 'auditlog' ? 'active' : ''}`} onClick={() => setActiveNav('auditlog')}>Audit Log</button>
+              <button type="button" className={`k-nav-item ${activeNav === 'addons' ? 'active' : ''}`} onClick={() => setActiveNav('addons')}>Add-on Management</button>
+              <button type="button" className={`k-nav-item ${activeNav === 'orgsetup' ? 'active' : ''}`} onClick={() => setActiveNav('orgsetup')}>Organisation Setup</button>
             </>}
           </div>
         )}
 
         <div style={{ marginTop: 'auto', borderTop: '1px solid var(--k-border-default)', padding: '12px 0' }}>
-          <div className={`k-nav-item ${activeNav === 'settings' ? 'active' : ''}`} onClick={() => setActiveNav('settings')} style={{ margin: '0 var(--k-space-3)' }}>
+          <button type="button" className={`k-nav-item ${activeNav === 'settings' ? 'active' : ''}`} onClick={() => setActiveNav('settings')} style={{ margin: '0 var(--k-space-3)' }}>
             ⚙️ Account Settings
-          </div>
+          </button>
         </div>
 
-      </div>
+      </nav>
 
       {/* Main content */}
-      <div className="k-main">
+      <main className="k-main">
         {/* Per-page error boundary: a render crash in one page shows a fallback
             without taking down the topbar/sidebar shell. Keyed by activeNav so
             navigating to another page resets the boundary. */}
@@ -429,6 +457,8 @@ function Dashboard() {
                 <div style={{ position: 'relative', marginRight: '12px' }}>
                   <button
                     onClick={() => setShowAlerts(!showAlerts)}
+                    aria-label={unreadCount > 0 ? `Alerts, ${unreadCount} unread` : 'Alerts'}
+                    aria-expanded={showAlerts}
                     style={{ position: 'relative', background: 'none', border: 'none', cursor: 'pointer', padding: '6px', borderRadius: 'var(--k-radius-md)', color: 'var(--k-text-muted)', fontSize: '18px' }}
                   >
                     🔔
@@ -449,7 +479,7 @@ function Dashboard() {
                             Mark all read
                           </button>
                         )}
-                        <button onClick={() => setShowAlerts(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px', color: 'var(--k-text-muted)', padding: '0 4px', lineHeight: 1 }}>✖</button>
+                        <button onClick={() => setShowAlerts(false)} aria-label="Close alerts" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px', color: 'var(--k-text-muted)', padding: '0 4px', lineHeight: 1 }}>✖</button>
                       </div>
                       <div style={{ overflowY: 'auto', flex: 1 }}>
                         {alerts.length === 0 ? (
@@ -774,7 +804,7 @@ function Dashboard() {
           </div>
         )}
         </ErrorBoundary>
-      </div>
+      </main>
     </div>
   )
 }

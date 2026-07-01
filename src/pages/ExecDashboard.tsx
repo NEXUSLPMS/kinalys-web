@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { getTeamScorecards, getReviewCycles, getUserScorecard } from '../api/client'
 import StatRing from '../components/StatRing'
+import MultiSelectDropdown from '../components/MultiSelectDropdown'
 
 export default function ExecDashboard() {
   const [team, setTeam] = useState<any[]>([])
@@ -308,13 +309,6 @@ export default function ExecDashboard() {
     )
   }
 
-  if (typeof document !== 'undefined' && !document.getElementById('desig-style')) {
-    const s = document.createElement('style')
-    s.id = 'desig-style'
-    s.textContent = '#desig-dropdown.open { display: block !important; }'
-    document.head.appendChild(s)
-  }
-
   // ── MAIN DASHBOARD VIEW ───────────────────────────────────────
   return (
     <div style={{ height: '100%', overflowY: 'auto' }}>
@@ -449,23 +443,14 @@ export default function ExecDashboard() {
               <option value="all">All Departments</option>
               {departments.filter(d => d !== 'all').map(d => <option key={d} value={d}>{d}</option>)}
             </select>
-            <div style={{ position: 'relative' }}>
-              <div onClick={() => document.getElementById('desig-dropdown')?.classList.toggle('open')}
-                style={{ fontSize: '13px', padding: '7px 12px', borderRadius: 'var(--k-radius-md)', border: `1px solid ${filterDesignation.length > 0 ? 'var(--k-brand-primary)' : 'var(--k-border-input)'}`, background: filterDesignation.length > 0 ? 'var(--k-brand-faint)' : 'var(--k-bg-input)', color: 'var(--k-text-primary)', fontFamily: 'var(--k-font-sans)', cursor: 'pointer', minWidth: '180px', userSelect: 'none' }}>
-                {filterDesignation.length === 0 ? 'All Designations' : `${filterDesignation.length} selected`}
-              </div>
-              <div id="desig-dropdown" style={{ display: 'none', position: 'absolute', top: '100%', left: 0, zIndex: 100, background: 'var(--k-bg-page, white)', border: '1px solid var(--k-border-default)', borderRadius: 'var(--k-radius-md)', boxShadow: '0 4px 16px rgba(0,0,0,0.12)', minWidth: '220px', maxHeight: '260px', overflowY: 'auto', padding: '6px 0' }}
-                onMouseLeave={() => document.getElementById('desig-dropdown')?.classList.remove('open')}>
-                {designations.filter(d => d !== 'all').map(d => (
-                  <div key={d} onClick={() => setFilterDesignation(prev => prev.includes(d) ? prev.filter(x => x !== d) : [...prev, d])}
-                    style={{ padding: '8px 14px', fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--k-text-primary)', background: filterDesignation.includes(d) ? 'var(--k-brand-faint)' : 'transparent' }}>
-                    <span style={{ width: '14px', height: '14px', borderRadius: '3px', border: `2px solid ${filterDesignation.includes(d) ? 'var(--k-brand-primary)' : 'var(--k-border-default)'}`, background: filterDesignation.includes(d) ? 'var(--k-brand-primary)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      {filterDesignation.includes(d) && <span style={{ color: 'white', fontSize: '10px', fontWeight: 700 }}>✓</span>}
-                    </span>
-                    {d}
-                  </div>
-                ))}
-              </div>
+            <div style={{ minWidth: '180px' }}>
+              <MultiSelectDropdown
+                label="Designations"
+                options={designations.filter(d => d !== 'all').map(d => ({ value: d, label: d }))}
+                selectedValues={filterDesignation}
+                onChange={setFilterDesignation}
+                placeholder="All Designations"
+              />
             </div>
             <select value={filterBand} onChange={e => setFilterBand(e.target.value)} style={{ fontSize: '13px', padding: '7px 12px', borderRadius: 'var(--k-radius-md)', border: `1px solid ${filterBand !== 'all' ? 'var(--k-brand-primary)' : 'var(--k-border-input)'}`, background: filterBand !== 'all' ? 'var(--k-brand-faint)' : 'var(--k-bg-input)', color: 'var(--k-text-primary)', fontFamily: 'var(--k-font-sans)', cursor: 'pointer' }}>
               <option value="all">All Performance Bands</option>

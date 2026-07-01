@@ -6,6 +6,7 @@ import {
   getDesignations, getReviewCycles
 } from '../api/client'
 import DestructiveConfirmModal from '../components/DestructiveConfirmModal'
+import MultiSelectDropdown from '../components/MultiSelectDropdown'
 import { useToast } from '../contexts/ToastContext'
 
 // B7-web-xlsx: xlsx/SheetJS -> exceljs (SheetJS CVEs). TRD §13 formula guard.
@@ -62,7 +63,6 @@ export default function KpiTemplates() {
   const [filterDept, setFilterDept] = useState('')
   const [filterMethodology, setFilterMethodology] = useState('')
   const [selectedCycle, setSelectedCycle] = useState('')
-  const [showDesignationPicker, setShowDesignationPicker] = useState(false)
   const [bulkData, setBulkData] = useState<any[]>([])
   const [bulkUploading, setBulkUploading] = useState(false)
   const [pendingDelete, setPendingDelete] = useState<KpiTemplate | null>(null)
@@ -108,7 +108,6 @@ export default function KpiTemplates() {
   function openCreate() {
     setEditingTemplate(null)
     setForm({ name: '', description: '', designation_ids: [], department_id: '', weight_pct: 25, metric_type: 'numeric', target_value: '', rag_green_threshold: '', rag_amber_threshold: '', is_mandatory: true })
-    setShowDesignationPicker(false)
     setShowForm(true)
   }
 
@@ -126,7 +125,6 @@ export default function KpiTemplates() {
       rag_amber_threshold: template.rag_amber_threshold?.toString() || '',
       is_mandatory: template.is_mandatory,
     })
-    setShowDesignationPicker(false)
     setShowForm(true)
   }
 
@@ -527,7 +525,7 @@ export default function KpiTemplates() {
 
         {/* Create/Edit modal */}
         {showForm && (
-          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }} onClick={() => setShowDesignationPicker(false)}>
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
             <div style={{ background: 'var(--k-bg-surface)', borderRadius: 'var(--k-radius-lg)', padding: '28px', width: '580px', maxWidth: '90vw', maxHeight: '90vh', overflowY: 'auto', boxShadow: 'var(--k-shadow-lg)' }} onClick={e => e.stopPropagation()}>
               <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--k-text-primary)', marginBottom: '20px' }}>
                 {editingTemplate ? 'Edit KPI Template' : 'New KPI Template'}
@@ -545,55 +543,18 @@ export default function KpiTemplates() {
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                  {/* Multi-select designation picker */}
-                  <div style={{ position: 'relative' }}>
+                  {/* Multi-select designation picker (MULTISELECT-SWEEP shared component) */}
+                  <div>
                     <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--k-text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>
                       Designation * <span style={{ fontSize: '10px', fontWeight: 400, color: 'var(--k-brand-primary)' }}>(multi-select)</span>
                     </div>
-                    <div
-                      onClick={e => { e.stopPropagation(); setShowDesignationPicker(p => !p) }}
-                      style={{ width: '100%', fontSize: '13px', padding: '8px 12px', borderRadius: 'var(--k-radius-md)', border: `1px solid ${form.designation_ids.length === 0 ? 'var(--k-border-input)' : 'var(--k-brand-primary)'}`, background: 'var(--k-bg-input)', color: form.designation_ids.length > 0 ? 'var(--k-text-primary)' : 'var(--k-text-muted)', fontFamily: 'var(--k-font-sans)', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', minHeight: '38px' }}
-                    >
-                      <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '13px' }}>
-                        {form.designation_ids.length === 0 ? 'Select designation(s)...'
-                          : form.designation_ids.length === 1 ? designations.find(d => d.id === form.designation_ids[0])?.name
-                          : `${form.designation_ids.length} designations selected`}
-                      </span>
-                      <span style={{ fontSize: '10px', marginLeft: '8px', flexShrink: 0 }}>{showDesignationPicker ? '▲' : '▼'}</span>
-                    </div>
-                    {/* Selected pills */}
-                    {form.designation_ids.length > 0 && (
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '6px' }}>
-                        {form.designation_ids.map(id => {
-                          const d = designations.find(x => x.id === id)
-                          return d ? (
-                            <span key={id} style={{ fontSize: '11px', background: 'var(--k-brand-faint)', color: 'var(--k-brand-primary)', border: '1px solid var(--k-brand-primary)', padding: '2px 8px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                              {d.name}
-                              <span onClick={() => setForm(p => ({ ...p, designation_ids: p.designation_ids.filter(x => x !== id) }))} style={{ cursor: 'pointer', fontWeight: 700, fontSize: '10px' }}>✕</span>
-                            </span>
-                          ) : null
-                        })}
-                      </div>
-                    )}
-                    {showDesignationPicker && (
-                      <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 200, background: 'var(--k-bg-surface)', border: '1px solid var(--k-border-strong)', borderRadius: 'var(--k-radius-md)', boxShadow: 'var(--k-shadow-md)', maxHeight: '220px', overflowY: 'auto', marginTop: '4px' }}>
-                        {designations.map((d: any) => {
-                          const isSelected = form.designation_ids.includes(d.id)
-                          return (
-                            <div
-                              key={d.id}
-                              onClick={() => setForm(p => ({ ...p, designation_ids: isSelected ? p.designation_ids.filter(id => id !== d.id) : [...p.designation_ids, d.id] }))}
-                              style={{ padding: '8px 12px', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', background: isSelected ? 'var(--k-brand-faint)' : 'transparent', color: isSelected ? 'var(--k-brand-primary)' : 'var(--k-text-primary)' }}
-                            >
-                              <div style={{ width: '16px', height: '16px', borderRadius: '4px', border: `2px solid ${isSelected ? 'var(--k-brand-primary)' : 'var(--k-border-default)'}`, background: isSelected ? 'var(--k-brand-primary)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                {isSelected && <span style={{ color: 'white', fontSize: '10px', fontWeight: 700 }}>✓</span>}
-                              </div>
-                              {d.name}
-                            </div>
-                          )
-                        })}
-                      </div>
-                    )}
+                    <MultiSelectDropdown
+                      label="Designation"
+                      options={designations.map((d: any) => ({ value: d.id, label: d.name }))}
+                      selectedValues={form.designation_ids}
+                      onChange={(values) => setForm(p => ({ ...p, designation_ids: values }))}
+                      placeholder="Select designation(s)..."
+                    />
                   </div>
 
                   {/* Department - mandatory */}
@@ -649,7 +610,7 @@ export default function KpiTemplates() {
                 <button className="k-btn k-btn-primary" onClick={saveTemplate} disabled={saving || !isFormComplete} style={{ flex: 1, justifyContent: 'center', opacity: (saving || !isFormComplete) ? 0.6 : 1, cursor: (saving || !isFormComplete) ? 'not-allowed' : 'pointer' }}>
                   {saving ? '⏳ Saving...' : editingTemplate ? '✓ Update Template' : '+ Create Template'}
                 </button>
-                <button className="k-btn k-btn-secondary" onClick={() => { setShowForm(false); setEditingTemplate(null); setShowDesignationPicker(false) }} style={{ flex: 1, justifyContent: 'center' }}>Cancel</button>
+                <button className="k-btn k-btn-secondary" onClick={() => { setShowForm(false); setEditingTemplate(null) }} style={{ flex: 1, justifyContent: 'center' }}>Cancel</button>
               </div>
             </div>
           </div>

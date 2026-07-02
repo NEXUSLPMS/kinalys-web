@@ -63,11 +63,11 @@ function LoginPage() {
   return (
     <div style={{ minHeight: '100vh', background: 'var(--k-bg-topbar)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
       <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-        <div style={{ fontFamily: 'var(--k-font-display)', fontSize: '42px', fontWeight: '800', color: 'var(--k-brand-lighter)', letterSpacing: '6px', display: 'inline-flex', alignItems: 'center', gap: '8px', position: 'relative' }}>
-          KINALYS
-          <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--k-brand-lighter)', flexShrink: 0 }}/>
-          <div style={{ position: 'absolute', bottom: '-4px', left: 0, right: '20px', height: '1.5px', background: 'var(--k-brand-primary)', opacity: 0.6 }}/>
-        </div>
+        <img
+          src="/Kinalys Logo White transparent.png"
+          alt="Kinalys"
+          style={{ height: '64px', width: 'auto' }}
+        />
         <div style={{ marginTop: '12px', fontSize: '13px', color: 'var(--k-brand-light)', letterSpacing: '4px' }}>KINETIC ANALYSIS</div>
       </div>
       <div className="k-card" style={{ width: '100%', maxWidth: '400px', padding: '40px', textAlign: 'center' }}>
@@ -246,8 +246,12 @@ function Dashboard() {
 
       {/* Topbar */}
       <header className="k-topbar">
-        <button type="button" onClick={() => setActiveNav('home')} aria-label="Go to dashboard home" style={{ background: 'none', border: 'none', fontFamily: 'var(--k-font-display)', fontSize: '18px', fontWeight: '800', color: 'var(--k-text-topbar)', letterSpacing: '3px', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-          KINALYS<span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--k-text-topbar)', display: 'inline-block' }}/>
+        <button type="button" onClick={() => setActiveNav('home')} aria-label="Go to dashboard home" style={{ background: 'none', border: 'none', display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+          <img
+            src="/Kinalys Logo White transparent.png"
+            alt="Kinalys"
+            style={{ height: '28px', width: 'auto' }}
+          />
         </button>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           {profile?.tenant && <span style={{ fontSize: '12px', color: 'var(--k-text-topbar)', opacity: 0.7, background: 'rgba(255,255,255,0.1)', padding: '3px 12px', borderRadius: '20px' }}>{profile.tenant.name}</span>}

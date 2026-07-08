@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { getTalentAssessments, setTalentPotential } from '../api/client'
+import { BAND_GREEN_MIN, bandForScore, colorForScore } from '../utils/bands'
 
 interface Employee {
   id: string
@@ -47,15 +48,26 @@ function getBoxFromBands(perf: string, pot: string): string {
 }
 
 // ── Suggested potential based on score ───────────────────────
+// High suggestion follows the org green band (utils/bands.ts
+// KINALYS-BAND-SOURCE, F2b); the 80% floor is the 9-box ELIGIBILITY rule
+// (Sprint 5), deliberately NOT a band-source value.
 function getSuggestedPotential(score: number | null): 'low' | 'medium' | 'high' | null {
   if (score === null) return null
-  if (score >= 90) return 'high'
+  if (score >= BAND_GREEN_MIN) return 'high'
   if (score >= 80) return 'medium'
   return null // below 80 = Need Improvement, not eligible
 }
 
 function isEligibleForGrid(score: number | null): boolean {
   return score !== null && score >= 80
+}
+
+// F2b: performance AXIS banding from the single org-band source — mirrors the
+// API's getPerformanceBand (green->high, amber->medium, red->low). Was a
+// private 90/80, out of step with the API's 75/50.
+function perfAxisBand(score: number): 'low' | 'medium' | 'high' {
+  const band = bandForScore(score)
+  return band === 'green' ? 'high' : band === 'amber' ? 'medium' : 'low'
 }
 
 export default function TalentGrid() {
@@ -137,7 +149,7 @@ export default function TalentGrid() {
     return employees.filter(e => {
       if (!e.potential_rating || !isEligibleForGrid(e.final_score)) return false
       const perf = e.performance_band ||
-        (e.final_score !== null ? (e.final_score >= 90 ? 'high' : e.final_score >= 80 ? 'medium' : 'low') : null)
+        (e.final_score !== null ? perfAxisBand(e.final_score) : null)
       return perf === perfBand && e.potential_rating === potBand
     })
   }
@@ -308,7 +320,7 @@ export default function TalentGrid() {
                           </td>
                           <td style={{ padding: '10px 12px', color: 'var(--k-text-muted)', fontSize: '12px' }}>{emp.department_name || '—'}</td>
                           <td style={{ padding: '10px 12px' }}>
-                            <span style={{ fontWeight: 700, color: emp.final_score! >= 90 ? 'var(--k-success-text)' : 'var(--k-warning-text)' }}>
+                            <span style={{ fontWeight: 700, color: colorForScore(emp.final_score!) }}>
                               {emp.final_score}%
                             </span>
                           </td>

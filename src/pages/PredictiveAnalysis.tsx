@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { getPredictiveTeam, getPredictiveMe, getMyProfile, submitEmployeeFlag, getUserScorecard } from '../api/client'
 import StatRing from '../components/StatRing'
+import { colorForScore, colorForBand, bgForBand } from '../utils/bands'
 
 export default function PredictiveAnalysis({ onNavigate }: { onNavigate?: (target: string) => void }) {
   const [teamData, setTeamData] = useState<any>(null)
@@ -85,22 +86,18 @@ export default function PredictiveAnalysis({ onNavigate }: { onNavigate?: (targe
     return { arrow: '\u2192', color: 'var(--k-warning-text)' }
   }
 
+  // Single org-band source (utils/bands.ts KINALYS-BAND-SOURCE) — this view
+  // previously banded at a private 90/75, out of step with the engine RAG.
   function scoreColor(score: number) {
-    if (score >= 90) return 'var(--k-success-text)'
-    if (score >= 75) return 'var(--k-warning-text)'
-    return 'var(--k-danger-text)'
+    return colorForScore(score)
   }
 
   function ragColor(rag: string) {
-    if (rag === 'green') return 'var(--k-success-text)'
-    if (rag === 'amber') return 'var(--k-warning-text)'
-    return 'var(--k-danger-text)'
+    return colorForBand(rag)
   }
 
   function ragBg(rag: string) {
-    if (rag === 'green') return 'var(--k-success-bg)'
-    if (rag === 'amber') return 'var(--k-warning-bg)'
-    return 'var(--k-danger-bg)'
+    return bgForBand(rag)
   }
 
   function resetFlag() {

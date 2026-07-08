@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { getCOPCReport, getMyProfile } from '../api/client'
 import { exportCOPCPDF, exportCOPCXLSX } from '../utils/reportExport'
+import { BAND_GREEN_MIN, BAND_AMBER_MIN } from '../utils/bands'
 
 interface KPI {
   kpi_id: string
@@ -214,9 +215,9 @@ export default function COPCReport() {
             )}
           </div>
           <div style={{ display: 'flex', gap: '24px', marginTop: '10px' }}>
-            <span style={{ fontSize: '11px', color: 'var(--k-success-text)' }}>● Excellent ≥90%</span>
-            <span style={{ fontSize: '11px', color: 'var(--k-warning-text)' }}>● Satisfactory ≥75%</span>
-            <span style={{ fontSize: '11px', color: 'var(--k-danger-text)' }}>● Unsatisfactory &lt;75%</span>
+            <span style={{ fontSize: '11px', color: 'var(--k-success-text)' }}>● Excellent ≥{BAND_GREEN_MIN}%</span>
+            <span style={{ fontSize: '11px', color: 'var(--k-warning-text)' }}>● Satisfactory ≥{BAND_AMBER_MIN}%</span>
+            <span style={{ fontSize: '11px', color: 'var(--k-danger-text)' }}>● Unsatisfactory &lt;{BAND_AMBER_MIN}%</span>
           </div>
         </div>
       )}

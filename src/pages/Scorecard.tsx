@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { AdaptiveLearningCard } from '../components/AdaptiveLearningCard'
 import { getMyScorecard, updateKpiActual, getTeamScorecards, getUserScorecard, getReviewCycles, proposeKpi, logKpiWarningAcknowledged } from '../api/client'
 import StatRing from '../components/StatRing'
+import { bandForScore, colorForScore } from '../utils/bands'
 
 interface KpiAssignment {
   id: string
@@ -206,10 +207,10 @@ async function submitProposal() {
     }
   }
   function getScoreColor(score: number | null) {
+    // Single org-band source (utils/bands.ts KINALYS-BAND-SOURCE) — this view
+    // previously banded at a private 90/80.
     if (score === null) return 'var(--k-text-muted)'
-    if (score >= 90) return 'var(--k-success-text)'
-    if (score >= 80) return 'var(--k-warning-text)'
-    return 'var(--k-danger-text)'
+    return colorForScore(score)
   }
 
   const liveKpis = myScorecard?.kpis?.filter((k: any) => k.status === 'live') || []
@@ -300,9 +301,10 @@ async function submitProposal() {
                     {myScorecard?.calculated_score ?? '—'}%
                   </div>
                   <div className="k-stat-trend">
-                    {myScorecard?.calculated_score >= 90 ? '🟢 High Performance'
-                      : myScorecard?.calculated_score >= 80 ? '🟡 Medium Performance'
-                      : myScorecard?.calculated_score > 0 ? '🔴 Needs Improvement'
+                    {myScorecard?.calculated_score > 0
+                      ? bandForScore(myScorecard.calculated_score) === 'green' ? '🟢 High Performance'
+                        : bandForScore(myScorecard.calculated_score) === 'amber' ? '🟡 Medium Performance'
+                        : '🔴 Needs Improvement'
                       : 'No score yet'}
                   </div>
                 </div>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { getCopcScorecard, getCopcTeam, getReviewCycles } from '../api/client'
+import { BAND_GREEN_MIN, BAND_AMBER_MIN, colorForScore } from '../utils/bands'
 
 const TIER_CONFIG = {
   excellent:     { label: 'Excellent',     color: '#0F6E56', bg: '#D6F0E4', icon: '⭐' },
@@ -60,9 +61,9 @@ export default function COPCScorecard() {
   }
 
   function getIndexColor(index: number) {
-    if (index >= 90) return '#0F6E56'
-    if (index >= 70) return '#B45309'
-    return '#B91C1C'
+    // Single org-band source (utils/bands.ts KINALYS-BAND-SOURCE) — was a
+    // private 90/70 band with fixed hex; now theme tokens like other views.
+    return colorForScore(index)
   }
 
   if (loading) return <div className="k-page"><div style={{ fontSize: '14px', color: 'var(--k-text-muted)' }}>Loading COPC Scorecard...</div></div>
@@ -102,7 +103,7 @@ export default function COPCScorecard() {
                 <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--k-text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>COPC Index</div>
                 <div style={{ fontSize: '42px', fontWeight: 800, color: getIndexColor(scorecard.copc_index), lineHeight: 1 }}>{scorecard.copc_index}%</div>
                 <div style={{ fontSize: '12px', color: 'var(--k-text-muted)', marginTop: '8px' }}>
-                  {scorecard.copc_index >= 90 ? 'Excellent performance' : scorecard.copc_index >= 70 ? 'Satisfactory performance' : 'Needs improvement'}
+                  {scorecard.copc_index >= BAND_GREEN_MIN ? 'Excellent performance' : scorecard.copc_index >= BAND_AMBER_MIN ? 'Satisfactory performance' : 'Needs improvement'}
                 </div>
               </div>
               <div style={{ background: '#D6F0E4', borderRadius: 'var(--k-radius-lg)', padding: '20px', textAlign: 'center' }}>

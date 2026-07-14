@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { getMyScorecard, getReviewCycles, apiClient } from '../api/client'
+import { colorForScore, labelForScore } from '../utils/bands'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -54,10 +55,9 @@ export default function AICoaching() {
     }).join('\n')
 
     const overallScore = scorecard?.calculated_score ?? null
+    // Single org-band source (utils/bands.ts KINALYS-BAND-SOURCE) — was 90/80.
     const performanceBand = overallScore !== null
-      ? overallScore >= 90 ? 'High Performance'
-        : overallScore >= 80 ? 'Medium Performance'
-        : 'Needs Improvement'
+      ? labelForScore(overallScore)
       : 'Not yet scored'
 
     return `You are Kinalys AI Coach — a warm, direct, and highly knowledgeable performance coach embedded in the Kinalys platform. You have access to this employee's live scorecard data and your job is to help them understand their performance, identify areas for improvement, and give specific actionable coaching.
@@ -168,7 +168,7 @@ START: When the conversation begins, give a brief, personalised scorecard summar
             <>
               {/* Overall score */}
               <div style={{ background: 'var(--k-bg-page)', borderRadius: 'var(--k-radius-md)', padding: '14px', marginBottom: '12px', textAlign: 'center' }}>
-                <div style={{ fontSize: '32px', fontWeight: 800, color: overallScore !== null && overallScore >= 90 ? 'var(--k-success-text)' : overallScore !== null && overallScore >= 80 ? 'var(--k-warning-text)' : overallScore !== null ? 'var(--k-danger-text)' : 'var(--k-text-muted)' }}>
+                <div style={{ fontSize: '32px', fontWeight: 800, color: overallScore !== null ? colorForScore(overallScore) : 'var(--k-text-muted)' }}>
                   {overallScore !== null ? `${overallScore}%` : '—'}
                 </div>
                 <div style={{ fontSize: '11px', color: 'var(--k-text-muted)', marginTop: '4px' }}>

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { getTeamScorecards, getReviewCycles, getUserScorecard } from '../api/client'
 import StatRing from '../components/StatRing'
 import MultiSelectDropdown from '../components/MultiSelectDropdown'
+import { BAND_GREEN_MIN, BAND_AMBER_MIN, bandForScore, colorForScore, bgForScore, labelForScore } from '../utils/bands'
 
 export default function ExecDashboard() {
   const [team, setTeam] = useState<any[]>([])
@@ -77,25 +78,22 @@ export default function ExecDashboard() {
     }
   }
 
+  // Single org-band source (utils/bands.ts KINALYS-BAND-SOURCE) — this view
+  // previously banded at a private 90/75 (Decision-82 debt).
   function getScoreColor(score: number | null) {
     if (score === null) return 'var(--k-text-muted)'
-    if (score >= 90) return 'var(--k-success-text)'
-    if (score >= 75) return 'var(--k-warning-text)'
-    return 'var(--k-danger-text)'
+    return colorForScore(score)
   }
 
   function getScoreBand(score: number | null) {
     if (score === null) return 'Not Scored'
-    if (score >= 90) return 'High Performance'
-    if (score >= 75) return 'Medium Performance'
-    return 'Needs Improvement'
+    return labelForScore(score)
   }
 
   function getBandKey(score: number | null) {
     if (score === null) return 'not_scored'
-    if (score >= 90) return 'high'
-    if (score >= 75) return 'medium'
-    return 'needs_improvement'
+    const band = bandForScore(score)
+    return band === 'green' ? 'high' : band === 'amber' ? 'medium' : 'needs_improvement'
   }
 
   // Build filter option lists from actual data
@@ -144,9 +142,9 @@ export default function ExecDashboard() {
   const avgScore = scoredMembers.length > 0
     ? Math.round(scoredMembers.reduce((s: number, m: any) => s + Number(m.calculated_score), 0) / scoredMembers.length * 10) / 10
     : null
-  const highPerf = filtered.filter((m: any) => m.calculated_score !== null && m.calculated_score >= 90).length
-  const medPerf = filtered.filter((m: any) => m.calculated_score !== null && m.calculated_score >= 75 && m.calculated_score < 90).length
-  const needsImprovement = filtered.filter((m: any) => m.calculated_score !== null && m.calculated_score < 75).length
+  const highPerf = filtered.filter((m: any) => m.calculated_score !== null && m.calculated_score >= BAND_GREEN_MIN).length
+  const medPerf = filtered.filter((m: any) => m.calculated_score !== null && m.calculated_score >= BAND_AMBER_MIN && m.calculated_score < BAND_GREEN_MIN).length
+  const needsImprovement = filtered.filter((m: any) => m.calculated_score !== null && m.calculated_score < BAND_AMBER_MIN).length
   const notScored = filtered.filter((m: any) => m.calculated_score === null).length
   const totalGreen = team.reduce((sum, m) => sum + Number(m.green_kpis || 0), 0)
   const totalAmber = team.reduce((sum, m) => sum + Number(m.amber_kpis || 0), 0)
@@ -341,7 +339,7 @@ export default function ExecDashboard() {
             <div>
               <div className="k-stat-label">High Performance</div>
               <div className="k-stat-value">{highPerf}</div>
-              <div className="k-stat-trend">Score ≥ 90%</div>
+              <div className="k-stat-trend">Score ≥ {BAND_GREEN_MIN}%</div>
             </div>
             <StatRing value={filtered.length > 0 ? Math.round((highPerf / filtered.length) * 100) : 0} color="var(--k-success-text)" />
           </div>
@@ -349,7 +347,7 @@ export default function ExecDashboard() {
             <div>
               <div className="k-stat-label">Medium Performance</div>
               <div className="k-stat-value">{medPerf}</div>
-              <div className="k-stat-trend">Score 80–89%</div>
+              <div className="k-stat-trend">Score {BAND_AMBER_MIN}–{BAND_GREEN_MIN - 1}%</div>
             </div>
             <StatRing value={filtered.length > 0 ? Math.round((medPerf / filtered.length) * 100) : 0} color="var(--k-warning-text)" />
           </div>
@@ -357,7 +355,7 @@ export default function ExecDashboard() {
             <div>
               <div className="k-stat-label">Needs Improvement</div>
               <div className="k-stat-value">{needsImprovement}</div>
-              <div className="k-stat-trend">Score below 75%</div>
+              <div className="k-stat-trend">Score below {BAND_AMBER_MIN}%</div>
             </div>
             <StatRing value={filtered.length > 0 ? Math.round((needsImprovement / filtered.length) * 100) : 0} color="var(--k-danger-text)" />
           </div>
@@ -400,9 +398,9 @@ export default function ExecDashboard() {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {[
-                { label: 'High Performance (≥90%)', count: highPerf, color: 'var(--k-success-text)', band: 'high' },
-                { label: 'Medium Performance (75–89%)', count: medPerf, color: 'var(--k-warning-text)', band: 'medium' },
-                { label: 'Needs Improvement (<75%)', count: needsImprovement, color: 'var(--k-danger-text)', band: 'needs_improvement' },
+                { label: `High Performance (≥${BAND_GREEN_MIN}%)`, count: highPerf, color: 'var(--k-success-text)', band: 'high' },
+                { label: `Medium Performance (${BAND_AMBER_MIN}–${BAND_GREEN_MIN - 1}%)`, count: medPerf, color: 'var(--k-warning-text)', band: 'medium' },
+                { label: `Needs Improvement (<${BAND_AMBER_MIN}%)`, count: needsImprovement, color: 'var(--k-danger-text)', band: 'needs_improvement' },
                 { label: 'Not Yet Scored', count: notScored, color: 'var(--k-text-muted)', band: 'not_scored' },
               ].map(band => (
                 <div key={band.label} onClick={() => setFilterBand(filterBand === band.band ? 'all' : band.band)} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
@@ -454,9 +452,9 @@ export default function ExecDashboard() {
             </div>
             <select value={filterBand} onChange={e => setFilterBand(e.target.value)} style={{ fontSize: '13px', padding: '7px 12px', borderRadius: 'var(--k-radius-md)', border: `1px solid ${filterBand !== 'all' ? 'var(--k-brand-primary)' : 'var(--k-border-input)'}`, background: filterBand !== 'all' ? 'var(--k-brand-faint)' : 'var(--k-bg-input)', color: 'var(--k-text-primary)', fontFamily: 'var(--k-font-sans)', cursor: 'pointer' }}>
               <option value="all">All Performance Bands</option>
-              <option value="high">High Performance (≥90%)</option>
-              <option value="medium">Medium Performance (75–89%)</option>
-              <option value="needs_improvement">Needs Improvement (&lt;75%)</option>
+              <option value="high">{`High Performance (≥${BAND_GREEN_MIN}%)`}</option>
+              <option value="medium">{`Medium Performance (${BAND_AMBER_MIN}–${BAND_GREEN_MIN - 1}%)`}</option>
+              <option value="needs_improvement">{`Needs Improvement (<${BAND_AMBER_MIN}%)`}</option>
               <option value="not_scored">Not Yet Scored</option>
             </select>
             <select value={filterRag} onChange={e => setFilterRag(e.target.value)} style={{ fontSize: '13px', padding: '7px 12px', borderRadius: 'var(--k-radius-md)', border: `1px solid ${filterRag !== 'all' ? 'var(--k-brand-primary)' : 'var(--k-border-input)'}`, background: filterRag !== 'all' ? 'var(--k-brand-faint)' : 'var(--k-bg-input)', color: 'var(--k-text-primary)', fontFamily: 'var(--k-font-sans)', cursor: 'pointer' }}>
@@ -494,7 +492,7 @@ export default function ExecDashboard() {
               ) : filtered.map(member => {
                 const pending = Number(member.pending_manager) + Number(member.pending_hr)
                 return (
-                  <tr key={member.id} style={{ borderBottom: '1px solid var(--k-border-default)', background: member.calculated_score !== null && member.calculated_score < 80 ? 'rgba(185,28,28,0.015)' : 'transparent' }}>
+                  <tr key={member.id} style={{ borderBottom: '1px solid var(--k-border-default)', background: member.calculated_score !== null && member.calculated_score < BAND_AMBER_MIN ? 'rgba(185,28,28,0.015)' : 'transparent' }}>
                     <td style={{ padding: '10px 12px' }}>
                       <div style={{ fontWeight: 600, color: 'var(--k-text-primary)' }}>{member.full_name}</div>
                     </td>
@@ -507,8 +505,8 @@ export default function ExecDashboard() {
                     </td>
                     <td style={{ padding: '10px 12px' }}>
                       <span style={{ fontSize: '11px', fontWeight: 700,
-                        color: member.calculated_score >= 90 ? 'var(--k-success-text)' : member.calculated_score >= 75 ? 'var(--k-warning-text)' : member.calculated_score !== null ? 'var(--k-danger-text)' : 'var(--k-text-muted)',
-                        background: member.calculated_score >= 90 ? 'var(--k-success-bg)' : member.calculated_score >= 75 ? 'var(--k-warning-bg)' : member.calculated_score !== null ? 'var(--k-danger-bg)' : 'var(--k-bg-page)',
+                        color: getScoreColor(member.calculated_score),
+                        background: member.calculated_score !== null ? bgForScore(member.calculated_score) : 'var(--k-bg-page)',
                         padding: '2px 8px', borderRadius: '10px'
                       }}>
                         {getScoreBand(member.calculated_score)}

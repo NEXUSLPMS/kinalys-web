@@ -1,6 +1,7 @@
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import ExcelJS from 'exceljs'
+import { BAND_GREEN_MIN, BAND_AMBER_MIN } from './bands'
 
 // B7-web-xlsx: xlsx/SheetJS replaced with exceljs (unpatchable prototype-
 // pollution + ReDoS CVEs). Mirrors the API-side B7 migration.
@@ -125,7 +126,8 @@ export function exportCOPCPDF(employee: any, cycle: string) {
       }
       if (data.section === 'body' && data.column.index === 3) {
         const score = parseFloat(data.cell.raw)
-        data.cell.styles.textColor = score >= 90 ? ragColors.green : score >= 75 ? ragColors.amber : ragColors.red
+        // KINALYS-BAND-SOURCE cutoffs; PDF needs concrete RGB, not CSS tokens.
+        data.cell.styles.textColor = score >= BAND_GREEN_MIN ? ragColors.green : score >= BAND_AMBER_MIN ? ragColors.amber : ragColors.red
       }
     },
     alternateRowStyles: { fillColor: [248, 250, 252] }
@@ -139,9 +141,9 @@ export function exportCOPCPDF(employee: any, cycle: string) {
   doc.text('Understanding Your COPC Classification', 14, finalY)
 
   const explanations = [
-    ['E — Excellent', 'Your score meets or exceeds 90% of the target. This is the highest COPC performance tier.'],
-    ['S — Satisfactory', 'Your score is between 75% and 89% of the target. Performance is acceptable but improvement is expected.'],
-    ['U — Unsatisfactory', 'Your score is below 75% of the target. Immediate improvement plan required.'],
+    ['E — Excellent', `Your score is ${BAND_GREEN_MIN}% or above. This is the highest COPC performance tier.`],
+    ['S — Satisfactory', `Your score is between ${BAND_AMBER_MIN}% and ${BAND_GREEN_MIN - 1}%. Performance is acceptable but improvement is expected.`],
+    ['U — Unsatisfactory', `Your score is below ${BAND_AMBER_MIN}%. Immediate improvement plan required.`],
     ['Green KPI', 'This KPI is on track and meeting its performance threshold.'],
     ['Amber KPI', 'This KPI is approaching its lower threshold. Action recommended before it turns red.'],
     ['Red KPI', 'This KPI has breached its lower threshold. Immediate attention required.'],
@@ -290,7 +292,8 @@ export function exportSixSigmaPDF(employee: any, cycle: string) {
       }
       if (data.section === 'body' && data.column.index === 3) {
         const score = parseFloat(data.cell.raw)
-        data.cell.styles.textColor = score >= 90 ? ragColors.green : score >= 75 ? ragColors.amber : ragColors.red
+        // KINALYS-BAND-SOURCE cutoffs; PDF needs concrete RGB, not CSS tokens.
+        data.cell.styles.textColor = score >= BAND_GREEN_MIN ? ragColors.green : score >= BAND_AMBER_MIN ? ragColors.amber : ragColors.red
       }
     },
     alternateRowStyles: { fillColor: [248, 250, 252] }

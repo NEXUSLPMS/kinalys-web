@@ -309,6 +309,8 @@ function Dashboard() {
             {canSee('copcreport') && <button type="button" className={`k-nav-item ${activeNav === 'copcreport' ? 'active' : ''}`} onClick={() => setActiveNav('copcreport')}>COPC Report</button>}
             {canSee('sixsigma') && <button type="button" className={`k-nav-item ${activeNav === 'sixsigma' ? 'active' : ''}`} onClick={() => setActiveNav('sixsigma')}>Six Sigma Scorecard</button>}
             {canSee('sixsigmareport') && <button type="button" className={`k-nav-item ${activeNav === 'sixsigmareport' ? 'active' : ''}`} onClick={() => setActiveNav('sixsigmareport')}>Six Sigma Report</button>}
+            {canSee('bsc') && <button type="button" className={`k-nav-item ${activeNav === 'bsc' ? 'active' : ''}`} onClick={() => setActiveNav('bsc')}>Balanced Scorecard</button>}
+            {canSee('okr') && <button type="button" className={`k-nav-item ${activeNav === 'okr' ? 'active' : ''}`} onClick={() => setActiveNav('okr')}>OKR Framework</button>}
             {canSee('oneonone') && <button type="button" className={`k-nav-item ${activeNav === 'oneonone' ? 'active' : ''}`} onClick={() => setActiveNav('oneonone')}>1-on-1 Reviews</button>}
             {canSee('competency') && <button type="button" className={`k-nav-item ${activeNav === 'competency' ? 'active' : ''}`} onClick={() => setActiveNav('competency')}>Competency</button>}
             {canSee('pkt') && <button type="button" className={`k-nav-item ${activeNav === 'pkt' ? 'active' : ''}`} onClick={() => setActiveNav('pkt')}>PKT Engine</button>}
@@ -330,8 +332,6 @@ function Dashboard() {
             {!collapsedSections['management'] && <>
               {canSee('org') && <button type="button" className={`k-nav-item ${activeNav === 'org' ? 'active' : ''}`} onClick={() => setActiveNav('org')}>Organisation</button>}
               {canSee('import') && <button type="button" className={`k-nav-item ${activeNav === 'import' ? 'active' : ''}`} onClick={() => setActiveNav('import')}>Import Users</button>}
-              {canSee('bsc') && <button type="button" className={`k-nav-item ${activeNav === 'bsc' ? 'active' : ''}`} onClick={() => setActiveNav('bsc')}>Balanced Scorecard</button>}
-              {canSee('okr') && <button type="button" className={`k-nav-item ${activeNav === 'okr' ? 'active' : ''}`} onClick={() => setActiveNav('okr')}>OKR Framework</button>}
               {canSee('talent') && <button type="button" className={`k-nav-item ${activeNav === 'talent' ? 'active' : ''}`} onClick={() => setActiveNav('talent')}>Talent Grid</button>}
               {canSee('users') && <button type="button" className={`k-nav-item ${activeNav === 'users' ? 'active' : ''}`} onClick={() => setActiveNav('users')}>User Management</button>}
               {canSee('kpi') && <button type="button" className={`k-nav-item ${activeNav === 'kpi' ? 'active' : ''}`} onClick={() => setActiveNav('kpi')}>KPI Templates</button>}

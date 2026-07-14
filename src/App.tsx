@@ -36,6 +36,7 @@ import StatRing from './components/StatRing'
 import PipCheckins from './pages/PipCheckins'
 import ErrorBoundary from './components/ErrorBoundary'
 import { ToastProvider, useToast } from './contexts/ToastContext'
+import { bandForScore, colorForScore } from './utils/bands'
 
 
 
@@ -318,7 +319,7 @@ function Dashboard() {
         </div>
 
         {/* Management */}
-        {isAdmin && (
+        {(isAdmin || role === 'super_admin') && (
           <div className="k-sidebar-section" style={{ marginTop: '4px' }}>
             <button
               type="button"
@@ -648,11 +649,11 @@ function Dashboard() {
                         <div style={{ marginBottom: '16px' }}>
                           <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--k-text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>Performance Score</div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                            <div style={{ fontSize: '32px', fontWeight: 800, color: talentPosition.position.performance_score >= 90 ? 'var(--k-success-text)' : talentPosition.position.performance_score >= 80 ? 'var(--k-warning-text)' : 'var(--k-danger-text)' }}>
+                            <div style={{ fontSize: '32px', fontWeight: 800, color: colorForScore(talentPosition.position.performance_score) }}>
                               {talentPosition.position.performance_score}%
                             </div>
                             <div style={{ flex: 1, height: '8px', background: 'var(--k-border-default)', borderRadius: '4px', overflow: 'hidden' }}>
-                              <div style={{ height: '100%', width: `${talentPosition.position.performance_score}%`, background: talentPosition.position.performance_score >= 90 ? 'var(--k-success-text)' : talentPosition.position.performance_score >= 80 ? 'var(--k-warning-text)' : 'var(--k-danger-text)', borderRadius: '4px' }} />
+                              <div style={{ height: '100%', width: `${talentPosition.position.performance_score}%`, background: colorForScore(talentPosition.position.performance_score), borderRadius: '4px' }} />
                             </div>
                           </div>
                         </div>
@@ -684,16 +685,20 @@ function Dashboard() {
                     <div className="k-stat-card accent" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                       <div>
                         <div className="k-stat-label">Overall Score</div>
-                        <div className="k-stat-value" style={{ color: dashStats?.overall_score >= 90 ? 'var(--k-success-text)' : dashStats?.overall_score >= 80 ? 'var(--k-warning-text)' : dashStats?.overall_score ? 'var(--k-danger-text)' : 'var(--k-text-muted)' }}>
+                        <div className="k-stat-value" style={{ color: dashStats?.overall_score ? colorForScore(dashStats.overall_score) : 'var(--k-text-muted)' }}>
                           {dashStats?.overall_score != null ? `${dashStats.overall_score}%` : '—'}
                         </div>
                         <div className="k-stat-trend">
-                          {dashStats?.overall_score >= 90 ? '🟢 High Performance' : dashStats?.overall_score >= 80 ? '🟡 On Track' : dashStats?.overall_score ? '🔴 Needs Attention' : 'No score yet'}
+                          {dashStats?.overall_score
+                            ? bandForScore(dashStats.overall_score) === 'green' ? '🟢 High Performance'
+                              : bandForScore(dashStats.overall_score) === 'amber' ? '🟡 On Track'
+                              : '🔴 Needs Attention'
+                            : 'No score yet'}
                         </div>
                       </div>
                       <StatRing
                         value={dashStats?.overall_score ?? 0}
-                        color={dashStats?.overall_score >= 90 ? 'var(--k-success-text)' : dashStats?.overall_score >= 80 ? 'var(--k-warning-text)' : dashStats?.overall_score ? 'var(--k-danger-text)' : 'var(--k-text-muted)'}
+                        color={dashStats?.overall_score ? colorForScore(dashStats.overall_score) : 'var(--k-text-muted)'}
                       />
                     </div>
                     <div className="k-stat-card green" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>

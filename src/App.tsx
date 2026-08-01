@@ -11,6 +11,7 @@ import OKR from './pages/OKR'
 import TalentGrid from './pages/TalentGrid'
 import UserManagement from './pages/UserManagement'
 import KpiTemplates from './pages/KpiTemplates'
+import ReviewCycles from './pages/ReviewCycles'
 import KnowledgeBase from './pages/KnowledgeBase'
 import SupportTickets from './pages/SupportTickets'
 import Scorecard from './pages/Scorecard'
@@ -92,6 +93,7 @@ const NAV_TITLES: Record<string, string> = {
   catalog: 'Course Catalog', certs: 'Certifications', exec: 'Exec Dashboard', kpi: 'KPI Templates',
   kb: 'Knowledge Base', support: 'Support Tickets', copc: 'COPC Scorecard', sixsigma: 'Six Sigma Scorecard',
   competency: 'Competency', pkt: 'PKT Engine', copcreport: 'COPC Report', sixsigmareport: 'Six Sigma Report',
+  cycles: 'Review Cycles',
   hradmin: 'HR Admin Management', predictive: 'Predictive Analysis', hrflags: 'Flags Inbox',
   flaghistory: 'Flag History', departures: 'Departures Inbox', recommendations: 'AI Recommendations',
   pip_checkins: 'PIP Check-ins', auditlog: 'Audit Log', addons: 'Add-on Management', orgsetup: 'Organisation Setup',
@@ -203,6 +205,7 @@ function Dashboard() {
       import:        ['super_admin','hr_admin'],
       users:         ['super_admin','hr_admin'],
       kpi:           ['super_admin','hr_admin'],
+      cycles:        ['super_admin','hr_admin','executive'],
       learning:      ['super_admin','hr_admin','manager','team_lead','individual_contributor'],
       catalog:       ['super_admin','hr_admin','manager','team_lead','individual_contributor'],
       certs:         ['super_admin','hr_admin','manager','team_lead','individual_contributor'],
@@ -336,6 +339,7 @@ function Dashboard() {
               {canSee('talent') && <button type="button" className={`k-nav-item ${activeNav === 'talent' ? 'active' : ''}`} onClick={() => setActiveNav('talent')}>Talent Grid</button>}
               {canSee('users') && <button type="button" className={`k-nav-item ${activeNav === 'users' ? 'active' : ''}`} onClick={() => setActiveNav('users')}>User Management</button>}
               {canSee('kpi') && <button type="button" className={`k-nav-item ${activeNav === 'kpi' ? 'active' : ''}`} onClick={() => setActiveNav('kpi')}>KPI Templates</button>}
+              {canSee('cycles') && <button type="button" className={`k-nav-item ${activeNav === 'cycles' ? 'active' : ''}`} onClick={() => setActiveNav('cycles')}>Review Cycles</button>}
               {canSee('hrflags') && <button type="button" className={`k-nav-item ${activeNav === 'hrflags' ? 'active' : ''}`} onClick={() => setActiveNav('hrflags')}>Flags Inbox</button>}
               {canSee('hrflags') && <button type="button" className={`k-nav-item ${activeNav === 'flaghistory' ? 'active' : ''}`} onClick={() => setActiveNav('flaghistory')}>Flag History</button>}
               {canSee('departures') && <button type="button" className={`k-nav-item ${activeNav === 'departures' ? 'active' : ''}`} onClick={() => setActiveNav('departures')}>Departures Inbox</button>}
@@ -419,6 +423,8 @@ function Dashboard() {
           <ExecDashboard />
         ) : activeNav === 'kpi' ? (
           <KpiTemplates />
+        ) : activeNav === 'cycles' ? (
+          <ReviewCycles />
         ) : activeNav === 'kb' ? (
           <KnowledgeBase />
         ) : activeNav === 'support' ? (

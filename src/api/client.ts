@@ -127,6 +127,26 @@ export async function getReviewCycles() {
   const response = await apiClient.get('/review-cycles')
   return response.data
 }
+
+export async function createCycle(data: {
+  name: string
+  cycle_type: string
+  start_date: string
+  end_date: string
+  methodology: string
+  proposal_cutoff_day?: number
+  manager_approval_day?: number
+  hr_approval_day?: number
+  kpis_live_day?: number
+}) {
+  const response = await apiClient.post('/review-cycles', data)
+  return response.data as { cycle: any }
+}
+
+export async function activateCycle(cycleId: string) {
+  const response = await apiClient.post(`/review-cycles/${cycleId}/activate`)
+  return response.data as { cycle: any; assigned: number; skipped: number }
+}
 export async function getOkrObjectives(year?: number, quarter?: number) {
   const params = new URLSearchParams()
   if (year) params.append('year', String(year))
